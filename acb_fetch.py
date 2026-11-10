@@ -1,7 +1,7 @@
 import sys,os; sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 from common import *
 import re, concurrent.futures as cf, urllib.parse
-sys.path.insert(0,S+'/acb'); from rsc import rsc
+sys.path.insert(0,S+'/acb'); sys.path.insert(0,S); from rsc import rsc  # rsc.py dentro de acb/ o suelto
 os.makedirs(B+'/img/acb',exist_ok=True)
 dec=json.JSONDecoder()
 def page(u): return rsc(get(u).decode('utf-8','ignore'))

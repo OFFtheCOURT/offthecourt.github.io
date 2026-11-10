@@ -60,10 +60,14 @@ js=js.replace('/*UPDATED*/',json.dumps(datetime.datetime.now(datetime.timezone.u
 js=js.replace('/*IMG*/',json.dumps(img,separators=(',',':'))).replace('/*CREDITS*/',json.dumps(credits,ensure_ascii=False,separators=(',',':')).replace('</','<\\/'))
 html=open(S+'/tpl_head.html').read()+js
 import re as _re
+def F(name):
+    # admite los archivos dentro de lgl/ o sueltos en la raíz del repositorio
+    a=os.path.join(S,'lgl',name)
+    return a if os.path.exists(a) else os.path.join(S,name)
 def svg_inline(p):
     x=open(p).read(); x=_re.sub(r'<\?xml[^>]*>','',x); return x.replace('<svg ','<svg aria-hidden="true" ',1)
-html=html.replace('%%LOGO_NBA%%','<img src="data:image/webp;base64,'+base64.b64encode(open(S+'/lgl/nba.webp','rb').read()).decode()+'" alt="">')
-html=html.replace('%%LOGO_ACB%%',svg_inline(S+'/lgl/acb.svg')).replace('%%LOGO_EL%%',svg_inline(S+'/lgl/el.svg'))
+html=html.replace('%%LOGO_NBA%%','<img src="data:image/webp;base64,'+base64.b64encode(open(F('nba.webp'),'rb').read()).decode()+'" alt="">')
+html=html.replace('%%LOGO_ACB%%',svg_inline(F('acb.svg'))).replace('%%LOGO_EL%%',svg_inline(F('el.svg')))
 OUT=os.environ.get('OFFCOURT_OUT','noche-nba.html')
 if OUT=='index.html':  # web propia: documento HTML completo
     html=('<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
