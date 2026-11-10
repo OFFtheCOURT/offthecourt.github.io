@@ -347,6 +347,7 @@ function renderHoy(){
   const gs=hoyPool().filter(g=>W.test(Date.parse(g.utc))).sort((a,b)=>Date.parse(a.utc)-Date.parse(b.utc));
   const first=gs.length?Date.parse(gs[0].utc):0;
   const open=gs.length&&(W.open!==null?W.open:(mdHour(now)>=OPEN_H[CUR]||now>=first-2*3600e3));
+    if(open&&CUR==='nba'&&mdHour(now)<12&&gs.every(g=>g.state==='post'||now>Date.parse(g.utc)+3.5*3600e3)){sec.hidden=true;$('hoyGrid').innerHTML='';return}
   sec.hidden=!open; if(!open){$('hoyGrid').innerHTML='';return}
   const left=ms=>{const m=Math.round(ms/60000);return m>=60?`${Math.floor(m/60)} h${m%60?' '+m%60+' min':''}`:`${m} min`};
   let live=0,done=0;
