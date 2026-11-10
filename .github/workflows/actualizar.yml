@@ -1,1 +1,35 @@
+name: Actualizar Offcourt
 
+on:
+  schedule:
+    - cron: '37 9,13 * * *'        # cada día (10:37 y 14:37 en España en invierno)
+    - cron: '*/10 11-20 * * 6,0'   # sábados y domingos: ACB cada 10 min durante los partidos
+    - cron: '*/15 17-21 * * 2-5'   # martes a viernes por la tarde: EuroLiga y ACB cada 15 min
+    - cron: '*/15 0-6 * * *'       # cada madrugada: NBA cada 15 min (respaldo del directo)
+  workflow_dispatch:               # botón "Run workflow" para lanzarlo a mano
+
+permissions:
+  contents: write
+
+concurrency:
+  group: offcourt
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - run: bash run.sh
+      - name: Guardar la web actualizada
+        run: |
+          git config user.name "offcourt-bot"
+          git config user.email "offcourt-bot@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Actualizar datos"
+          git push
