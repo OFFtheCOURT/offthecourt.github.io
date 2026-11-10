@@ -43,10 +43,12 @@ for lg,fix in ((el,EL_FIX),(acb,ACB_FIX)):
 LEAGUES={'nba':nba,'el':el,'acb':acb}
 
 # ---------- images ----------
-credits=json.load(open(B+'/credits.json')) if os.path.exists(B+'/credits.json') else {}
+# fotos de jugadores (Wikimedia Commons), generadas por photos.py en la carpeta photos/
+PH=S+'/photos'
+credits=json.load(open(PH+'/credits.json')) if os.path.exists(PH+'/credits.json') else {}
 img={'p':{},'t':{'nba':{},'el':{},'acb':{}}}
 for pid in credits:
-    f=f'{B}/img/w/{pid}.webp'
+    f=f'{PH}/{pid}.webp'
     if os.path.exists(f): img['p'][pid]=b64(f)
 credits={k:v for k,v in credits.items() if k in img['p']}
 for ab in nba['teams']: img['t']['nba'][ab]=b64(f'{B}/img/t/{ab}.webp')
@@ -67,10 +69,36 @@ def F(name):
 def svg_inline(p):
     x=open(p).read(); x=_re.sub(r'<\?xml[^>]*>','',x); return x.replace('<svg ','<svg aria-hidden="true" ',1)
 html=html.replace('%%LOGO_NBA%%','<img src="data:image/webp;base64,'+base64.b64encode(open(F('nba.webp'),'rb').read()).decode()+'" alt="">')
-html=html.replace('%%LOGO_ACB%%',svg_inline(F('acb.svg'))).replace('%%LOGO_EL%%',svg_inline(F('el.svg')))
+def el_logo():
+    # logo de la EuroLiga: euroleague.png (solo el balón, sin el texto) o, si no está, el emblema propio
+    p=F('euroleague.png')
+    if not os.path.exists(p): return svg_inline(F('el.svg'))
+    from PIL import Image
+    import io
+    im=Image.open(p).convert('RGBA'); w,h=im.size
+    px=im.load()
+    for y in range(h):
+        for x in range(w):
+            r,g,b,a=px[x,y]
+            if r>235 and g>235 and b>235: px[x,y]=(255,255,255,0)
+    # se queda con la parte de arriba (el balón) si debajo hay texto
+    rows=[y for y in range(h) if any(px[x,y][3]>0 for x in range(0,w,2))]
+    if rows:
+        gaps=[(rows[i],rows[i+1]) for i in range(len(rows)-1) if rows[i+1]-rows[i]>h*0.02]
+        bottom=gaps[0][0] if gaps else rows[-1]
+        im=im.crop((0,rows[0],w,bottom+1))
+    bb=im.getbbox()
+    if bb: im=im.crop(bb)
+    im.thumbnail((96,96)); buf=io.BytesIO(); im.save(buf,'WEBP',quality=90)
+    return '<img src="data:image/webp;base64,'+base64.b64encode(buf.getvalue()).decode()+'" alt="">'
+html=html.replace('%%LOGO_ACB%%',svg_inline(F('acb.svg'))).replace('%%LOGO_EL%%',el_logo())
+# icono de la pestaña del navegador: el logo de Offcourt
+m=_re.search(r'<div class="logo-slot" id="logoSlot">(<svg.*?</svg>)',html,flags=_re.S)
+FAV=('<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,'+urllib.parse.quote(m.group(1))+'">') if m else ''
 OUT=os.environ.get('OFFCOURT_OUT','noche-nba.html')
 if OUT=='index.html':  # web propia: documento HTML completo
     html=('<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
+          '<title>Offcourt</title>'+FAV+'<meta name="theme-color" content="#070b13">'
           '<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style></head><body>'+html+'</body></html>')
 open(S+'/'+OUT,'w').write(html)
 print('photos',len(img['p']),'size',len(html))

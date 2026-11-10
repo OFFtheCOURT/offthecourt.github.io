@@ -1,0 +1,34 @@
+name: Fotos de jugadores
+
+on:
+  schedule:
+    - cron: '23 4 * * 1'           # cada lunes de madrugada: busca fotos de jugadores nuevos
+  workflow_dispatch:               # botón "Run workflow" para lanzarlo a mano
+
+permissions:
+  contents: write
+
+concurrency:
+  group: offcourt
+  cancel-in-progress: false
+
+jobs:
+  fotos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow "opencv-python-headless<5"
+      - run: python3 photos.py
+      - name: Volver a generar la web con las fotos
+        run: bash run.sh
+      - name: Guardar fotos y web
+        run: |
+          git config user.name "offcourt-bot"
+          git config user.email "offcourt-bot@users.noreply.github.com"
+          git add photos index.html
+          git diff --cached --quiet || git commit -m "Fotos de jugadores"
+          git push
