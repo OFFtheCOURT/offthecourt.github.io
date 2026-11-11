@@ -127,7 +127,7 @@ def noche():
 
 def voz():
     _voz_una_vez()
-    n = noche(); vkey = n.get('voz', 'en-US-AndrewMultilingualNeural:r').replace(':', '_'); d = os.path.join(OUT, 'voz')
+    n = noche(); vkey = n.get('voz', 'es-ES-AlvaroNeural:r').replace(':', '_'); d = os.path.join(OUT, 'voz')
     for intento in range(2):
         vacios = [x['id'] for x in n['segmentos'] if os.path.getsize(os.path.join(d, vkey, x['id'] + '.mp3')) < 2000]
         if not vacios: return
@@ -147,7 +147,7 @@ def voz():
 
 
 def _voz_una_vez(n=None):
-    n = n or noche(); voice = n.get('voz', 'en-US-AndrewMultilingualNeural:r')
+    n = n or noche(); voice = n.get('voz', 'es-ES-AlvaroNeural:r')
     guion = [{'id': s['id'], 't': s['t']} for s in n['segmentos']]
     payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+16%')}}
     pf = os.path.join(OUT, 'dispatch.json'); json.dump(payload, open(pf, 'w'))
@@ -269,7 +269,7 @@ def prof(pl):
 
 def montar():
     n = noche(); L, IMG, logo = web_data(); N = L[LIGA]; T = N['teams']; LOG = IMG['t'][LIGA]
-    vkey = n.get('voz', 'en-US-AndrewMultilingualNeural:r').replace(':', '_'); mode = vkey.rsplit('_', 1)[1]
+    vkey = n.get('voz', 'es-ES-AlvaroNeural:r').replace(':', '_'); mode = vkey.rsplit('_', 1)[1]
     vdir = os.path.join(OUT, 'voz'); TIMES = json.load(open(os.path.join(vdir, 'tiempos.json')))[vkey]
     if LIGA == 'nba': night = next(p for p in N['periods'] if p['key'] == n['fecha']); ronda = None
     else: _j, _p, ronda = partidos_del_dia(N, n['fecha']); night = {'games': _j}
@@ -288,7 +288,7 @@ def montar():
             if t is None: t = next((x['o'] for x in w if key.split()[-1] in x['src']), None)
             return t if t is not None else PAD_IN
         if seg['id'] == 'intro':
-            scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(3.6, d + PAD_IN + .35), 2), 'off': PAD_IN, 'words': w}); continue
+            scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(3.6, d + PAD_IN + (.75 if LIGA == 'nba' else .35)), 2), 'off': PAD_IN, 'words': w}); continue
         if seg['id'] == 'outro':
             ton = []; hl = []
             for g in ((N['upcoming'][0]['games'] if N.get('upcoming') else []) if LIGA == 'nba' else proximos(N, n['fecha'])[1]):
@@ -350,6 +350,21 @@ def montar():
     for i, r in enumerate(DATA['results']):
         r['hot'] = i in _best and r['tag'] is not None; r.pop('_s')
     DATA['results'].sort(key=lambda r: (not r['hot'],))
+    # portada de cine (NBA): focos = ganchos de la intro, la cámara vuela a cada pantalla
+    if LIGA == 'nba' and DATA['results']:
+        DATA['cine'] = True
+        intro = next((x for x in scenes if x['type'] == 'intro'), None); seg = next((x for x in n['segmentos'] if x['id'] == 'intro'), {})
+        focos = []
+        for f_ in seg.get('focos', []):
+            a_, h_ = f_['partido'].split('-')
+            idx = next((i for i, r in enumerate(DATA['results']) if r['l']['ab'] == h_ and r['v']['ab'] == a_), None)
+            tt = next((w['o'] for w in intro['words'] if w['src'] == f_['clave']), None)
+            if tt is None: tt = next((w['o'] for w in intro['words'] if f_['clave'].split()[-1].lower() in w['src'].lower()), None)
+            if idx is not None and tt is not None: focos.append({'i': idx, 't': round(tt - .12, 3), 'tag': f_.get('etiqueta') or DATA['results'][idx].get('tag')})
+        if not focos:
+            hot = [i for i, r in enumerate(DATA['results']) if r.get('tag')][:4] or [0]
+            focos = [{'i': i, 't': round(.5 + k * (intro['dur'] - 1.2) / len(hot), 3), 'tag': DATA['results'][i].get('tag')} for k, i in enumerate(hot)]
+        intro['focos'] = focos
     _hero = {x['id'] for x in n['segmentos'] if x.get('hero')}
     for _sc in scenes:
         if _sc.get('id') in _hero: _sc['hero'] = True
