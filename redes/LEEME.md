@@ -35,6 +35,7 @@ Desde la raíz del repo, con `main` al día (`git pull`):
      (25–40 palabras, ~10–13 s) y un cierre con 2–3 partidos de esta noche.
    - Máximo 7 partidos narrados; si hay más, elige los más interesantes (la intro ya enseña
      todos los resultados). Empieza por el más llamativo.
+   - Siglas: NBA → `{NBA|enebeá}`, ACB → `{ACB|acebé}`, EuroLiga → `{Euroliga|Eurolíga}` (elegidas por el usuario; no cambiarlas).
    - Cifras en dígitos ("117 a 85"); balances en palabras ("nueve y dos").
    - **Todo nombre en inglés** (jugadores, equipos, ciudades, pabellones) va como
      `{Original|Pronunciación}`: la voz lee la pronunciación y los subtítulos muestran el original.
@@ -69,7 +70,7 @@ Desde la raíz del repo, con `main` al día (`git pull`):
  "fecha": "2026-11-10",
  "voz": "es-ES-AlvaroNeural:r",
  "segmentos": [
-  {"id": "intro", "t": "Buenos días. Esto es Offcourt, y esto es lo que pasó anoche en la {NBA|ene be a}. Seis partidos. Vamos allá."},
+  {"id": "intro", "t": "Buenos días. Esto es Offcourt, y esto es lo que pasó anoche en la {NBA|enebeá}. Seis partidos. Vamos allá."},
   {"id": "BOS", "partido": "BOS-PHI",
    "t": "Exhibición de {Paul George|Pol Yorch} en {Philadelphia|Filadelfia}: 36 puntos…",
    "tarjetas": [
