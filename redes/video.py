@@ -312,6 +312,9 @@ def montar():
             'mini': [{'a': g['teams'][1]['abbr'], 'h': g['teams'][0]['abbr'], 'as': g['teams'][1]['score'], 'hs': g['teams'][0]['score']} for g in night['games'] if g['teams'][0].get('score') is not None],
             'logos': {k: LOG[k] for k in used | {g['teams'][i]['abbr'] for g in night['games'] for i in (0, 1)} if k in LOG}, 'photos': photos,
             'logo': 'data:image/svg+xml;base64,' + base64.b64encode(logo.encode()).decode()}
+    _hero = {x['id'] for x in n['segmentos'] if x.get('hero')}
+    for _sc in scenes:
+        if _sc.get('id') in _hero: _sc['hero'] = True
     open(os.path.join(OUT, 'data.js'), 'w', encoding='utf-8').write('window.DATA=' + json.dumps(DATA, ensure_ascii=False) + ';')
     # guarda en el diccionario las pronunciaciones usadas
     pf = os.path.join(R, 'pronunciacion.json'); pron = json.load(open(pf, encoding='utf-8')); nuevo = 0
