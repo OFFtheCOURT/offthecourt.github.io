@@ -381,6 +381,7 @@ function renderHoy(){
     else if(now<t){st=`Empieza en ${left(t-now)}`}
     else {done++;st='Terminado · resultado en la próxima actualización';cls='done'}
     if(!btn&&g.live&&g.state!=='post'&&now>=t-30*60e3) btn=`<a class="btn primary" href="${esc(g.live)}" target="_blank" rel="noopener">● Seguir en directo</a>`;
+    {const pg=findGame(g.id);if(LIVEBOX[g.id]||(pg&&pg.bx))btn+=`<button class="btn bx-btn" type="button" data-box="${esc(g.id)}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></svg>${cls==='live'?'Ficha en directo':'Ficha completa'}</button>`}
     const mid=sc?`<div class="lboard"><b class="${A.score>H.score?'w':''}" data-sk="${g.id}-a">${A.score}</b><i>–</i><b class="${H.score>A.score?'w':''}" data-sk="${g.id}-h">${H.score}</b>${cls==='live'&&g.detail?`<span class="lclock">${esc(g.detail)}</span>`:''}</div>`:`<div class="vs">${CUR==='nba'?'@':'vs'}</div>`;
     return `<article class="up ${cls}" style="--a:${tc(ta)};--h:${tc(th)}">
       <div class="up-top"><span class="hr">${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}<small>${madrid(g.utc,{weekday:'short'}).replace('.','')}</small></span><span>${esc(g.venue)}</span></div>
@@ -554,7 +555,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false)});
 /* ---------- ficha completa del partido (todos los jugadores) ---------- */
 const BOX={};let boxCur=null;
 function loadBox(lg){if(!BOX[lg])BOX[lg]=fetch('box/'+lg+'.json?v='+encodeURIComponent(UPDATED||'')).then(r=>{if(!r.ok)throw 0;return r.json()}).catch(e=>{delete BOX[lg];throw e});return BOX[lg]}
-function findGame(id){for(const p of L.periods)for(const g of p.games)if(String(g.id)===String(id))return Object.assign({},g,{_day:p.key});return null}
+function findGame(id){for(const p of L.periods)for(const g of p.games)if(String(g.id)===String(id))return Object.assign({},g,{_day:p.key});for(const u of (L.upcoming||[]))for(const g of u.games)if(String(g.id)===String(id))return Object.assign({},g,{_up:1});return null}
 const BXC=()=>[['min','Min','Minutos'],['pts','Pts','Puntos'],['reb','Reb','Rebotes'],['ast','Ast','Asistencias'],['fg','TC','Tiros de campo (anotados-intentados)'],['tp','T3','Triples'],['ft','TL','Tiros libres'],['or','RO','Rebotes ofensivos'],['dr','RD','Rebotes defensivos'],['stl','Rob','Robos'],['blk','Tap','Tapones'],['to','Pér','Pérdidas'],['pf','FP','Faltas personales'],['pm','+/-','Más/menos'],...(CUR!=='nba'?[['val','Val','Valoración']]:[])];
 const nv=v=>{if(typeof v==='number')return v;const s=String(v||'');if(s.includes('-')&&!s.startsWith('-')&&!s.startsWith('+'))return parseInt(s)||0;return parseFloat(s)||0};
 function boxTable(rows,side,sortK){
@@ -579,7 +580,7 @@ function renderBox(){
   $('boxSheet').innerHTML=`<div class="bx-box" role="dialog" aria-modal="true" aria-label="Ficha completa del partido">
    <div class="bx-head"><div class="bx-score">${[A,H].map((s,i)=>`<span class="bx-tm ${s.win?'w':''}"><img src="${logo(s.abbr)}" alt=""><b>${esc(TEAMS[s.abbr].short)}</b><em>${s.score}</em></span>${i===0?'<i>–</i>':''}`).join('')}</div>
     <button type="button" class="fp-x" data-boxclose aria-label="Cerrar">✕</button></div>
-   <div class="bx-sub">Ficha completa${when?' · '+esc(when):''}</div>
+   <div class="bx-sub">${g._up&&g.state!=='post'&&LIVEBOX[g.id]?'<b class="bx-live">● En directo</b> · se actualiza sola':'Ficha completa'}${when?' · '+esc(when):''}</div>
    <div class="bx-tabs" role="tablist">${[A,H].map((s,i)=>`<button type="button" role="tab" data-bxside="${i}" aria-selected="${i===side}" style="--tc:${tc(TEAMS[s.abbr])}"><img src="${logo(s.abbr)}" alt="">${esc(TEAMS[s.abbr].short)}</button>`).join('')}</div>
    ${boxTable(rows[side],side,sort)}
    <div class="bx-leg">Toca una columna para ordenar · <b>en color</b>: mejor dato del equipo · TC: tiros de campo · T3: triples · TL: tiros libres · RO/RD: rebotes ofensivos/defensivos${CUR!=='nba'?' · Val: valoración':''}</div></div>`;fitBox()
@@ -599,7 +600,9 @@ async function openBox(id){
   const g=findGame(id);if(!g)return;
   const sh=$('boxSheet');sh.hidden=false;document.body.classList.add('noscroll');
   sh.innerHTML='<div class="bx-box"><div class="bx-load">Cargando ficha completa…</div></div>';
-  try{const all=await loadBox(CUR);const rows=all[String(id)];if(!rows)throw 0;
+  try{let rows;
+    if(LIVEBOX[id]&&(g._up||!g.bx))rows=g.teams.map(t=>LIVEBOX[id][t.abbr]||[]);
+    else{const all=await loadBox(CUR);rows=all[String(id)];if(!rows)throw 0;if(HOME_FIRST(CUR))rows=[rows[1],rows[0]]}
     const fv=favAb();boxCur={g,rows,side:g.teams[1].abbr===fv?1:0,sort:null};renderBox();}
   catch(e){sh.innerHTML='<div class="bx-box"><div class="bx-head"><b>Ficha no disponible</b><button type="button" class="fp-x" data-boxclose aria-label="Cerrar">✕</button></div><p class="bx-load">No se ha podido cargar la ficha de este partido. Prueba de nuevo en un rato.</p></div>'}
 }
@@ -651,6 +654,11 @@ addEventListener('resize',setHH);
 $('updTxt').textContent=new Date(UPDATED).toLocaleString('es-ES',{timeZone:'Europe/Madrid',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
 /* ---------- directo (solo en la web propia: el navegador consulta ESPN y EuroLiga) ---------- */
 const LIVE = /*LIVE*/false;
+const LIVEBOX={};   // fichas en directo: id del partido -> {equipo: filas}
+function elRows(players){return players.filter(p=>p.stats&&p.stats.timePlayed).map(p=>{const y=p.stats,per=p.player.person,nm=(per.name.split(', ').reverse().join(' ')).toLowerCase().replace(/(^|[\s-])\S/g,c=>c.toUpperCase());
+  return {pid:'el'+per.code,n:nm,num:String(y.dorsal??''),pos:'',s:y.startFive?1:0,min:String(Math.round(y.timePlayed/60)),pts:y.points|0,fg:`${y.fieldGoalsMadeTotal|0}-${y.fieldGoalsAttemptedTotal|0}`,
+   tp:`${y.fieldGoalsMade3|0}-${y.fieldGoalsAttempted3|0}`,ft:`${y.freeThrowsMade|0}-${y.freeThrowsAttempted|0}`,or:y.offensiveRebounds|0,dr:y.defensiveRebounds|0,reb:y.totalRebounds|0,ast:y.assistances|0,
+   stl:y.steals|0,blk:y.blocksFavour|0,to:y.turnovers|0,pf:y.foulsCommited|0,pm:(y.plusMinus>0?'+':'')+(y.plusMinus|0),val:y.valuation|0}})}
 async function liveTick(){
   if(!LIVE||document.hidden) return;
   try{
@@ -662,17 +670,34 @@ async function liveTick(){
         const st=e.status.type; g.state=st.state; g.detail=st.shortDetail;
         const c=e.competitions[0].competitors; const sc=ha=>+((c.find(x=>x.homeAway===ha)||{}).score||0);
         g.teams.forEach(t=>t.score=sc(t.home?'home':'away'));}));
-    } else if(CUR==='el'){
-      const rounds=[...new Set((LG.el.upcoming||[]).map(u=>+(u.label.match(/\d+/)||[0])[0]).filter(Boolean))];
-      for(const rn of rounds.slice(0,1)){
-        const r=await fetch(`https://api-live.euroleague.net/v2/competitions/E/seasons/E2026/games?roundNumber=${rn}`,{cache:'no-store'});
-        const d=(await r.json()).data; const by={}; d.forEach(x=>by['el'+x.gameCode]=x);
-        LG.el.upcoming.forEach(u=>u.games.forEach(g=>{const x=by[g.id];if(!x)return;
-          g.teams.forEach(t=>t.score=(t.home?x.local.score:x.road.score)||0);
-          g.state=x.played?'post':((x.road.score||x.local.score)?'in':'pre'); g.detail='';}));
+    } else {
+      // 1) live.json: lo genera GitHub Actions cada 2 min mientras hay partidos (ACB y EuroLiga)
+      try{const r=await fetch('live.json?t='+Date.now(),{cache:'no-store'});if(r.ok){const d=await r.json();
+        (LG[CUR].upcoming||[]).forEach(u=>u.games.forEach(g=>{const e=(d.g||{})[g.id];if(!e)return;
+          if(e.st!=='pre'||g.state!=='post')g.state=e.st;g.teams.forEach(t=>{if(e.s&&e.s[t.abbr]!=null)t.score=e.s[t.abbr]});
+          if(e.box&&Object.values(e.box).some(x=>x.length))LIVEBOX[g.id]=e.box;}))}}catch(e){}
+      // 2) EuroLiga: su API pública permite consultarla directamente (más inmediato)
+      if(CUR==='el'){
+        const API='https://api-live.euroleague.net/v2/competitions/E/seasons/E2026';
+        const rounds=[...new Set((LG.el.upcoming||[]).map(u=>+(u.label.match(/\d+/)||[0])[0]).filter(Boolean))];
+        for(const rn of rounds.slice(0,1)){
+          const d=(await (await fetch(`${API}/games?roundNumber=${rn}`,{cache:'no-store'})).json()).data; const by={}; d.forEach(x=>by['el'+x.gameCode]=x);
+          const now=Date.now(),jobs=[];
+          LG.el.upcoming.forEach(u=>u.games.forEach(g=>{const x=by[g.id];if(!x)return;
+            g.teams.forEach(t=>t.score=Math.max(t.score||0,(t.home?x.local.score:x.road.score)||0));
+            if(x.played)g.state='post';else if(x.road.score||x.local.score)g.state='in';
+            const t0=Date.parse(g.utc);
+            if(now>=t0-5*60e3&&now<t0+4*3600e3&&(!x.played||!LIVEBOX[g.id]))jobs.push(fetch(`${API}/games/${x.gameCode}/stats`,{cache:'no-store'}).then(r=>r.json()).then(st=>{
+              const box={};let any=false;
+              [['local',x.local.club.code],['road',x.road.club.code]].forEach(([sd,ab])=>{const rows=elRows((st[sd]||{}).players||[]);box[ab]=rows;if(rows.length)any=true;
+                const pts=rows.reduce((a,r)=>a+r.pts,0);const t=g.teams.find(t=>t.abbr===ab);if(t&&pts>(t.score||0))t.score=pts});
+              if(any){LIVEBOX[g.id]=box;if(g.state!=='post')g.state='in'}}).catch(()=>{}))}));
+          await Promise.all(jobs);
+        }
       }
-    } else return;
+    }
     renderHoy();
+    if(boxCur&&LIVEBOX[boxCur.g.id]&&!$('boxSheet').hidden){const g=findGame(boxCur.g.id);if(g){boxCur.g=g;boxCur.rows=g.teams.map(t=>LIVEBOX[g.id][t.abbr]||[]);renderBox()}}
   }catch(e){/* sin conexión: se queda con los datos de la última actualización */}
 }
 if(LIVE){setInterval(liveTick,15000);setTimeout(liveTick,1500);document.addEventListener('visibilitychange',liveTick);}

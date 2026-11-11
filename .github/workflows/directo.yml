@@ -1,0 +1,50 @@
+name: Directo EuroLiga y ACB
+
+# Mientras hay partidos de EuroLiga o ACB, actualiza live.json cada 2 minutos
+# (resultado y ficha completa en directo). Se lanza cada hora; si no hay partidos
+# en las próximas 3 horas termina enseguida.
+on:
+  schedule:
+    - cron: '5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: offcourt-directo
+  cancel-in-progress: false
+
+jobs:
+  directo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bucle en directo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "offcourt-bot"
+          git config user.email "offcourt-bot@users.noreply.github.com"
+          fin=$(( $(date +%s) + 340*60 ))
+          hubo=0
+          while [ "$(date +%s)" -lt "$fin" ]; do
+            git pull -q --rebase origin main || true
+            set +e; python3 -u live.py; code=$?; set -e
+            if [ -n "$(git status --porcelain live.json)" ]; then
+              git add live.json
+              git commit -q -m "Directo"
+              git pull -q --rebase -X theirs origin main || true
+              git push -q || true
+              hubo=1
+            fi
+            [ "$code" = "3" ] && break
+            sleep 110
+          done
+          # al terminar la jornada, actualizar la web para que los resultados pasen a "última jornada"
+          if [ "$hubo" = "1" ]; then gh workflow run actualizar.yml --ref main || true; fi

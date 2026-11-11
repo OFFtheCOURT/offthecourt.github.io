@@ -6,6 +6,7 @@ self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.origin !== location.origin) return;   // los marcadores en directo van siempre a la red
+  if (u.pathname.endsWith('/live.json')) return;                                  // directo: siempre a la red, sin guardar copias
   // fichas completas: se guarda solo la última de cada liga (sin la versión en la dirección)
   const key = u.pathname.includes('/box/') ? new Request(u.origin + u.pathname) : e.request;
   e.respondWith(fetch(e.request).then(r => { const c = r.clone(); if (r.ok) caches.open(CACHE).then(k => k.put(key, c)); return r; })
