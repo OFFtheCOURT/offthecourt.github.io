@@ -1,0 +1,104 @@
+name: Voz para vídeos
+
+# Genera la locución de un vídeo de redes con voces neuronales (edge-tts)
+# y descarga las fuentes de la web. Se lanza a mano; no toca la web.
+on:
+  workflow_dispatch:
+    inputs:
+      guion:
+        description: 'Guion en JSON codificado en base64'
+        required: true
+      voces:
+        description: 'Voces a probar, separadas por comas (vacío = selección automática)'
+        required: false
+        default: ''
+      rate:
+        description: 'Velocidad (por ejemplo +8%)'
+        required: false
+        default: '+8%'
+
+permissions:
+  contents: read
+
+jobs:
+  voz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -q edge-tts
+      - name: Generar locución
+        env:
+          GUION: ${{ github.event.inputs.guion }}
+          VOCES: ${{ github.event.inputs.voces }}
+          RATE: ${{ github.event.inputs.rate }}
+        run: |
+          mkdir -p out
+          cat > voz.py <<'EOF'
+          import asyncio, base64, json, os, re
+          import edge_tts
+          G = json.loads(base64.b64decode(os.environ['GUION']).decode())
+          RATE = os.environ.get('RATE') or '+8%'
+
+          def texto(t, modo):
+              # {original|pronunciación}: 'o' deja el nombre en inglés, 'r' usa la grafía española
+              return re.sub(r'\{([^|}]*)\|([^}]*)\}', lambda m: m.group(1) if modo == 'o' else m.group(2), t)
+
+          async def main():
+              todas = await edge_tts.list_voices()
+              json.dump(todas, open('out/voces_disponibles.json', 'w'), ensure_ascii=False, indent=1)
+              nombres = {v['ShortName'] for v in todas}
+              if os.environ.get('VOCES'):
+                  cand = []
+                  for x in os.environ['VOCES'].split(','):
+                      x = x.strip()
+                      if ':' in x:
+                          n, m = x.split(':')
+                      else:
+                          n, m = x, 'o'
+                      cand.append((n, m))
+              else:
+                  cand = [('es-ES-AlvaroNeural', 'r'), ('es-ES-AlvaroNeural', 'o')]
+                  cand += [(n, 'o') for n in sorted(nombres) if n.startswith('es-') and 'Multilingual' in n]
+                  cand += [(n, 'o') for n in ('en-US-AndrewMultilingualNeural', 'en-US-BrianMultilingualNeural') if n in nombres]
+              print('voces:', cand)
+              resumen = {}
+              for n, m in cand:
+                  if n not in nombres:
+                      print('no existe', n); continue
+                  clave = f'{n}_{m}'
+                  os.makedirs(f'out/{clave}', exist_ok=True)
+                  resumen[clave] = []
+                  for s in G:
+                      t = texto(s['t'], m)
+                      palabras = []
+                      try:
+                          c = edge_tts.Communicate(t, n, rate=RATE, boundary='WordBoundary')
+                      except TypeError:
+                          c = edge_tts.Communicate(t, n, rate=RATE)
+                      with open(f"out/{clave}/{s['id']}.mp3", 'wb') as f:
+                          async for ch in c.stream():
+                              if ch['type'] == 'audio':
+                                  f.write(ch['data'])
+                              elif ch['type'] in ('WordBoundary', 'SentenceBoundary'):
+                                  palabras.append({'w': ch['text'], 'o': ch['offset'] / 1e7, 'd': ch['duration'] / 1e7, 'k': ch['type']})
+                      resumen[clave].append({'id': s['id'], 'texto': t, 'palabras': palabras})
+                      print(clave, s['id'], 'ok', len(palabras))
+              json.dump(resumen, open('out/tiempos.json', 'w'), ensure_ascii=False, indent=1)
+
+          asyncio.run(main())
+          EOF
+          python3 voz.py
+      - name: Fuentes de la web
+        run: |
+          mkdir -p out/fuentes
+          curl -sL "https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Barlow:wght@500;600;700&family=Barlow+Condensed:wght@600;700" -o out/fuentes/fonts.css
+          grep -o 'https://[^)]*' out/fuentes/fonts.css | while read u; do curl -sL "$u" -o "out/fuentes/$(basename "$u")"; done
+          ls -la out/fuentes
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voz
+          path: out
+          retention-days: 7
