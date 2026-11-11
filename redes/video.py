@@ -125,7 +125,52 @@ def noche():
     return json.load(open(os.path.join(OUT, 'noche.json'), encoding='utf-8'))
 
 
+def _texto(t, modo):
+    return re.sub(r'\{([^|}]*)\|([^}]*)\}', lambda m: m.group(1) if modo == 'o' else m.group(2), t)
+
+
+def _partir(n, vkey, d, full_t):
+    """corta la locución continua en un trozo por segmento, por el centro de la pausa entre ellos"""
+    modo = vkey.rsplit('_', 1)[1]; T = json.load(open(os.path.join(d, 'tiempos.json')))
+    bounds = [b for b in T[vkey][0]['palabras'] if b['k'] == 'WordBoundary']
+    partes = [_texto(x['t'], modo) for x in n['segmentos']]; spoken = ''; spans = []
+    for ptxt in partes:
+        if spoken: spoken += ' '
+        spans.append((len(spoken), len(spoken) + len(ptxt))); spoken += ptxt
+    low = spoken.lower(); cur = 0; por = [[] for _ in partes]
+    for b in bounds:
+        j = low.find(b['w'].lower(), cur)
+        if j < 0: continue
+        cur = j + len(b['w'])
+        for k, (a, e) in enumerate(spans):
+            if a <= j < e: por[k].append(b); break
+    src = os.path.join(d, vkey, 'todo.mp3'); total = dur_of(src)
+    ini = [p[0]['o'] if p else None for p in por]; fin = [p[-1]['o'] + p[-1]['d'] if p else None for p in por]
+    cortes = [0.0]
+    for k in range(len(partes) - 1):
+        a = fin[k] if fin[k] is not None else cortes[-1]; b = ini[k + 1] if ini[k + 1] is not None else a
+        cortes.append(round((a + b) / 2, 3))
+    cortes.append(total); out = []
+    for k, x in enumerate(n['segmentos']):
+        a, b = cortes[k], cortes[k + 1]
+        sh('ffmpeg', '-v', 'error', '-y', '-i', src, '-ss', f'{a:.3f}', '-to', f'{b:.3f}', '-c:a', 'libmp3lame', '-q:a', '2', os.path.join(d, vkey, x['id'] + '.mp3'))
+        out.append({'id': x['id'], 'texto': partes[k], 'palabras': [dict(p, o=round(p['o'] - a, 3)) for p in por[k]]})
+    T[vkey] = out; json.dump(T, open(os.path.join(d, 'tiempos.json'), 'w'), ensure_ascii=False)
+    print('locución continua partida en', len(out), 'trozos')
+
+
 def voz():
+    n = noche()
+    if n.get('continua', True):
+        vkey = n.get('voz', 'es-ES-AlvaroNeural:r').replace(':', '_'); d = os.path.join(OUT, 'voz')
+        full = ' '.join(x['t'] for x in n['segmentos'])
+        for intento in range(3):
+            t_ = full if intento == 0 else full.replace('. ', ', ', intento)
+            _voz_una_vez(dict(n, segmentos=[{'id': 'todo', 't': t_}]))
+            if os.path.getsize(os.path.join(d, vkey, 'todo.mp3')) > 2000: break
+        else:
+            sys.exit('la voz sale vacía')
+        _partir(n, vkey, d, t_); return
     _voz_una_vez()
     n = noche(); vkey = n.get('voz', 'es-ES-AlvaroNeural:r').replace(':', '_'); d = os.path.join(OUT, 'voz')
     for intento in range(2):
@@ -149,7 +194,7 @@ def voz():
 def _voz_una_vez(n=None):
     n = n or noche(); voice = n.get('voz', 'es-ES-AlvaroNeural:r')
     guion = [{'id': s['id'], 't': s['t']} for s in n['segmentos']]
-    payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+6%'), 'tono': n.get('tono', '-2Hz')}}
+    payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+2%'), 'tono': n.get('tono', '-3Hz')}}
     pf = os.path.join(OUT, 'dispatch.json'); json.dump(payload, open(pf, 'w'))
     before = subprocess.run(['gh', 'run', 'list', '-R', GH_REPO, '-w', 'voz.yml', '-L', '1', '--json', 'databaseId', '-q', '.[0].databaseId'], capture_output=True, text=True).stdout.strip()
     sh('gh', 'api', '-X', 'POST', f'repos/{GH_REPO}/actions/workflows/voz.yml/dispatches', '--input', pf)
@@ -220,9 +265,9 @@ def caption_words(tpl, mode, bounds, dur):
     return words
 
 
-KEEP = 0.24
+KEEP = 0.34
 # voz más cálida y menos robótica: cuerpo en graves, menos agudos duros, compresión suave y un toque de sala
-SUAVE = 'highpass=f=70,equalizer=f=170:t=q:w=1:g=2.5,equalizer=f=3200:t=q:w=1.4:g=-2,highshelf=f=7500:g=-3.5,acompressor=threshold=-20dB:ratio=2.5:attack=15:release=220,aecho=0.85:0.5:28|46:0.10|0.06'
+SUAVE = 'highpass=f=70,equalizer=f=170:t=q:w=1:g=3,equalizer=f=3200:t=q:w=1.4:g=-2.5,equalizer=f=6500:t=q:w=2:g=-4,highshelf=f=8000:g=-4,acompressor=threshold=-20dB:ratio=2.5:attack=15:release=220,aecho=0.85:0.5:28|46:0.10|0.06'
 def tighten(src, out):
     """acorta los silencios largos entre frases; devuelve (duración, función para reajustar tiempos)"""
     log = subprocess.run(['ffmpeg', '-i', src, '-af', 'silencedetect=n=-40dB:d=0.3', '-f', 'null', '-'], capture_output=True, text=True).stderr
@@ -277,7 +322,7 @@ def montar():
     else: _j, _p, ronda = partidos_del_dia(N, n['fecha']); night = {'games': _j}
     games = {g['teams'][0]['abbr'] + '-' + g['teams'][1]['abbr']: g for g in night['games']}
     os.makedirs(os.path.join(OUT, 'audio'), exist_ok=True)
-    PAD_IN, PAD_OUT = 0.22, 0.18
+    PAD_IN, PAD_OUT = (0.05, 0.04) if n.get('continua', True) else (0.22, 0.18)
     scenes = []; photos = {}; used = set(); narrated = [s for s in n['segmentos'] if s.get('partido')]
     for seg in n['segmentos']:
         b = next(x['palabras'] for x in TIMES if x['id'] == seg['id'])
