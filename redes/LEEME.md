@@ -3,10 +3,11 @@
 Duración **máxima 60 s** (`montar` avisa si se pasa). Vertical 9:16 con zona segura: todo el contenido va reducido
 al 86 % y subido, para que ni los bordes ni los subtítulos queden tapados por la interfaz de TikTok/Reels/Shorts.
 
-1. **Intro (~4 s): pantalla de resultados.** Tarjetas con TODOS los partidos de la jornada (1 o 2 columnas según
-   cuántos haya, se adapta sola), local a la izquierda y visitante a la derecha, marcador que sube, ganador
-   iluminado, etiqueta FINAL/PRÓRROGA. La voz NO lee los partidos que ya se ven: una sola frase de resumen
-   por encima ("paliza en Belgrado y final de locura en París").
+1. **Intro (~3-4 s): pantalla de resultados + UN gancho.** Tarjetas con TODOS los partidos de la jornada (1 o 2
+   columnas según cuántos haya, se adapta sola), local a la izquierda y visitante a la derecha, marcador que sube,
+   ganador iluminado, etiqueta FINAL/PRÓRROGA. La voz NO va partido por partido ni lee lo que ya se ve: UNA sola
+   frase con lo más llamativo de la jornada (canasta ganadora, remontada, paliza, récord) y entra directa al
+   resumen de cada partido, empezando por el del gancho.
 2. **Un resumen por partido destacado**, dinámico y sin relleno, con marcador en directo, pantallazos con la cifra
    del jugador (tarjetas) y detalle breve (último cuarto decisivo, mejores jugadores, balance). Reparto del tiempo
    para no pasar de 60 s: 2 partidos → ~9 s cada uno; 3 → ~8 s; 4-5 → ~6 s (una frase y una tarjeta);
