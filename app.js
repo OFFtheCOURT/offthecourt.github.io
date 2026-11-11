@@ -106,7 +106,7 @@ function topCol(s){
   const t=TEAMS[s.abbr];
   return `<div class="tcol" style="--tc:${tc(t)}"><h4><img src="${logo(s.abbr)}" alt="">${esc(t.short)} · Top 5</h4>
   <div class="cromos">${s.top.map((p,i)=>{const ph=photo(p);return `<div class="cromo ${i===0?'mvp':''}">
-     <div class="cr-ph ${ph?'':'fb'}">${ph||initials(p.n)}<span class="cr-num">${esc(p.num)}</span><span class="cr-pos">${p.pos?esc(p.pos)+' · ':''}${p.min}'</span></div>
+     <div class="cr-ph ${ph?'':'fb'}">${ph||initials(p.n)}${ph?'':`<span class="cr-num">${esc(p.num)}</span>`}<span class="cr-pos">${p.pos?esc(p.pos)+' · ':''}${p.min}'</span></div>
      <div class="cr-nm">${esc(p.n)}</div>
      <div class="cr-st"><div><b>${p.pts}</b><small>PTS</small></div><div><b>${p.reb}</b><small>REB</small></div><div><b>${p.ast}</b><small>AST</small></div></div>
      <div class="cr-ex">${crEx(p)}</div></div>`}).join('')}</div></div>`;

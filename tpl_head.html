@@ -751,6 +751,15 @@ html[data-theme="light"] .bx-sheet{background:rgba(20,28,45,.55)}
 .ts-row.rv,.cg.rv{transform:translateX(-14px)}
 .rv.in.ts-row,.rv.in.cg{transform:none}
 .rv:not(.in) :is(.ts-bar i,.bar i,.pbar i,.margin i),.rv.ts-row:not(.in) .ts-bar i{animation-play-state:paused}
+
+/* Cromos: los 5 caben en la fila cuando hay sitio; en móvil se deslizan */
+.cromo{min-width:0}
+.cr-nm{overflow-wrap:anywhere}
+@media (min-width:700px){.cromos{grid-auto-flow:row;grid-template-columns:repeat(5,minmax(0,1fr));overflow:visible}}
+@media (max-width:699px){.cromos{grid-auto-columns:minmax(128px,38%)}}
+.cr-pos{top:auto;bottom:6px;right:6px;font-size:9.5px;padding:2px 5px;background:rgba(5,8,14,.6)}
+.cr-ph.fb{background:repeating-linear-gradient(64deg,rgba(255,255,255,.09) 0 3px,transparent 3px 22px),linear-gradient(135deg,var(--tc),color-mix(in srgb,var(--tc) 32%,#000));color:rgba(255,255,255,.92);text-shadow:0 3px 12px rgba(0,0,0,.35)}
+.cr-ph.fb .cr-num{left:auto;right:8px;top:4px;font-size:64px;color:rgba(255,255,255,.2);text-shadow:none;z-index:0}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 
