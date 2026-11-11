@@ -548,7 +548,7 @@ function renderAll(){
   $('leadersGrid').innerHTML=L.leaders.map(ldrCard).join('');
   calSel=null;renderTS();renderFav();renderCal();renderMenu();countUp();setHH();
 }
-function setLeague(k,scroll){setTimeout(()=>{try{liveTick()}catch(e){}},300);
+function setLeague(k,scroll){try{delete $('ticker').dataset.user}catch(e){}setTimeout(()=>{try{liveTick()}catch(e){}},300);
   if(!LG[k]||k===CUR&&scroll!==undefined)return;CUR=k;
   try{localStorage.setItem('offcourt-league',k)}catch(e){}
   renderAll();
@@ -675,6 +675,27 @@ document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault()
   scan(document.body);
   let q=[],raf=0;new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)q.push(n)}));
     if(!raf)raf=requestAnimationFrame(()=>{raf=0;const t=q;q=[];t.forEach(scan)})}).observe(document.body,{childList:true,subtree:true});
+})();
+/* barra de arriba: flechas, arrastre, rueda y situarse en el partido que importa ahora */
+(()=>{const box=document.querySelector('.tk-box'),w=$('ticker');if(!box||!w)return;
+  const [bl,br]=[box.querySelector('.tk-arr.l'),box.querySelector('.tk-arr.r')];
+  const upd=()=>{const max=w.scrollWidth-w.clientWidth,l=w.scrollLeft>4,r=w.scrollLeft<max-4;box.classList.toggle('more-l',l);box.classList.toggle('more-r',r);bl.hidden=!l;br.hidden=!r};
+  w.addEventListener('scroll',upd,{passive:true});addEventListener('resize',upd);
+  bl.addEventListener('click',()=>{w.dataset.user=1;w.scrollBy({left:-w.clientWidth*.8})});br.addEventListener('click',()=>{w.dataset.user=1;w.scrollBy({left:w.clientWidth*.8})});
+  w.addEventListener('wheel',e=>{if(w.scrollWidth<=w.clientWidth)return;const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+    const max=w.scrollWidth-w.clientWidth;if((d<0&&w.scrollLeft<=0)||(d>0&&w.scrollLeft>=max-1))return;e.preventDefault();w.scrollLeft+=d},{passive:false});
+  let x0=null,s0=0,moved=false;
+  w.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;x0=e.clientX;s0=w.scrollLeft;moved=false});
+  addEventListener('pointermove',e=>{if(x0===null)return;const dx=e.clientX-x0;if(Math.abs(dx)>5){moved=true;w.classList.add('drag')}if(moved)w.scrollLeft=s0-dx});
+  addEventListener('pointerup',()=>{x0=null;setTimeout(()=>w.classList.remove('drag'),0)});
+  w.addEventListener('click',e=>{if(moved){e.preventDefault();e.stopPropagation();moved=false}},true);
+  // tras cada actualización de la barra: situarse en el primer partido en directo o pendiente
+  new MutationObserver(()=>{const tgt=w.querySelector('.tk.live')||w.querySelector('.tk.pend');
+    if(tgt&&!w.dataset.user){const prev=tgt.previousElementSibling&&tgt.previousElementSibling.classList.contains('tk')?tgt.previousElementSibling:tgt;
+      w.style.scrollBehavior='auto';w.scrollLeft=Math.max(0,prev.offsetLeft-w.offsetLeft-60);w.style.scrollBehavior=''}
+    requestAnimationFrame(upd)}).observe(w,{childList:true});
+  ['pointerdown','wheel','touchstart'].forEach(ev=>w.addEventListener(ev,()=>{w.dataset.user=1},{passive:true}));
+  requestAnimationFrame(upd);
 })();
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}

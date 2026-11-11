@@ -793,6 +793,18 @@ html[data-theme="light"] .cromo{box-shadow:0 4px 12px rgba(20,30,60,.07)}
 .leader img.ph{-webkit-mask-image:linear-gradient(to right,transparent,#000 35%),linear-gradient(to bottom,transparent,#000 22%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent,#000 35%),linear-gradient(to bottom,transparent,#000 22%);mask-composite:intersect}
 
 .tk.pend .tk-when b.tk-on,.tk-on{color:#e5484d;font-size:12px!important;animation:pulse 1.6s ease-in-out infinite}
+
+/* barra de arriba: flechas, arrastre y difuminado cuando no caben todos los partidos */
+.tk-box{position:relative;max-width:1240px;margin:0 auto}
+.tk-box .wrap{scroll-behavior:smooth;cursor:grab}
+.tk-box .wrap.drag{cursor:grabbing;scroll-behavior:auto;user-select:none}
+.tk-box.more-r .wrap{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 70px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 70px),transparent)}
+.tk-box.more-l .wrap{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 70px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 70px),transparent)}
+.tk-box.more-l.more-r .wrap{-webkit-mask-image:linear-gradient(to right,transparent,#000 70px,#000 calc(100% - 70px),transparent);mask-image:linear-gradient(to right,transparent,#000 70px,#000 calc(100% - 70px),transparent)}
+.tk-arr{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--fg);font:900 22px/1 var(--f-display);cursor:pointer;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.tk-arr.l{left:6px}.tk-arr.r{right:6px}
+.tk-arr:hover{border-color:var(--accent);color:var(--accent)}
+@media (hover:none){.tk-arr{display:none!important}}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 
@@ -840,7 +852,7 @@ html[data-theme="light"] .cromo{box-shadow:0 4px 12px rgba(20,30,60,.07)}
       </div>
     </div>
   </div>
-  <div class="ticker"><div class="wrap" id="ticker"></div></div>
+  <div class="ticker"><div class="tk-box"><button class="tk-arr l" type="button" aria-label="Partidos anteriores" hidden>‹</button><div class="wrap" id="ticker"></div><button class="tk-arr r" type="button" aria-label="Más partidos" hidden>›</button></div></div>
 </header>
 
 <main class="wrap">
