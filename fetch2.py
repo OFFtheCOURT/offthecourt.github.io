@@ -40,6 +40,24 @@ for c in st['children']:
     rows.sort(key=lambda r:r['seed'])
     conf['east' if 'East' in c['name'] else 'west']=rows
 ex['standings']=conf
+# forma real: resultado de los últimos 5 partidos, del más antiguo al más reciente
+def form(ab):
+    t=teams[ab]
+    try:
+        ev=j(f"{API}/teams/{t['id']}/schedule")['events']
+        res=[]
+        for e in sorted(ev,key=lambda e:e['date']):
+            c=e['competitions'][0]
+            if not c['status']['type']['completed']: continue
+            me=next((x for x in c['competitors'] if x['team']['id']==t['id']),None)
+            if me is not None: res.append('W' if me.get('winner') else 'L')
+        return ab,res[-5:]
+    except Exception as x:
+        print('forma',ab,x); return ab,None
+with cf.ThreadPoolExecutor(8) as e: FORM=dict(e.map(form,list(teams)))
+for rows in conf.values():
+    for r in rows:
+        if FORM.get(r['abbr']): r['form']=FORM[r['abbr']]
 # leaders
 L=j('https://site.api.espn.com/apis/site/v3/sports/basketball/nba/leaders')['leaders']['categories']
 want={'pointsPerGame':'Puntos','reboundsPerGame':'Rebotes','assistsPerGame':'Asistencias','stealsPerGame':'Robos','blocksPerGame':'Tapones','3PointsMadePerGame':'Triples por partido','fieldGoalPercentage':'% Tiros de campo','doubleDouble':'Dobles-dobles'}

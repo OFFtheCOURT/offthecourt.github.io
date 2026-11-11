@@ -246,11 +246,11 @@ function confTable(grp){
   const z=grp.zones,n=grp.rows.length;
   const leg=[z.po?`<span><i style="background:var(--win)"></i>${CUR==='acb'?'Playoffs':'Playoffs'}</span>`:'',z.pi?`<span><i style="background:var(--accent)"></i>Play-in</span>`:'',z.rel?`<span><i style="background:var(--loss)"></i>Descenso</span>`:''].join('');
   return `<div class="conf"><h3>${esc(grp.name)}<span>${leg}</span></h3><div class="tbl-wrap"><table class="st">
-  <thead><tr><th></th><th>Equipo</th><th>V-D</th><th>%</th><th>PF</th><th>PC</th><th>Dif.</th><th>Casa</th><th>Fuera</th><th>Racha</th><th>Últimos</th></tr></thead><tbody>
+  <thead><tr><th></th><th>Equipo</th><th>V-D</th><th>%</th><th>PF</th><th>PC</th><th>Dif.</th><th>Casa</th><th>Fuera</th><th>Racha</th><th title="Últimos 5 partidos, del más antiguo (izquierda) al más reciente (derecha)">Últimos 5 →</th></tr></thead><tbody>
   ${grp.rows.map(r=>{const t=TEAMS[r.abbr];const df=parseFloat(r.diff);
    const cls=r.seed<=z.po?'po':(z.pi&&r.seed<=z.pi?'pi':(z.rel&&r.seed>n-z.rel?'rel':''));
    const cut=(r.seed===z.po||r.seed===z.pi||(z.rel&&r.seed===n-z.rel))?'cut':'';
-   const form=r.form?`<span class="form">${r.form.map(x=>`<i class="${x}">${x==='W'?'V':'D'}</i>`).join('')}</span>`:`<span class="dots" title="${r.l10}">${Array.from({length:10},(_,i)=>`<i class="${i<(parseInt(r.l10)||0)?'on':''}"></i>`).join('')}</span>`;
+   const form=r.form?`<span class="form" title="Del más antiguo al más reciente">${r.form.slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('')}</span>`:`<span class="dots" title="${r.l10}">${Array.from({length:10},(_,i)=>`<i class="${i<(parseInt(r.l10)||0)?'on':''}"></i>`).join('')}</span>`;
    return `<tr class="${cls} ${cut}">
     <td class="sd"><span>${r.seed}</span></td>
     <td class="tm"><div><img src="${logo(r.abbr)}" alt="">${esc(t.short)}</div></td>
