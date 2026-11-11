@@ -321,7 +321,6 @@ function renderMenu(){
    ['#clasificacion','Clasificación',IC.table,'#16a36a',stPrev],
    ['#lideres','Líderes individuales',IC.star,'#d99a00',`${IMG.p[pl.pid]?`<img src="${IMG.p[pl.pid]}" alt="" style="border-radius:50%;object-fit:cover;object-position:top;background:${tc(TEAMS[pl.abbr])}">`:`<img src="${logo(pl.abbr)}" alt="">`}${esc(pl.n)} <em>${pl.v}</em> ${esc(c0.t.toLowerCase())}`],
    ['#miequipo','Mi equipo',IC.star,'#ffb100',favAb()?`<img src="${logo(favAb())}" alt="">${esc(TEAMS[favAb()].short)}`:'Elige tu equipo favorito'],
-   ['#espanoles','Españoles por el mundo','<svg viewBox="0 0 24 24"><path d="M4 21V4m0 0h14l-3 4 3 4H4"/></svg>','#c60b1e','Cómo han jugado anoche'],
    ['#equipos','Estadísticas equipos',IC.bars,'#e5484d',`<img src="${logo(bestO)}" alt="">Mejor ataque: <em>${tsVal(bestO,'avgPoints').toFixed(1)}</em>`]
   ];
   $('menuGrid').innerHTML=M.map((m,i)=>`<a class="mp-item" href="${m[0]}" style="--ib:${m[3]}"><span class="n">${i+1}</span><span class="ic">${m[2]}</span><span><b>${m[1]}</b><span class="pv">${m[4]}</span></span></a>`).join('');
@@ -422,30 +421,6 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('favPicker').hidden=true});
 
-/* ---------- españoles por el mundo (NBA + EuroLiga) ---------- */
-let espSel='nba';
-function espData(lk){
-  const lg=LG[lk];if(!lg)return null;
-  for(const p of lg.periods){const list=[];p.games.forEach(g=>g.teams.forEach(t=>(t.esp||[]).forEach(x=>{const op=g.teams.find(o=>o!==t);list.push({...x,abbr:t.abbr,win:t.win,score:t.score,opp:op.abbr,oscore:op.score,gid:g.id})})));
-    if(list.length)return {p,list:list.sort((a,b)=>b.gs-a.gs)}}
-  return null;
-}
-function renderEsp(){
-  const tabs=[['nba','NBA'],['el','EuroLiga']].filter(([k])=>espData(k));
-  if(!tabs.length){$('espanoles').hidden=true;return}
-  $('espanoles').hidden=false;if(!tabs.some(([k])=>k===espSel))espSel=tabs[0][0];
-  $('espTabs').innerHTML=tabs.map(([k,n])=>`<button class="tab" type="button" data-esp="${k}" aria-pressed="${k===espSel}">${n}</button>`).join('');
-  const d=espData(espSel),lg=LG[espSel],TT=lg.teams,lgo=ab=>(IMG.t[espSel]||{})[ab]||'';
-  const when=lg.periodType==='day'?cap(new Date(d.p.key+'T12:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'})):`${d.p.label} · ${range(d.p.from,d.p.to)}`;
-  $('espSub').textContent=`${when} · ${d.list.length} español${d.list.length>1?'es':''} en pista`;
-  $('espGrid').innerHTML=d.list.map(x=>{const t=TT[x.abbr],src=IMG.p[x.pid];return `<article class="esp" style="--tc:${tc(t)}">
-    <div class="esp-ph ${src?'':'fb'}">${src?`<img src="${src}" alt="" title="${credit(x.pid)}">`:initials(x.n)}<span class="esp-flag" aria-label="España"></span></div>
-    <div class="esp-b"><b>${esc(x.n)}</b><span class="esp-t"><img src="${lgo(x.abbr)}" alt="">${esc(t.short)} · ${x.min} min</span>
-      <span class="esp-r"><i class="${x.win?'W':'L'}">${x.win?'V':'D'}</i>${x.score}-${x.oscore} vs <img src="${lgo(x.opp)}" alt="">${esc(TT[x.opp].short)}</span></div>
-    <div class="esp-s"><div><b>${x.pts}</b><small>PTS</small></div><div><b>${x.reb}</b><small>REB</small></div><div><b>${x.ast}</b><small>AST</small></div></div></article>`}).join('');
-}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-esp]');if(b){espSel=b.dataset.esp;renderEsp()}});
-
 /* ---------- liga ---------- */
 function renderAll(){
   L=LG[CUR];TEAMS=L.teams;uid=0;
@@ -459,7 +434,7 @@ function renderAll(){
   TSA=TSM.filter(([,k])=>Object.keys(TEAMS).some(ab=>!isNaN(tsVal(ab,k))));
   renderHoy();renderTop();renderUp();renderDays();renderPanel();renderStandings();
   $('leadersGrid').innerHTML=L.leaders.map(ldrCard).join('');
-  renderTS();renderFav();renderEsp();renderMenu();countUp();setHH();
+  renderTS();renderFav();renderMenu();countUp();setHH();
 }
 function setLeague(k,scroll){setTimeout(()=>{try{liveTick()}catch(e){}},300);
   if(!LG[k]||k===CUR&&scroll!==undefined)return;CUR=k;

@@ -36,7 +36,6 @@ def box(code): return code, j(f'{API}/v3/competitions/{C}/seasons/{SEA}/games/{c
 with cf.ThreadPoolExecutor(8) as ex: boxes=dict(ex.map(box,[g['gameCode'] for g in played]))
 
 def mmss(sec): return str(round(sec/60))
-ESP=set()
 def team_side(g,side,bx):
     s=g[side]; c=s['club']['code']; opp=g['road' if side=='local' else 'local']
     p=s['partials']; ls=[p.get(f'partials{i}') for i in range(1,5)]+[v for k,v in sorted((p.get('extraPeriods') or {}).items())]
@@ -57,14 +56,12 @@ def team_side(g,side,bx):
         x=pl['stats']
         if not x.get('timePlayed'): continue
         per=pl['player']['person']; pid='el'+per['code']
-        if (per.get('country') or {}).get('code')=='ESP': ESP.add(pid)
         top.append({'pid':pid,'n':nice(per['name']),'pos':{'Guard':'B','Forward':'A','Center':'P'}.get(pl['player'].get('positionName'),''),'num':str(x.get('dorsal','')),'st':bool(x.get('startFive')),
           'min':mmss(x['timePlayed']),'pts':int(x['points']),'reb':int(x['totalRebounds']),'ast':int(x['assistances']),'stl':int(x['steals']),'blk':int(x['blocksFavour']),
           'to':int(x['turnovers']),'fg':f"{int(x['fieldGoalsMadeTotal'])}-{int(x['fieldGoalsAttemptedTotal'])}",'tp':f"{int(x['fieldGoalsMade3'])}-{int(x['fieldGoalsAttempted3'])}",
           'ft':f"{int(x['freeThrowsMade'])}-{int(x['freeThrowsAttempted'])}",'pm':('+' if x['plusMinus']>0 else '')+str(int(x['plusMinus'])),'gs':x['valuation'],'val':int(x['valuation'])})
-    esp=[dict(z) for z in top if z['pid'] in ESP]
     top.sort(key=lambda z:(-z['gs'],-z['pts'])); top=top[:5]
-    return {'abbr':c,'ha':'home' if side=='local' else 'away','score':s['score'],'win':s['score']>opp['score'],'rec':recs.get((g['gameCode'],c),''),'ls':ls,'st':st,'top':top,'esp':esp}
+    return {'abbr':c,'ha':'home' if side=='local' else 'away','score':s['score'],'win':s['score']>opp['score'],'rec':recs.get((g['gameCode'],c),''),'ls':ls,'st':st,'top':top}
 
 def mkgame(g):
     bx=boxes[g['gameCode']]

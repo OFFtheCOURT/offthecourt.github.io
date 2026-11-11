@@ -16,20 +16,6 @@ players={}
 def num(x):
     try: return float(x)
     except: return 0
-# --- jugadores españoles (nacidos en España, más nacionalizados conocidos) ---
-ESP_EXTRA={'Serge Ibaka','Usman Garuba','Nikola Mirotic'}
-SPAIN=set()
-def roster(tid):
-    try:
-        for a in j(f'{API}/teams/{tid}/roster').get('athletes',[]):
-            bp=(a.get('birthPlace') or {}).get('country','')
-            if bp in ('Spain','España','ESP') or a.get('displayName') in ESP_EXTRA: SPAIN.add(a['id'])
-    except Exception as x: print('roster',tid,x)
-try:
-    tids=[t['team']['id'] for t in j(f'{API}/teams')['sports'][0]['leagues'][0]['teams']]
-    with cf.ThreadPoolExecutor(8) as ex: list(ex.map(roster,tids))
-except Exception as x: print('rosters',x)
-print('españoles NBA',len(SPAIN))
 def summ(eid):
     return eid, j(f'{API}/summary?event={eid}')
 for day in days:
@@ -53,7 +39,7 @@ for day in days:
             teams[t['abbreviation']]={'id':tid,'abbr':t['abbreviation'],'name':t['displayName'],'short':t['shortDisplayName'],'color':t.get('color','333333'),'alt':t.get('alternateColor','ffffff'),'logo':t.get('logo','')}
             rec=next((r['summary'] for r in comp.get('records',[]) if r.get('type')=='total' or r.get('name')=='overall'), '')
             st={x['name']:x['displayValue'] for x in box.get(tid,{}).get('statistics',[])}
-            top=[]; esp=[]
+            top=[]
             if tid in pl:
                 grp=pl[tid]['statistics'][0]; names=grp['labels']
                 for a in grp['athletes']:
@@ -67,12 +53,11 @@ for day in days:
                     top.append({'pid':ath['id'],'n':ath['displayName'],'pos':ath.get('position',{}).get('abbreviation',''),'num':ath.get('jersey',''),
                         'st':a.get('starter',False),'min':m['MIN'],'pts':int(pts),'reb':int(reb),'ast':int(ast),'stl':int(stl),'blk':int(blk),'to':int(to),
                         'fg':m['FG'],'tp':m['3PT'],'ft':m['FT'],'pm':m['+/-'],'gs':round(gs,1)})
-                esp=[dict(x) for x in top if x['pid'] in SPAIN]
                 top.sort(key=lambda x:-x['gs']); top=top[:5]
             g['teams'].append({'abbr':t['abbreviation'],'ha':comp['homeAway'],'score':int(comp.get('score',0) or 0),'win':comp.get('winner',False),'rec':rec,
                'ls':[int(num(l.get('value',l.get('displayValue',0)))) for l in comp.get('linescores',[])],
                'st':{k:st.get(k,'') for k in ['fieldGoalsMade-fieldGoalsAttempted','fieldGoalPct','threePointFieldGoalsMade-threePointFieldGoalsAttempted','threePointFieldGoalPct','freeThrowsMade-freeThrowsAttempted','freeThrowPct','totalRebounds','offensiveRebounds','assists','steals','blocks','totalTurnovers','pointsInPaint','fastBreakPoints','turnoverPoints','largestLead']},
-               'top':top,'esp':esp})
+               'top':top})
         for v in s.get('videos',[])[:6]:
             g['videos'].append({'h':v['headline'],'d':v.get('duration',0),'u':v['links'].get('web',{}).get('href','')})
         games.append(g)

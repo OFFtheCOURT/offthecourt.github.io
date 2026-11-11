@@ -492,16 +492,6 @@ table.st{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;m
 .fp-t{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(160deg,color-mix(in srgb,var(--tc) 35%,transparent),var(--card2));color:var(--fg);cursor:pointer;font:800 13px var(--f-display);text-transform:uppercase}
 .fp-t img{width:46px;height:46px;object-fit:contain}.fp-t:hover,.fp-t.on{border-color:#ffc04d}
 .fp-clear{margin-top:14px}
-/* Españoles */
-.esp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.esp{display:grid;grid-template-columns:86px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px;border-radius:18px;background:linear-gradient(100deg,color-mix(in srgb,var(--tc) 45%,transparent),var(--card) 65%);border:1px solid var(--line)}
-.esp-ph{position:relative;width:86px;height:86px;border-radius:50%;overflow:visible;background:var(--tc);display:grid;place-items:center;font:900 30px var(--f-display)}
-.esp-ph img{width:86px;height:86px;border-radius:50%;object-fit:cover;object-position:center 30%;border:3px solid rgba(255,255,255,.3)}
-.esp-flag{position:absolute;right:-4px;bottom:2px;width:30px;height:20px;border-radius:4px;background:linear-gradient(#c60b1e 0 25%,#ffc400 25% 75%,#c60b1e 75%);border:2px solid var(--bg)}
-.esp-b{min-width:0}.esp-b>b{display:block;font:900 22px/1.05 var(--f-display);text-transform:uppercase}
-.esp-t,.esp-r{display:flex;align-items:center;gap:6px;font:700 12.5px var(--f-label);color:var(--muted);letter-spacing:.04em;margin-top:4px}.esp-t img,.esp-r img{width:18px;height:18px;object-fit:contain}
-.esp-r i{font-style:normal;width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font:800 10px var(--f-label)}.esp-r i.W{background:#1fbf73;color:#04210f}.esp-r i.L{background:#e5484d;color:#fff}
-.esp-s{display:flex;gap:8px;text-align:center}.esp-s b{display:block;font:900 30px/1 var(--f-display)}.esp-s div:first-child b{color:var(--accent2)}.esp-s small{font:800 10px var(--f-label);letter-spacing:.14em;color:var(--dim)}
 @media (max-width:760px){.fav-card{grid-template-columns:64px minmax(0,1fr);}.fav-logo{width:60px;height:60px}.fav-col{grid-column:1/-1}.fav-empty{flex-wrap:wrap}.fav-empty .btn{margin-left:0}}
 @media (max-width:1100px){.facts{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:980px){.days{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -604,12 +594,6 @@ table.st{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;m
     <div class="games" id="nightGames"></div>
   </section>
 
-
-  <section id="espanoles" hidden>
-    <div class="sec-head"><div><div class="eyebrow"><span>NBA y EuroLiga</span></div><h2>Españoles <span class="hl">por el mundo</span></h2><div class="sub" id="espSub"></div></div></div>
-    <div class="tabs" id="espTabs"></div>
-    <div class="esp-grid" id="espGrid"></div>
-  </section>
 
   <section id="proximos">
     <div class="sec-head"><div><div class="eyebrow"><span>Agenda</span></div><h2>Próximos <span class="hl">partidos</span></h2><div class="sub" id="upSub"></div></div></div>
