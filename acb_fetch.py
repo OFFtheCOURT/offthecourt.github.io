@@ -176,7 +176,18 @@ for ab,T in season_teams.items():
       'threePointPct':round(100*T['tpm']/max(T['tpa'],1),1),'freeThrowPct':round(100*T['ftm']/max(T['fta'],1),1),'avgThreePointFieldGoalsMade':round(T['tpm']/g,1),
       'paintPoints':round(T['paint']/g,1),'fastBreak':round(T['fb']/g,1),'benchPoints':round(T['bench']/g,1)}
 
+cal=[]
+try:
+    t=page('https://acb.com/es/liga/calendario')
+    i=t.find('"rounds":[{"id"'); RR=dec.raw_decode(t[i+9:])[0]
+    j0=t.rfind('"teams":[',0,i); CTL=dec.raw_decode(t[j0+8:])[0]
+    cref=lambda x:(x if isinstance(x,dict) else CTL[int(x.split(':')[-1])])['abbreviatedName']
+    for r in RR:
+        for m in r['matches']:
+            cal.append({'id':'acb'+str(m['id']),'utc':m['startDateTime'],'r':r['roundNumber'],'a':cref(m['awayTeam']),'h':cref(m['homeTeam']),
+                        'as':m.get('awayTeamScore') or 0,'hs':m.get('homeTeamScore') or 0,'done':m['matchStatus']=='FINALIZED'})
+except Exception as x: print('calendario ACB',x)
 out={'key':'acb','name':'ACB','periodType':'round','teams':{a:{k:v for k,v in t.items() if k not in('logo','hint')} for a,t in teams.items()},
-     'periods':periods,'upcoming':upcoming,'standings':standings,'leaders':leaders,'teamstats':teamstats}
+     'periods':periods,'upcoming':upcoming,'standings':standings,'leaders':leaders,'teamstats':teamstats,'cal':cal}
 json.dump(out,open(B+'/league_acb.json','w'),ensure_ascii=False,separators=(',',':'))
 print('ok periods',len(periods),'teams',len(teams),'upcoming',sum(len(u['games']) for u in upcoming))

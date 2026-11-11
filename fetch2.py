@@ -41,10 +41,18 @@ for c in st['children']:
     conf['east' if 'East' in c['name'] else 'west']=rows
 ex['standings']=conf
 # forma real: resultado de los últimos 5 partidos, del más antiguo al más reciente
+CAL={}
 def form(ab):
     t=teams[ab]
     try:
         ev=j(f"{API}/teams/{t['id']}/schedule")['events']
+        for e in ev:   # calendario completo de la temporada (se juntan los de los 30 equipos)
+            c=e['competitions'][0]; cp={x['homeAway']:x for x in c['competitors']}
+            if 'home' not in cp or 'away' not in cp: continue
+            sc=lambda x:int(float((x.get('score') or {}).get('value') or 0)) if isinstance(x.get('score'),dict) else int(float(x.get('score') or 0))
+            utc=e['date']; etd=(datetime.datetime.fromisoformat(utc.replace('Z','+00:00')).astimezone(ZoneInfo('America/New_York'))).date().isoformat()
+            CAL[e['id']]={'id':e['id'],'utc':utc,'d':etd,'a':cp['away']['team']['abbreviation'],'h':cp['home']['team']['abbreviation'],
+                         'as':sc(cp['away']),'hs':sc(cp['home']),'done':bool(c['status']['type']['completed'])}
         res=[]
         for e in sorted(ev,key=lambda e:e['date']):
             c=e['competitions'][0]
@@ -58,6 +66,8 @@ with cf.ThreadPoolExecutor(8) as e: FORM=dict(e.map(form,list(teams)))
 for rows in conf.values():
     for r in rows:
         if FORM.get(r['abbr']): r['form']=FORM[r['abbr']]
+ex['cal']=sorted(CAL.values(),key=lambda x:x['utc'])
+print('calendario NBA',len(ex['cal']))
 # leaders
 L=j('https://site.api.espn.com/apis/site/v3/sports/basketball/nba/leaders')['leaders']['categories']
 want={'pointsPerGame':'Puntos','reboundsPerGame':'Rebotes','assistsPerGame':'Asistencias','stealsPerGame':'Robos','blocksPerGame':'Tapones','3PointsMadePerGame':'Triples por partido','fieldGoalPercentage':'% Tiros de campo','doubleDouble':'Dobles-dobles'}

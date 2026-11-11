@@ -307,7 +307,8 @@ const IC={
  cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
  table:'<svg viewBox="0 0 24 24"><path d="M8 21V11M12 21V5M16 21v-7M4 21h16"/></svg>',
  star:'<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
- bars:'<svg viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h7"/></svg>'
+ bars:'<svg viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h7"/></svg>',
+ grid:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4M7.5 13h2M11 13h2M14.5 13h2M7.5 17h2M11 17h2"/></svg>'
 };
 function renderMenu(){
   const T=TXT[CUR],night=L.periods[0],U=(L.upcoming||[])[0],fu=U&&U.games[0];
@@ -318,6 +319,7 @@ function renderMenu(){
    ['#anoche',T.m1,IC.night,'#ff7a1a',`<em>${night.games.length} partidos</em> · resultados y resúmenes`],
    ['#proximos','Próximos partidos',IC.next,'#2f7cf6',fu?`<img src="${logo(fu.teams[0].abbr)}" alt=""><img src="${logo(fu.teams[1].abbr)}" alt="">${madrid(fu.utc,{weekday:'short'}).replace('.','')} a las <em>${madrid(fu.utc,{hour:'2-digit',minute:'2-digit'})}</em>`:'Sin partidos'],
    ['#fechas',T.m3,IC.cal,'#8b5cf6',`Últimas <em>${L.periods.length} ${T.unit}</em> con partido`.replace('Últimas','Últim'+(CUR==='nba'?'os':'as'))],
+   ['#calendario','Calendario',IC.grid,'#0ea5a4',`Toda la temporada · <em>${(L.cal||[]).filter(g=>!g.done).length}</em> partidos por jugar`],
    ['#clasificacion','Clasificación',IC.table,'#16a36a',stPrev],
    ['#lideres','Líderes individuales',IC.star,'#d99a00',`${IMG.p[pl.pid]?`<img src="${IMG.p[pl.pid]}" alt="" style="border-radius:50%;object-fit:cover;object-position:top;background:${tc(TEAMS[pl.abbr])}">`:`<img src="${logo(pl.abbr)}" alt="">`}${esc(pl.n)} <em>${pl.v}</em> ${esc(c0.t.toLowerCase())}`],
    ['#miequipo','Mi equipo',IC.star,'#ffb100',favAb()?`<img src="${logo(favAb())}" alt="">${esc(TEAMS[favAb()].short)}`:'Elige tu equipo favorito'],
@@ -421,6 +423,62 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('favPicker').hidden=true});
 
+/* ---------- calendario completo de la temporada ---------- */
+let calSel=null,calFav=false;
+const etToday=()=>new Date().toLocaleDateString('en-CA',{timeZone:'America/New_York'});
+const addDays=(d,n)=>{const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+const monday=d=>{const x=new Date(d+'T12:00:00Z');const w=(x.getUTCDay()+6)%7;return addDays(d,-w)};
+function calRow(g,showRound){
+  const fv=favAb(),A=TEAMS[g.a]||{short:g.a},H=TEAMS[g.h]||{short:g.h},aw=g.done&&g.as>g.hs,hw=g.done&&g.hs>g.as;
+  const when=`${madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'')}<b>${g.done?'Final':madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}</b>`;
+  return `<div class="cg ${g.done?'done':''} ${(g.a===fv||g.h===fv)?'fav':''}">
+    <span class="cg-w">${showRound&&g.r?`<i>J${g.r}</i>`:''}${when}</span>
+    <span class="cg-t a ${aw?'w':''}"><b>${esc(A.short)}</b><img src="${logo(g.a)}" alt=""></span>
+    <span class="cg-s">${g.done?`<b class="${aw?'w':''}">${g.as}</b><i>–</i><b class="${hw?'w':''}">${g.hs}</b>`:'<em>vs</em>'}</span>
+    <span class="cg-t h ${hw?'w':''}"><img src="${logo(g.h)}" alt=""><b>${esc(H.short)}</b></span></div>`;
+}
+function renderCal(){
+  const C=L.cal||[],sec=$('calendario');
+  if(!C.length){sec.hidden=true;return} sec.hidden=false;
+  const fv=favAb(),round=L.periodType==='round';
+  const favBtn=fv?`<button class="tab cal-fav" type="button" data-calfav aria-pressed="${calFav}"><img src="${logo(fv)}" alt="">Solo ${esc(TEAMS[fv].short)}</button>`:'';
+  if(calFav&&fv){
+    const mine=C.filter(g=>g.a===fv||g.h===fv),w=mine.filter(g=>g.done&&((g.a===fv&&g.as>g.hs)||(g.h===fv&&g.hs>g.as))).length,l=mine.filter(g=>g.done).length-w;
+    $('calCtl').innerHTML=favBtn;
+    $('calSub').textContent=`Temporada de ${TEAMS[fv].name}: ${mine.length} partidos · ${w}-${l} · quedan ${mine.filter(g=>!g.done).length}`;
+    let html='',mo='';
+    mine.forEach(g=>{const m=cap(madrid(g.utc,{month:'long',year:'numeric'}));if(m!==mo){html+=`<div class="cal-m">${m}</div>`;mo=m}html+=calRow(g,round)});
+    $('calList').innerHTML=html;
+    const nx=$('calList').querySelector('.cg:not(.done)');if(nx)nx.classList.add('next');
+    return;
+  }
+  if(round){
+    const rs=[...new Set(C.map(g=>g.r))].sort((a,b)=>a-b);
+    if(calSel===null||!rs.includes(calSel)){const pend=C.find(g=>!g.done);calSel=pend?pend.r:rs[rs.length-1]}
+    const gs=C.filter(g=>g.r===calSel),ds=gs.map(g=>g.utc).sort();
+    $('calCtl').innerHTML=`<button class="cal-arr" type="button" data-calstep="-1" aria-label="Jornada anterior">‹</button><div class="cal-chips" id="calChips">${rs.map(r=>{const done=C.filter(g=>g.r===r).every(g=>g.done);return `<button type="button" class="cal-c ${done?'past':''}" data-calr="${r}" aria-pressed="${r===calSel}"><small>Jor.</small><b>${r}</b></button>`}).join('')}</div><button class="cal-arr" type="button" data-calstep="1" aria-label="Jornada siguiente">›</button>${favBtn}`;
+    $('calSub').textContent=`Jornada ${calSel} de ${rs.length} · ${range(mdDate(Date.parse(ds[0])),mdDate(Date.parse(ds[ds.length-1])))} · ${gs.length} partidos`;
+    $('calList').innerHTML=gs.map(g=>calRow(g,false)).join('');
+  } else {
+    const days=new Set(C.map(g=>g.d));
+    if(calSel===null||!days.has(calSel)){const t=etToday();calSel=[...days].sort().find(d=>d>=t)||[...days].sort().pop()}
+    const m0=monday(calSel),week=[0,1,2,3,4,5,6].map(i=>addDays(m0,i));
+    $('calCtl').innerHTML=`<button class="cal-arr" type="button" data-calw="-7" aria-label="Semana anterior">‹</button><div class="cal-chips">${week.map(d=>{const n=C.filter(g=>g.d===d).length,dt=new Date(d+'T12:00:00Z');return `<button type="button" class="cal-c ${d<etToday()?'past':''} ${n?'':'empty'}" ${n?`data-cald="${d}"`:'disabled'} aria-pressed="${d===calSel}"><small>${dt.toLocaleDateString('es-ES',{weekday:'short',timeZone:'UTC'}).replace('.','')}</small><b>${dt.getUTCDate()}</b><i>${n?n+' p.':'—'}</i></button>`}).join('')}</div><button class="cal-arr" type="button" data-calw="7" aria-label="Semana siguiente">›</button>${favBtn}`;
+    const gs=C.filter(g=>g.d===calSel);
+    $('calSub').textContent=`${cap(new Date(calSel+'T12:00:00Z').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'}))} (fecha de EE. UU.) · ${gs.length} partidos · horario de España`;
+    $('calList').innerHTML=gs.map(g=>calRow(g,false)).join('');
+  }
+  const on=document.querySelector('#calChips [aria-pressed="true"]');if(on)on.scrollIntoView({block:'nearest',inline:'center'});
+}
+document.addEventListener('click',e=>{
+  const C=L.cal||[];let b;
+  if((b=e.target.closest('[data-calr]'))){calSel=+b.dataset.calr;renderCal()}
+  else if((b=e.target.closest('[data-cald]'))){calSel=b.dataset.cald;renderCal()}
+  else if((b=e.target.closest('[data-calstep]'))){const rs=[...new Set(C.map(g=>g.r))].sort((a,b)=>a-b);const i=rs.indexOf(calSel)+(+b.dataset.calstep);if(rs[i]!==undefined){calSel=rs[i];renderCal()}}
+  else if((b=e.target.closest('[data-calw]'))){const ds=[...new Set(C.map(g=>g.d))].sort();const tgt=addDays(calSel,+b.dataset.calw);const m=monday(tgt);calSel=ds.find(d=>d>=m&&d<addDays(m,7))||tgt;renderCal()}
+  else if(e.target.closest('[data-calfav]')){calFav=!calFav;renderCal()}
+});
+
 /* ---------- liga ---------- */
 function renderAll(){
   L=LG[CUR];TEAMS=L.teams;uid=0;
@@ -434,7 +492,7 @@ function renderAll(){
   TSA=TSM.filter(([,k])=>Object.keys(TEAMS).some(ab=>!isNaN(tsVal(ab,k))));
   renderHoy();renderTop();renderUp();renderDays();renderPanel();renderStandings();
   $('leadersGrid').innerHTML=L.leaders.map(ldrCard).join('');
-  renderTS();renderFav();renderMenu();countUp();setHH();
+  calSel=null;renderTS();renderFav();renderCal();renderMenu();countUp();setHH();
 }
 function setLeague(k,scroll){setTimeout(()=>{try{liveTick()}catch(e){}},300);
   if(!LG[k]||k===CUR&&scroll!==undefined)return;CUR=k;

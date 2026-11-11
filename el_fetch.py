@@ -132,7 +132,9 @@ for t in TS:
       'avgTurnovers':t['turnovers'],'fieldGoalPct':round(100*fgm/fga,1) if fga else 0,'twoPointPct':pf(t['twoPointersPercentage']),'threePointPct':pf(t['threePointersPercentage']),
       'freeThrowPct':pf(t['freeThrowsPercentage']),'avgThreePointFieldGoalsMade':t['threePointersMade'],'avgOffensiveRebounds':t['offensiveRebounds'],'pir':t['pir']}
 
+cal=[{'id':'el'+str(g['gameCode']),'utc':g['utcDate'],'r':g['round'],'a':g['road']['club']['code'],'h':g['local']['club']['code'],
+      'as':g['road'].get('score') or 0,'hs':g['local'].get('score') or 0,'done':bool(g['played'])} for g in sorted(allg,key=lambda x:x['utcDate'])]
 out={'key':'el','name':'EuroLiga','periodType':'round','teams':{c:{k:v for k,v in t.items() if k!='crest'} for c,t in teams.items()},
-     'periods':periods,'upcoming':upcoming,'standings':standings,'leaders':leaders,'teamstats':teamstats}
+     'periods':periods,'upcoming':upcoming,'standings':standings,'leaders':leaders,'teamstats':teamstats,'cal':cal}
 json.dump(out,open(B+'/league_el.json','w'),ensure_ascii=False,separators=(',',':'))
 print('ok periods',len(periods),'teams',len(teams))

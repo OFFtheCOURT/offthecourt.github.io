@@ -23,7 +23,7 @@ nba={'key':'nba','name':'NBA','periodType':'day','teams':{k:{kk:v[kk] for kk in 
      'periods':periods,'upcoming':up,
      'standings':[{'name':'Conferencia Este','zones':{'po':6,'pi':10,'rel':0},'rows':ex['standings']['east']},
                   {'name':'Conferencia Oeste','zones':{'po':6,'pi':10,'rel':0},'rows':ex['standings']['west']}],
-     'leaders':ex['leaders'],'teamstats':ex['teamstats']}
+     'leaders':ex['leaders'],'teamstats':ex['teamstats'],'cal':ex.get('cal',[])}
 
 el=json.load(open(B+'/league_el.json')); acb=json.load(open(B+'/league_acb.json'))
 # colour / name touch-ups (identity colours that the crest-sampling gets wrong)
