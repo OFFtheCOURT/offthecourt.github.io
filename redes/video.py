@@ -334,7 +334,7 @@ def montar():
             'logos': {k: LOG[k] for k in used | {g['teams'][i]['abbr'] for g in night['games'] for i in (0, 1)} if k in LOG}, 'photos': photos,
             'logo': 'data:image/svg+xml;base64,' + base64.b64encode(logo.encode()).decode()}
     DATA['results'] = []
-    DATA['theme'] = {'nba': {'a': '#2f7bff', 'b': '#e5383b'}, 'el': {'a': '#ff7a1a', 'b': '#386eff'}, 'acb': {'a': '#1fbf75', 'b': '#2f6bff'}}[LIGA]
+    DATA['theme'] = {'nba': {'a': '#4d94ff', 'b': '#ff5a66', 'bg': '#13213f'}, 'el': {'a': '#ff7a1a', 'b': '#386eff'}, 'acb': {'a': '#1fbf75', 'b': '#2f6bff'}}[LIGA]
     for _g in night['games']:
         _H, _A = _g['teams']  # [visitante, local]
         if _A.get('score') is None or _H.get('score') is None: continue
@@ -365,6 +365,8 @@ def montar():
             hot = [i for i, r in enumerate(DATA['results']) if r.get('tag')][:4] or [0]
             focos = [{'i': i, 't': round(.5 + k * (intro['dur'] - 1.2) / len(hot), 3), 'tag': DATA['results'][i].get('tag')} for k, i in enumerate(hot)]
         intro['focos'] = focos
+        nxt = scenes[scenes.index(intro) + 1] if scenes.index(intro) + 1 < len(scenes) else None
+        if nxt and nxt['type'] == 'game': nxt['fromCine'] = True; intro.pop('next', None)
     _hero = {x['id'] for x in n['segmentos'] if x.get('hero')}
     for _sc in scenes:
         if _sc.get('id') in _hero: _sc['hero'] = True
