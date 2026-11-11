@@ -16,6 +16,10 @@ on:
         description: 'Velocidad (por ejemplo +8%)'
         required: false
         default: '+8%'
+      tono:
+        description: 'Tono (por ejemplo -2Hz)'
+        required: false
+        default: '+0Hz'
 
 permissions:
   contents: write
@@ -34,6 +38,7 @@ jobs:
           GUION: ${{ github.event.inputs.guion }}
           VOCES: ${{ github.event.inputs.voces }}
           RATE: ${{ github.event.inputs.rate }}
+          TONO: ${{ github.event.inputs.tono }}
         run: |
           mkdir -p out
           cat > voz.py <<'EOF'
@@ -41,6 +46,7 @@ jobs:
           import edge_tts
           G = json.loads(base64.b64decode(os.environ['GUION']).decode())
           RATE = os.environ.get('RATE') or '+8%'
+          TONO = os.environ.get('TONO') or '+0Hz'
 
           def texto(t, modo):
               # {original|pronunciación}: 'o' deja el nombre en inglés, 'r' usa la grafía española
@@ -78,9 +84,9 @@ jobs:
                           palabras = []
                           try:
                               try:
-                                  c = edge_tts.Communicate(t, n, rate=RATE, boundary='WordBoundary')
+                                  c = edge_tts.Communicate(t, n, rate=RATE, pitch=TONO, boundary='WordBoundary')
                               except TypeError:
-                                  c = edge_tts.Communicate(t, n, rate=RATE)
+                                  c = edge_tts.Communicate(t, n, rate=RATE, pitch=TONO)
                               with open(f"out/{clave}/{s['id']}.mp3", 'wb') as f:
                                   async for ch in c.stream():
                                       if ch['type'] == 'audio':
