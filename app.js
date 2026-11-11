@@ -38,6 +38,18 @@ function initials(n){return String(n).split(' ').filter(Boolean).map(s=>s[0]).sl
 function splitName(t){const nick=t.short;const city=t.name.replace(' '+nick,'').trim();return {city:(city===t.name||city===nick)?'':city,nick}}
 const qlbl=i=>i<4?(i+1)+'C':'PR'+(i>4?i-3:'');
 
+/* ---------- iconos propios ---------- */
+const ICO={
+ fire:'<svg class="ico fire" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.6 2.2c.4 3.1-1.4 4.6-2.9 6.2C8.2 10 7 11.6 7 14.2A5 5 0 0 0 12 19a5 5 0 0 0 5-4.8c0-1.5-.5-2.7-1.3-3.7-.2 1-.8 1.8-1.7 2.2.6-2.9-.2-6.4-1.4-10.5z" fill="currentColor"/><path d="M12 21.8a6.8 6.8 0 0 1-6.8-6.8c0-.5 0-1 .2-1.5.3 2.9 2.7 5.2 6.6 5.2s6.3-2.3 6.6-5.2c.1.5.2 1 .2 1.5a6.8 6.8 0 0 1-6.8 6.8z" fill="currentColor" opacity=".55"/></svg>',
+ ice:'<svg class="ico ice" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/><path d="m9.5 3.8 2.5 2 2.5-2M9.5 20.2l2.5-2 2.5 2M3.6 10.4l3-.5-1-3M20.4 13.6l-3 .5 1 3M3.6 13.6l3 .5-1 3M20.4 10.4l-3-.5 1-3"/></svg>',
+ crown:'<svg class="ico crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5 7.5 11 12 4l4.5 7L21 7.5 19.3 18H4.7z" fill="currentColor"/><rect x="4.7" y="19.2" width="14.6" height="2.2" rx="1.1" fill="currentColor"/></svg>',
+ bolt:'<svg class="ico bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.6z" fill="currentColor"/></svg>',
+ clock:'<svg class="ico clock" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.5l3.5 2"/></svg>',
+ target:'<svg class="ico target" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>',
+ star:'<svg class="ico star" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="currentColor"/></svg>'};
+const streakN=s=>parseInt(String(s||'').replace(/\D/g,''))||0;
+const streakIco=s=>{const n=streakN(s),k=String(s||'')[0];return n>=3?(k==='W'?ICO.fire:k==='L'?ICO.ice:''):''};
+const medal=i=>i<3?`<span class="medal m${i+1}">${i+1}</span>`:`${i+1}`;
 /* ---------- partido ---------- */
 function teamRow(g,side){
   const s=g.teams[side],t=TEAMS[s.abbr],nm=splitName(t);
@@ -106,10 +118,10 @@ function gameCard(g){
   const qlabels=Array.from({length:nq},(_,i)=>qlbl(i)).map(x=>`<span>${x}</span>`).join('');
   const [A,H]=g.teams,diff=Math.abs(A.score-H.score),[ca,ch]=pair(TEAMS[A.abbr],TEAMS[H.abbr]);
   const b=[];
-  if(A.ls.length>4) b.push(`<span class="bdg ot">${A.ls.length>5?(A.ls.length-4)+' prórrogas':'Prórroga'}</span>`);
-  if(diff>=20) b.push(`<span class="bdg blow">Paliza +${diff}</span>`); else if(diff<=5) b.push(`<span class="bdg close">Igualado · ${diff}</span>`);
+  if(A.ls.length>4) b.push(`<span class="bdg ot">${ICO.clock}${A.ls.length>5?(A.ls.length-4)+' prórrogas':'Prórroga'}</span>`);
+  if(diff>=20) b.push(`<span class="bdg blow">${ICO.bolt}Paliza +${diff}</span>`); else if(diff<=5) b.push(`<span class="bdg close">${ICO.target}Igualado · ${diff}</span>`);
   const mx=Math.max(0,...g.teams.flatMap(t=>t.top.map(p=>p.pts)));
-  if(mx>=(CUR==='nba'?40:28)) b.push(`<span class="bdg big">${mx} pts</span>`);
+  if(mx>=(CUR==='nba'?40:28)) b.push(`<span class="bdg big">${ICO.fire}${mx} pts</span>`);
   const tot=(A.score+H.score)||1;
   const when=CUR==='nba'?'':madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
   return `<article class="game" id="g${g.id}" data-teams="${esc(A.abbr)},${esc(H.abbr)}" style="--ca:${ca};--ch:${ch}">
@@ -118,7 +130,7 @@ function gameCard(g){
     ${teamRow(g,0)}${teamRow(g,1)}
     <div class="margin" title="Reparto de puntos"><i style="width:${A.score/tot*100}%;background:${ca}"></i><i style="width:${H.score/tot*100}%;background:${ch}"></i></div>
     <div class="stars">${g.teams.map(s=>{const p=s.top[0];if(!p)return '';const t=TEAMS[s.abbr];const ph=photo(p);
-      return `<div class="star" style="--tc:${tc(t)}"><div class="av ${ph?'':'fb'}">${ph||initials(p.n)}</div><div class="who"><div class="tg">Mejor de ${esc(t.short)}</div><b>${esc(p.n)}</b><span><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast${CUR!=='nba'?' · '+p.val+' val':''}</span></div></div>`}).join('')}</div>
+      return `<div class="star" style="--tc:${tc(t)}"><div class="av ${ph?'':'fb'}">${ph||initials(p.n)}</div><div class="who"><div class="tg">Mejor de ${esc(t.short)}</div><b>${esc(p.n)}${p.pts>=(CUR==='nba'?30:22)?`<span class="hot-hand" title="Mano caliente: ${p.pts} puntos">${ICO.fire}</span>`:''}</b><span><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast${CUR!=='nba'?' · '+p.val+' val':''}</span></div></div>`}).join('')}</div>
     <div class="g-foot">
       <button class="btn grow" type="button" aria-expanded="false" aria-controls="${id}" data-toggle="${id}"><span class="lbl-l">Estadísticas y top 5</span><span class="lbl-s">Detalles</span> <span class="car">▾</span></button>
       ${g.bx?`<button class="btn bx-btn" type="button" data-box="${esc(g.id)}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></svg>Ficha completa</button>`:''}
@@ -253,14 +265,14 @@ function confTable(grp){
    const cut=(r.seed===z.po||r.seed===z.pi||(z.rel&&r.seed===n-z.rel))?'cut':'';
    const form=r.form?`<span class="form" title="Del más antiguo al más reciente">${r.form.slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('')}</span>`:`<span class="dots" title="${r.l10}">${Array.from({length:10},(_,i)=>`<i class="${i<(parseInt(r.l10)||0)?'on':''}"></i>`).join('')}</span>`;
    return `<tr class="${cls} ${cut}" data-ab="${esc(r.abbr)}">
-    <td class="sd"><span>${r.seed}</span></td>
+    <td class="sd"><span>${r.seed===1?ICO.crown:r.seed}</span></td>
     <td class="tm"><div><img src="${logo(r.abbr)}" alt=""><span>${esc(t.short)}</span></div></td>
     <td class="wl"><b>${r.w}-${r.l}</b></td>
     <td><span class="pct">${r.pct}</span><div class="pbar"><i style="width:${(r.w/Math.max(r.w+r.l,1))*100}%;--tcol:${ink(t)}"></i></div></td>
     <td>${r.ppg}</td><td>${r.opp}</td>
     <td class="${df>0?'pos':df<0?'neg':''}">${r.diff}</td>
     <td>${r.home}</td><td>${r.road}</td>
-    <td><span class="strk ${(r.strk||'-')[0]}">${(r.strk||'-').replace(/^W/,'V').replace(/^L/,'D')}</span></td>
+    <td><span class="strk ${(r.strk||'-')[0]} ${streakN(r.strk)>=3?'hot':''}">${streakIco(r.strk)}${(r.strk||'-').replace(/^W/,'V').replace(/^L/,'D')}</span></td>
     <td>${form}</td>
    </tr>`}).join('')}</tbody></table></div></div>`;
 }
@@ -276,7 +288,7 @@ function ldrCard(c){
   const li=(x,j)=>{const tt=TEAMS[x.abbr]||t;const s=IMG.p[x.pid];return `<li style="--tc:${tc(tt)}" ${j>=5?'data-x hidden':''}><span class="r">${j+1}</span><span class="av ${s?'':'fb'}">${s?`<img src="${s}" alt="">`:`<img src="${logo(x.abbr)}" alt="" style="width:22px;height:22px;object-fit:contain;margin:auto">`}</span><span class="nm">${esc(x.n)}<small>${[x.abbr,x.pos].filter(Boolean).map(esc).join(' · ')}</small></span><span class="v">${x.v}</span></li>`};
   const src=IMG.p[p.pid];
   return `<article class="ldr"><div class="ldr-hero" style="--tc:${tc(t)}">
-    <span class="cat">${esc(c.t)}</span><span class="val">${p.v}</span>
+    <span class="cat">${ICO.crown}${esc(c.t)}</span><span class="val">${p.v}</span>
     <img class="tl" src="${logo(p.abbr)}" alt="">
     ${src?`<img class="ph" src="${src}" alt="${esc(p.n)}" title="${credit(p.pid)}">`:`<span class="ph-fb">${initials(p.n)}</span>`}
     <span class="who"><b>${esc(p.n)}</b><span>${[t.short,p.num?'#'+p.num:'',p.pos].filter(Boolean).map(esc).join(' · ')}</span></span></div>
@@ -297,7 +309,7 @@ function renderTS(){
   const rows=Object.keys(TEAMS).map(ab=>({ab,v:tsVal(ab,k)})).filter(r=>!isNaN(r.v)).sort((a,b)=>low?a.v-b.v:b.v-a.v);
   const vs=rows.map(r=>r.v),mn=Math.min(...vs),mx=Math.max(...vs);const span=(mx-mn)||1,lo=mn-span*0.35;
   $('tsList').innerHTML=rows.map((r,i)=>{const t=TEAMS[r.ab];const w=low?(mx-r.v+span*0.35)/(span*1.35)*100:(r.v-lo)/(mx-lo)*100;
-    return `<div class="ts-row ${i<3?'top3':''}"><span class="r">${i+1}</span><img src="${logo(r.ab)}" alt=""><span class="nm">${esc(t.short)}</span>
+    return `<div class="ts-row ${i<3?'top3':''}"><span class="r">${medal(i)}</span><img src="${logo(r.ab)}" alt=""><span class="nm">${esc(t.short)}</span>
       <div class="ts-bar"><i style="width:${Math.max(4,Math.min(100,w))}%;--tcol:${ink(t)}"></i></div><span class="v">${k==='diff'&&r.v>0?'+':''}${r.v.toFixed(1)}${/Pct/.test(k)?'%':''}</span></div>`}).join('');
 }
 
@@ -605,6 +617,22 @@ setTheme(document.documentElement.dataset.theme==='light'?'light':'dark',false);
 document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();setMenu&&setMenu(false);
   window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
   if(location.hash)history.replaceState(null,'',location.pathname+location.search)});
+/* ---------- animaciones al hacer scroll ---------- */
+(()=>{
+  if(!('IntersectionObserver' in window)||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const SEL='.sec-head,.game,.up,.fact,.ldr,.day,.conf,.cg,.fav-card,.fav-empty,.hero,.ts-row,.leader';
+  const io=new IntersectionObserver(es=>{
+    const vis=es.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top||a.boundingClientRect.left-b.boundingClientRect.left);
+    vis.forEach((e,k)=>{const el=e.target;io.unobserve(el);el.style.transitionDelay=Math.min(k,8)*55+'ms';el.classList.add('in');
+      const done=()=>{el.classList.remove('rv','in');el.style.transitionDelay=''};
+      el.addEventListener('transitionend',ev=>{if(ev.target===el&&ev.propertyName==='transform')done()},{once:false});setTimeout(done,1400)});
+  },{rootMargin:'0px 0px -6% 0px',threshold:.06});
+  const scan=root=>{(root.matches&&root.matches(SEL)?[root]:[]).concat([...(root.querySelectorAll?root.querySelectorAll(SEL):[])]).forEach(el=>{
+    if(el.dataset.rvd||el.closest('#boxSheet,#favPicker,#menuPanel'))return;el.dataset.rvd=1;el.classList.add('rv');io.observe(el)})};
+  scan(document.body);
+  let q=[],raf=0;new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)q.push(n)}));
+    if(!raf)raf=requestAnimationFrame(()=>{raf=0;const t=q;q=[];t.forEach(scan)})}).observe(document.body,{childList:true,subtree:true});
+})();
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);

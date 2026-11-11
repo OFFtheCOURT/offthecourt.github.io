@@ -722,6 +722,35 @@ html[data-theme="light"] .bx-sheet{background:rgba(20,28,45,.55)}
 .bx-box.tight .bx-sub,.bx-box.tight .bx-leg{display:none}
 .bx-box.tight .bx-tabs{margin-bottom:6px}.bx-box.tight .bx-tabs button{padding:5px 8px}
 .bx-box.tight .bx-tm em{font-size:24px}.bx-box.tight .bx-head{margin-bottom:6px}
+
+/* ===== Iconos ===== */
+.ico{width:1.05em;height:1.05em;flex:none;vertical-align:-.15em;display:inline-block}
+.bdg{display:inline-flex;align-items:center;gap:4px}.bdg .ico{width:12px;height:12px}
+.ico.fire{color:#ff6a1a;filter:drop-shadow(0 0 4px rgba(255,106,26,.45))}
+.ico.ice{color:#5cc8ff}
+.ico.crown{color:#ffc23d}
+.st .sd span .ico.crown{width:15px;height:15px;filter:drop-shadow(0 0 4px rgba(255,194,61,.5))}
+.strk{display:inline-flex;align-items:center;gap:3px}.strk .ico{width:12px;height:12px}
+.strk.W.hot{background:linear-gradient(135deg,#1fbf73,#16a35f);box-shadow:0 0 0 1px rgba(255,106,26,.55),0 0 10px rgba(255,106,26,.35)}
+.strk.W.hot .ico.fire{color:#ffe08a;filter:none}
+.strk.L.hot{background:linear-gradient(135deg,#e5484d,#b7343a);box-shadow:0 0 0 1px rgba(92,200,255,.6),0 0 10px rgba(92,200,255,.3)}
+.strk.L.hot .ico.ice{color:#d8f2ff}
+.hot-hand{display:inline-flex;margin-left:5px;vertical-align:-1px}.hot-hand .ico{width:14px;height:14px;animation:flick 1.4s ease-in-out infinite}
+@keyframes flick{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.15) rotate(3deg)}}
+.ldr-hero .cat{display:inline-flex;align-items:center;gap:5px}.ldr-hero .cat .ico{width:13px;height:13px}
+.medal{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font:900 13px var(--f-display);color:#2a1a00;box-shadow:inset 0 -2px 0 rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.25)}
+.medal.m1{background:radial-gradient(circle at 35% 30%,#fff3b0,#ffc83d 55%,#d99a00)}
+.medal.m2{background:radial-gradient(circle at 35% 30%,#ffffff,#cfd6e0 55%,#9aa5b5)}
+.medal.m3{background:radial-gradient(circle at 35% 30%,#ffd9b8,#d98a4e 55%,#a65e2a)}
+.ts-row .r{display:flex;justify-content:flex-end;align-items:center}
+@media (prefers-reduced-motion:reduce){.hot-hand .ico{animation:none}}
+
+/* ===== Animaciones al hacer scroll ===== */
+.rv{opacity:0;transform:translateY(18px) scale(.985);transition:opacity .55s ease,transform .6s cubic-bezier(.2,.8,.2,1)!important}
+.rv.in{opacity:1;transform:none}
+.ts-row.rv,.cg.rv{transform:translateX(-14px)}
+.rv.in.ts-row,.rv.in.cg{transform:none}
+.rv:not(.in) :is(.ts-bar i,.bar i,.pbar i,.margin i),.rv.ts-row:not(.in) .ts-bar i{animation-play-state:paused}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 
