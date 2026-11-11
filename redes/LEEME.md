@@ -1,4 +1,10 @@
-# Vídeo resumen diario de Offcourt ("La noche NBA")
+# Vídeos resumen diarios de Offcourt (NBA, EuroLiga y ACB)
+
+Un vídeo por cada liga que haya jugado: **NBA** cada mañana (la noche anterior), **EuroLiga**
+y **ACB** por la noche, con los partidos de ese día. Todos los comandos aceptan `--liga nba|el|acb`
+(por defecto `nba`) y trabajan en `redes/salida/<liga>/` (`noche.json`, `borrador.json`, el MP4…).
+En EuroLiga y ACB los jugadores llevan también `valoracion`; úsala en las tarjetas (`28 PTS · 39 VAL`).
+Para probar con un día pasado de EuroLiga/ACB: `OFFCOURT_FECHA=AAAA-MM-DD` delante de cada comando.
 
 Vídeo vertical 9:16 (Reels, TikTok, Shorts) con un mini resumen de cada partido de la noche:
 marcador, recreación animada con figuritas en los colores de cada equipo, tarjetas de los
@@ -20,13 +26,13 @@ Desde la raíz del repo, con `main` al día (`git pull`):
    - `LISTO`: todos los partidos terminados y con estadísticas → sigue.
 
 1. **Borrador**: `python3 redes/video.py borrador`
-   Escribe `redes/salida/borrador.json` con la noche más reciente: partidos (ordenados por
+   Escribe `redes/salida/<liga>/borrador.json` con la noche más reciente: partidos (ordenados por
    interés), estadísticas, jugadores (con `pid` y si tienen foto), crónica de ESPN, partidos
    de esta noche con hora española y las pronunciaciones ya conocidas.
    - Comprueba que `fecha` es la noche de ayer (hora España) y que los partidos están
      terminados. Si la web no está al día o no hubo partidos, no hagas vídeo y avisa.
 
-2. **Guion**: escribe `redes/salida/noche.json` (formato abajo). Criterio editorial:
+2. **Guion**: escribe `redes/salida/<liga>/noche.json` (formato abajo). Criterio editorial:
    - Español de España, tono de narrador deportivo con chispa, frases cortas. Nada de inventar:
      solo datos del borrador (la crónica de ESPN sirve para el contexto, p. ej. rachas o lesiones).
    - Intro de una o dos frases ("Buenos días. Esto es Offcourt…"), un segmento por partido
@@ -52,8 +58,8 @@ Desde la raíz del repo, con `main` al día (`git pull`):
 5. **Revisar**: `python3 redes/video.py fotogramas 1:6,2:9,3:4` (escena:segundo) y mira
    `redes/salida/prueba_*.jpg`: tarjetas, subtítulos, etiquetas de nombre.
 
-6. **Render**: `python3 redes/video.py render` (~3 min) → `redes/salida/offcourt_noche_nba_FECHA.mp4`
-   y `redes/salida/control.jpg` (un fotograma por escena). Míralo antes de enviar.
+6. **Render**: `python3 redes/video.py render` (~3 min) → `redes/salida/<liga>/offcourt_…_FECHA.mp4`
+   y `redes/salida/<liga>/control.jpg` (un fotograma por escena). Míralo antes de enviar.
 
 7. **Entregar**: envía el MP4 al usuario con una línea de resumen y, aparte, el texto del guion
    sin llaves por si lo quiere usar como descripción del post.

@@ -11,9 +11,48 @@ Pasos (ver redes/LEEME.md):
 """
 import base64, datetime, json, os, re, shutil, subprocess, sys, time
 
-R = os.path.dirname(os.path.abspath(__file__)); REPO = os.path.dirname(R); OUT = os.path.join(R, 'salida')
+R = os.path.dirname(os.path.abspath(__file__)); REPO = os.path.dirname(R)
+LIGA = 'nba'
+if '--liga' in sys.argv:
+    _i = sys.argv.index('--liga'); LIGA = sys.argv[_i + 1]; del sys.argv[_i:_i + 2]
+assert LIGA in ('nba', 'el', 'acb'), 'liga: nba, el o acb'
+OUT = os.path.join(R, 'salida', LIGA)
+NOMBRE = {'nba': 'NBA', 'el': 'EuroLiga', 'acb': 'ACB'}[LIGA]
 GH_REPO = 'OFFtheCOURT/offthecourt.github.io'
 os.makedirs(OUT, exist_ok=True)
+
+
+def madrid(utc):
+    d = datetime.datetime.fromisoformat(utc.replace('Z', '+00:00'))
+    y = d.year
+    def last_sun(mo): x = datetime.datetime(y, mo, 31, 1, tzinfo=datetime.timezone.utc); return x - datetime.timedelta(days=(x.weekday() + 1) % 7)
+    return d + datetime.timedelta(hours=2 if last_sun(3) <= d < last_sun(10) else 1)
+
+
+def dia_europeo():
+    """día de la jornada europea: hora de España menos 6 h (a las 00:40 cuenta aún el día anterior)"""
+    if os.environ.get('OFFCOURT_FECHA'): return os.environ['OFFCOURT_FECHA']  # solo para pruebas
+    return (madrid(datetime.datetime.now(datetime.timezone.utc).isoformat()) - datetime.timedelta(hours=6)).date().isoformat()
+
+
+def partidos_del_dia(lg, fecha):
+    """(jugados, pendientes, ronda) de EuroLiga/ACB en una fecha (hora de España)"""
+    jug = []; ronda = None
+    for p in lg['periods']:
+        for g in p['games']:
+            if g.get('utc') and madrid(g['utc']).date().isoformat() == fecha: jug.append(g); ronda = ronda or p.get('label')
+    pen = []
+    for u in lg.get('upcoming', []):
+        for g in u['games']:
+            if g.get('utc') and madrid(g['utc']).date().isoformat() == fecha: pen.append(g); ronda = ronda or u.get('label')
+    return jug, pen, ronda
+
+
+def proximos(lg, fecha):
+    """siguiente día con partidos de esta liga después de 'fecha'"""
+    gs = sorted([g for u in lg.get('upcoming', []) for g in u['games'] if g.get('utc') and madrid(g['utc']).date().isoformat() > fecha], key=lambda g: g['utc'])
+    if not gs: return None, []
+    d0 = madrid(gs[0]['utc']).date().isoformat(); return d0, [g for g in gs if madrid(g['utc']).date().isoformat() == d0]
 MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
 ABR_D = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM']; ABR_M = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
@@ -45,17 +84,20 @@ def hora_es(utc):
 
 # ---------------------------------------------------------------- borrador
 def borrador():
-    L, IMG, _ = web_data(); N = L['nba']; T = N['teams']
-    night = N['periods'][0]
+    L, IMG, _ = web_data(); N = L[LIGA]; T = N['teams']
+    if LIGA == 'nba':
+        night = N['periods'][0]; lista = night['games']; fecha = night['key']; ronda = None
+    else:
+        fecha = dia_europeo(); lista, pend, ronda = partidos_del_dia(N, fecha); night = {'key': fecha}
     games = []
-    for g in night['games']:
+    for g in lista:
         A, H = g['teams']
         def side(t):
             st = t.get('st') or {}
             return {'equipo': t['abbr'], 'nombre': T[t['abbr']]['name'], 'corto': T[t['abbr']]['short'], 'puntos': t['score'], 'balance': t.get('rec'),
                     'cuartos': t.get('ls'), 'triples': st.get('threePointFieldGoalsMade-threePointFieldGoalsAttempted'), 'rebotes': st.get('totalRebounds'),
                     'asistencias': st.get('assists'), 'pintura': st.get('pointsInPaint'), 'contraataque': st.get('fastBreakPoints'), 'maxima_ventaja': st.get('largestLead'),
-                    'jugadores': [{'pid': p['pid'], 'nombre': p['n'], 'pos': p['pos'], 'pts': p['pts'], 'reb': p['reb'], 'ast': p['ast'], 'rob': p['stl'], 'tap': p['blk'],
+                    'jugadores': [{'pid': p['pid'], 'nombre': p['n'], 'pos': p.get('pos'), 'pts': p['pts'], 'reb': p['reb'], 'ast': p['ast'], 'rob': p.get('stl'), 'tap': p.get('blk'), 'valoracion': p.get('val'),
                                    'tiros': p['fg'], 'triples': p['tp'], 'tl': p['ft'], 'min': p['min'], 'masmenos': p['pm'],
                                    'foto': os.path.exists(os.path.join(REPO, 'photos', p['pid'] + '.webp'))} for p in sorted(t.get('top') or [], key=lambda p: -p['pts'])]}
         best = max((p['pts'] for t in (A, H) for p in (t.get('top') or [])), default=0)
@@ -63,16 +105,19 @@ def borrador():
                       'pabellon': g.get('venue'), 'ciudad': g.get('city'), 'cronica_espn': g.get('recap'), 'nota': g.get('note'),
                       'visitante': side(A), 'local': side(H), 'interes': best + max(0, 15 - abs(A['score'] - H['score']))})
     games.sort(key=lambda g: -g['interes'])
-    up = N['upcoming'][0] if N.get('upcoming') else {'games': []}
+    if LIGA == 'nba':
+        up = N['upcoming'][0] if N.get('upcoming') else {'games': []}; prox_fecha = None
+    else:
+        prox_fecha, gs = proximos(N, fecha); up = {'games': gs}
     hoy = [{'partido': f"{g['teams'][0]['abbr']}-{g['teams'][1]['abbr']}", 'visitante': T[g['teams'][0]['abbr']]['name'], 'local': T[g['teams'][1]['abbr']]['name'],
             'hora_es': hora_es(g.get('utc'))} for g in up['games']]
     pron = json.load(open(os.path.join(R, 'pronunciacion.json'), encoding='utf-8'))
     nombres = sorted({p['nombre'] for g in games for s in ('visitante', 'local') for p in g[s]['jugadores']} | {T[a]['name'] for a in T})
-    out = {'fecha': night['key'], 'actualizado_web': os.path.getmtime(os.path.join(REPO, 'index.html')), 'partidos': games, 'esta_noche': hoy,
+    out = {'liga': LIGA, 'jornada': ronda, 'proximo_dia': prox_fecha, 'fecha': night['key'], 'actualizado_web': os.path.getmtime(os.path.join(REPO, 'index.html')), 'partidos': games, 'esta_noche': hoy,
            'lideres_temporada': N.get('leaders'), 'pronunciacion_conocida': {n: pron[n] for n in nombres if n in pron},
            'sin_pronunciacion': [n for n in nombres if n not in pron]}
     p = os.path.join(OUT, 'borrador.json'); json.dump(out, open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
-    print('fecha', night['key'], '·', len(games), 'partidos ·', len(hoy), 'esta noche ->', p)
+    print(LIGA, 'fecha', night['key'], '·', len(games), 'partidos ·', len(hoy), 'próximos ->', p)
 
 
 # ---------------------------------------------------------------- voz
@@ -195,14 +240,17 @@ def team_obj(ab, tm, T):
 
 
 def prof(pl):
-    tpm = int((pl.get('tp') or '0-0').split('-')[0]); return {'three': tpm >= 3, 'big': (pl.get('pos') == 'C' or pl.get('reb', 0) >= 10) and tpm < 3}
+    try: tpm = int((pl.get('tp') or '0-0').split('-')[0])
+    except ValueError: tpm = 0
+    return {'three': tpm >= 3, 'big': (pl.get('pos') == 'C' or pl.get('reb', 0) >= 10) and tpm < 3}
 
 
 def montar():
-    n = noche(); L, IMG, logo = web_data(); N = L['nba']; T = N['teams']; LOG = IMG['t']['nba']
+    n = noche(); L, IMG, logo = web_data(); N = L[LIGA]; T = N['teams']; LOG = IMG['t'][LIGA]
     vkey = n.get('voz', 'es-ES-AlvaroNeural:r').replace(':', '_'); mode = vkey.rsplit('_', 1)[1]
     vdir = os.path.join(OUT, 'voz'); TIMES = json.load(open(os.path.join(vdir, 'tiempos.json')))[vkey]
-    night = next(p for p in N['periods'] if p['key'] == n['fecha'])
+    if LIGA == 'nba': night = next(p for p in N['periods'] if p['key'] == n['fecha']); ronda = None
+    else: _j, _p, ronda = partidos_del_dia(N, n['fecha']); night = {'games': _j}
     games = {g['teams'][0]['abbr'] + '-' + g['teams'][1]['abbr']: g for g in night['games']}
     os.makedirs(os.path.join(OUT, 'audio'), exist_ok=True)
     PAD_IN, PAD_OUT = 0.55, 0.45
@@ -221,7 +269,7 @@ def montar():
             scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(5.2, d + PAD_IN + .5), 2), 'off': PAD_IN, 'words': w}); continue
         if seg['id'] == 'outro':
             ton = []; hl = []
-            for g in (N['upcoming'][0]['games'] if N.get('upcoming') else []):
+            for g in ((N['upcoming'][0]['games'] if N.get('upcoming') else []) if LIGA == 'nba' else proximos(N, n['fecha'])[1]):
                 a, h = g['teams'][0]['abbr'], g['teams'][1]['abbr']; used |= {a, h}
                 ton.append({'a': a, 'h': h, 'an': T[a]['short'], 'hn': T[h]['short'], 'time': hora_es(g.get('utc'))})
                 k = (seg.get('resaltar') or {}).get(f'{a}-{h}'); hl.append(when(k) if k else None)
@@ -250,8 +298,14 @@ def montar():
     for i, sc in enumerate(scenes[:-1]):
         nx = scenes[i + 1]; sc['next'] = [nx['teams'][1]['c'], nx['teams'][0]['c']] if nx['type'] == 'game' else ['#ff7a1a', '#386eff']
     f = datetime.date.fromisoformat(n['fecha']); f2 = f + datetime.timedelta(days=1)
+    if LIGA != 'nba':
+        pd = proximos(N, n['fecha'])[0]
+        if pd: f2 = datetime.date.fromisoformat(pd)
+    ETQ = {'nba': ('LA NOCHE NBA', 'LA NOCHE', 'NBA', 'ESTA NOCHE'),
+           'el': (f"EUROLIGA · {(ronda or '').upper()}", (ronda or 'LA JORNADA').upper(), 'EUROLIGA', 'PRÓXIMOS'),
+           'acb': (f"ACB · {(ronda or '').upper()}", (ronda or 'LA JORNADA').upper(), 'ACB', 'PRÓXIMOS')}[LIGA]
     outro = next((s for s in scenes if s['type'] == 'outro'), None); ton = outro['tonight'] if outro else []
-    DATA = {'dateLabel': f'{ABR_D[f.weekday()]} {f.day} {ABR_M[f.month - 1]}', 'dateLong': f'{DIAS[f.weekday()]} {f.day} de {MESES[f.month - 1]}',
+    DATA = {'eyebrow': ETQ[0], 'title1': ETQ[1], 'title2': ETQ[2], 'outTitle': ETQ[3], 'dateLabel': f'{ABR_D[f.weekday()]} {f.day} {ABR_M[f.month - 1]}', 'dateLong': f'{DIAS[f.weekday()]} {f.day} de {MESES[f.month - 1]}',
             'tonightLabel': f'{ABR_D[f2.weekday()]} {f2.day} {ABR_M[f2.month - 1]}', 'tonightCount': f'{len(ton)} PARTIDOS · HORA ESPAÑOLA',
             'ngames': len(narrated), 'scenes': scenes, 'tonight': ton,
             'mini': [{'a': g['teams'][0]['abbr'], 'h': g['teams'][1]['abbr'], 'as': g['teams'][0]['score'], 'hs': g['teams'][1]['score']} for g in night['games'] if g['teams'][0].get('score') is not None],
@@ -269,10 +323,12 @@ def montar():
 
 # ---------------------------------------------------------------- render
 def fotogramas(lst):
+    shutil.copy(os.path.join(OUT, 'data.js'), os.path.join(R, 'salida', 'data.js'))
     sh('node', os.path.join(R, 'render.js'), 'frames', lst)
 
 
 def render():
+    shutil.copy(os.path.join(OUT, 'data.js'), os.path.join(R, 'salida', 'data.js'))
     D = json.loads(open(os.path.join(OUT, 'data.js'), encoding='utf-8').read()[len('window.DATA='):-1]); n = noche()
     esc = os.path.join(OUT, 'escenas'); shutil.rmtree(esc, ignore_errors=True); os.makedirs(esc)
     procs = [subprocess.Popen(['node', os.path.join(R, 'render.js'), 'scene', str(i), os.path.join(esc, f's{i}.mp4')]) for i in range(len(D['scenes']))]
@@ -285,7 +341,7 @@ def render():
     open(os.path.join(esc, 'a.txt'), 'w').write(''.join(f"file 'a{i}.wav'\n" for i in range(len(D['scenes']))))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'v.txt'), '-c', 'copy', os.path.join(esc, 'v.mp4'))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'a.txt'), '-c:a', 'pcm_s16le', os.path.join(esc, 'a.wav'))
-    final = os.path.join(OUT, f"offcourt_noche_nba_{n['fecha']}.mp4")
+    final = os.path.join(OUT, f"offcourt_{'noche_nba' if LIGA == 'nba' else LIGA}_{n['fecha']}.mp4")
     sh('ffmpeg', '-v', 'error', '-y', '-i', os.path.join(esc, 'v.mp4'), '-i', os.path.join(esc, 'a.wav'), '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
        '-shortest', '-movflags', '+faststart', final)
     # hoja de control: un fotograma de cada escena
@@ -315,7 +371,29 @@ def _restante(detail):
     if m: return 3
     return None
 
+def hecho_de(lg):
+    h = json.load(open(HECHO)) if os.path.exists(HECHO) else {}
+    if 'fecha' in h and lg == 'nba': return h['fecha']
+    return (h.get(lg) or {}).get('fecha')
+
+def estado_europa(imprimir):
+    L, _, _ = web_data(); N = L[LIGA]; now = datetime.datetime.now(datetime.timezone.utc)
+    fecha = dia_europeo(); jug, pen, ronda = partidos_del_dia(N, fecha)
+    res = {'liga': LIGA, 'noche': fecha, 'jornada': ronda, 'jugados': len(jug), 'pendientes': len(pen), 'ahora': now.isoformat()}
+    if hecho_de(LIGA) == fecha: res['estado'] = 'HECHO'
+    elif not jug and not pen: res['estado'] = 'SIN_PARTIDOS'
+    elif not pen: res['estado'] = 'LISTO'
+    else:
+        etas = []
+        for g in pen:
+            tip = datetime.datetime.fromisoformat(g['utc'].replace('Z', '+00:00'))
+            etas.append(max(0, (tip - now).total_seconds() / 60) + 125 if g.get('state', 'pre') == 'pre' else 40)
+        res['estado'] = 'ESPERANDO'; res['minutos_restantes'] = round(max(etas))
+    if imprimir: print(json.dumps(res, ensure_ascii=False))
+    return res
+
 def estado(imprimir=True):
+    if LIGA != 'nba': return estado_europa(imprimir)
     """LISTO / ESPERANDO (con hora estimada) / HECHO / SIN_PARTIDOS para la noche NBA más reciente"""
     L, _, _ = web_data(); N = L['nba']
     h = open(os.path.join(REPO, 'index.html'), encoding='utf-8').read()
@@ -327,7 +405,7 @@ def estado(imprimir=True):
     res = {'noche': night, 'datos_web': upd.isoformat() if upd else None, 'ahora': now.isoformat()}
     per = next((p for p in N['periods'] if p['key'] == night), None)
     upc = next((u for u in N.get('upcoming', []) if u.get('date') == night), None)
-    if hecho.get('fecha') == night: res['estado'] = 'HECHO'
+    if hecho_de('nba') == night: res['estado'] = 'HECHO'
     elif per and per['games'] and all(g.get('completed') for g in per['games']): res['estado'] = 'LISTO'
     elif not per and not (upc and upc['games']): res['estado'] = 'SIN_PARTIDOS'
     else:
@@ -366,7 +444,10 @@ def esperar():
     print(json.dumps(estado(False), ensure_ascii=False))
 
 def marcar_hecho():
-    n = noche(); json.dump({'fecha': n['fecha'], 'hora': datetime.datetime.now(datetime.timezone.utc).isoformat()}, open(HECHO, 'w')); print('hecho', n['fecha'])
+    n = noche(); h = json.load(open(HECHO)) if os.path.exists(HECHO) else {}
+    if 'fecha' in h: h = {'nba': {'fecha': h['fecha'], 'hora': h.get('hora')}}
+    h[LIGA] = {'fecha': n['fecha'], 'hora': datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    json.dump(h, open(HECHO, 'w'), indent=1); print('hecho', LIGA, n['fecha'])
 
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''

@@ -353,7 +353,7 @@ function wipe(colors,q,dirIn){ // q 0..1; dirIn: bars entering (cover) or leavin
 }
 function sceneGame(sc,t){
   const A=sc.teams[0],Hm=sc.teams[1];
-  bg(A.c,Hm.c,t);header('LA NOCHE NBA',D.dateLabel,sc.gi,D.ngames);
+  bg(A.c,Hm.c,t);header(D.eyebrow||'LA NOCHE NBA',D.dateLabel,sc.gi,D.ngames);
   court(sc,t);scoreboard(sc,t);cards(sc,t);captions(sc.words,t);
   footer();
   if(t<.42)wipe([Hm.c,A.c],t/.42,false);
@@ -369,7 +369,7 @@ function sceneIntro(sc,t){
   X.restore();
   const k3=eo((t-.7)/.5);X.save();X.globalAlpha=k3;X.translate(0,(1-k3)*40);X.textAlign='center';
   X.font=`900 200px ${FD}`;const g=X.createLinearGradient(200,0,880,0);g.addColorStop(0,'#ff5a1f');g.addColorStop(.5,'#ff8a1a');g.addColorStop(1,'#ffc04d');
-  X.fillStyle=FG;X.fillText('LA NOCHE',540,920);X.fillStyle=g;X.fillText('NBA',540,1100);
+  X.fillStyle=FG;X.fillText(D.title1||'LA NOCHE',540,920);X.font=`900 ${(D.title2||'NBA').length>5?150:200}px ${FD}`;X.fillStyle=g;X.fillText(D.title2||'NBA',540,1100);
   X.font=`700 40px ${FL}`;X.letterSpacing='8px';X.fillStyle=MUT;X.fillText(D.dateLong.toUpperCase(),540,1170);X.letterSpacing='0px';X.restore();
   const nm=D.mini.length,cols=nm<=6?2:3,sc_=cols==2?1:.68,rows=Math.ceil(nm/cols),cw_=470*sc_,gx=(W-120-cols*cw_)/(cols-1||1),rh=Math.min(110*sc_,(1600-1230)/rows);
   D.mini.forEach((m,i)=>{const dl=Math.min(.16,1.2/nm),kk=back((t-1.3-i*dl)/.45);if(kk<=0)return;X.save();X.globalAlpha=clamp((t-1.3-i*dl)/.2);
@@ -381,10 +381,10 @@ function sceneIntro(sc,t){
   if(sc.next&&t>sc.dur-.3)wipe(sc.next,(t-(sc.dur-.3))/.3,true);
 }
 function sceneOutro(sc,t){
-  bg('#386eff','#ff7a1a',t);header('ESTA NOCHE',D.tonightLabel,0,0);
+  bg('#386eff','#ff7a1a',t);header(D.outTitle||'ESTA NOCHE',D.tonightLabel,0,0);
   if(t<.42)wipe(['#ff7a1a','#386eff'],t/.42,false);
   const endT=sc.dur-2.2;
-  X.save();X.globalAlpha=t>endT?clamp(1-(t-endT)/.4):1;X.textAlign='left';X.font=`900 96px ${FD}`;X.fillStyle=FG;X.fillText('ESTA NOCHE',60,340);
+  X.save();X.globalAlpha=t>endT?clamp(1-(t-endT)/.4):1;X.textAlign='left';X.font=`900 96px ${FD}`;X.fillStyle=FG;X.fillText(D.outTitle||'ESTA NOCHE',60,340);
   X.font=`700 32px ${FL}`;X.fillStyle=MUT;X.letterSpacing='4px';X.fillText(D.tonightCount,64,392);X.letterSpacing='0px';X.restore();
   const nt=D.tonight.length,rh2=nt>10?Math.floor(1020/nt):102,s2=Math.min(1,rh2/102);
   D.tonight.forEach((g,i)=>{const kk=eo((t-.3-i*.07)/.4);if(kk<=0)return;const hlT=sc.hl[i];const on=hlT!=null&&t>=hlT;
