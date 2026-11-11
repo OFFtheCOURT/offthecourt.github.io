@@ -334,7 +334,7 @@ function captions(words,t,y0=1480){
   if(!words||!words.length)return;
   // group into chunks of ~2 lines
   if(!words._ch){const ch=[];let cur=[],len=0;X.font=`700 54px ${FB}`;
-    for(const w of words){const wl=X.measureText(w.w+' ').width;if(cur.length&&(len+wl>1700||/[.:;]$/.test(cur[cur.length-1].w))){ch.push(cur);cur=[];len=0}cur.push(w);len+=wl}
+    for(const w of words){const wl=X.measureText(w.w+' ').width;if(cur.length&&(len+wl>1450||/[.:;]$/.test(cur[cur.length-1].w))){ch.push(cur);cur=[];len=0}cur.push(w);len+=wl}
     if(cur.length)ch.push(cur);words._ch=ch}
   const ch=words._ch;let ci=-1;for(let i=0;i<ch.length;i++){if(t>=ch[i][0].o-.05)ci=i}
   if(ci<0)return;const c=ch[ci],endT=c[c.length-1].o+c[c.length-1].d+.6;if(ci==ch.length-1&&t>endT+1.2)return;
