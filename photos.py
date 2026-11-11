@@ -10,6 +10,8 @@ OWNER, NAME = REPO.split('/')
 UA = {'User-Agent': f'OffcourtBot/1.0 (https://{OWNER.lower()}.github.io/{NAME}/; fotos de jugadores para una web personal)'}
 MAX_SEARCH = int(os.environ.get('MAX_SEARCH', '150'))   # búsquedas sueltas por ejecución
 RECROP = os.environ.get('RECROP') == '1'                 # volver a descargar y recortar todas las fotos
+STYLE = os.environ.get('STYLE') == '1'                   # aplicar el patrón Offcourt (sin fondo + fondo del equipo)
+ONLY = [x for x in os.environ.get('ONLY', '').replace(' ', '').split(',') if x]   # limitar a estos jugadores
 import facecrop
 W, H = 200, 146
 
@@ -31,14 +33,17 @@ def isbb(pp): return 'basketball' in (pp or {}).get('wikibase-shortdesc', '').lo
 src = open(S + '/index.html', encoding='utf-8').read()
 i = src.find('const LG = '); j = src.find(';\nconst UPDATED', i)
 LG = json.loads(src[i + 11:j])
-names = {}
-for lg in LG.values():
+names = {}; info = {}
+for lk, lg in LG.items():
     for p in lg['periods']:
         for g in p['games']:
             for t in g['teams']:
-                for x in t['top']: names[x['pid']] = x['n']
+                for x in t['top']: names[x['pid']] = x['n']; info[x['pid']] = (lk, t['abbr'], x.get('num', ''))
     for c in lg['leaders']:
-        for x in c['ls']: names[x['pid']] = x['n']
+        for x in c['ls']:
+            names[x['pid']] = x['n']
+            if x['pid'] not in info: info[x['pid']] = (lk, x['abbr'], x.get('num', ''))
+if ONLY: names = {k: v for k, v in names.items() if k in ONLY}
 print('jugadores', len(names))
 
 idx_f, cr_f = PH + '/index.json', PH + '/credits.json'
@@ -79,7 +84,7 @@ for pid in [p for p in names if p not in idx]:
 save()
 
 # --- 3) autor y licencia en Commons + descarga ---
-need = {v['file']: pid for pid, v in idx.items() if v.get('file') and (RECROP or (pid in names and not os.path.exists(f'{PH}/{pid}.webp')))}
+need = {v['file']: pid for pid, v in idx.items() if v.get('file') and (not ONLY or pid in ONLY) and (RECROP or (pid in names and not os.path.exists(f'{PH}/{pid}.webp')))}
 files = list(need)
 meta = {}
 for i in range(0, len(files), 40):
@@ -97,8 +102,15 @@ for f, pid in need.items():
     if not mt or not mt['thumb']: continue
     raw = get(mt['thumb'].replace('https://thumb.wikimedia.org/', 'https://upload.wikimedia.org/').split('?')[0]); time.sleep(1.5)
     if not raw: continue
-    img, _ = facecrop.crop(Image.open(io.BytesIO(raw)), W, H)
-    img.save(f'{PH}/{pid}.webp', 'WEBP', quality=82)
+    orig = Image.open(io.BytesIO(raw)).convert('RGB')
+    os.makedirs(f'{PH}/src', exist_ok=True); orig.save(f'{PH}/src/{pid}.webp', 'WEBP', quality=80)   # original, para re-estilizar sin volver a descargar
+    if STYLE and pid in info:
+        import stylize
+        lk, ab, num = info[pid]; tm = LG[lk]['teams'][ab]
+        img = stylize.card(orig, tm['color'], tm['alt'], num, 300, 219)
+    else:
+        img, _ = facecrop.crop(orig, W, H)
+    img.save(f'{PH}/{pid}.webp', 'WEBP', quality=84)
     credits[pid] = {'a': mt['artist'], 'l': mt['lic'], 'u': mt['page']}; ok += 1
     if ok % 25 == 0: save()
 save()

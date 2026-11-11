@@ -9,6 +9,14 @@ on:
         description: 'Volver a descargar y recortar todas las fotos (1 = sí)'
         required: false
         default: '0'
+      style:
+        description: 'Aplicar el patrón Offcourt (1 = sí)'
+        required: false
+        default: '0'
+      only:
+        description: 'Solo estos jugadores (ids separados por comas; vacío = todos)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -26,12 +34,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install pillow "opencv-python-headless<5"
-      - name: Detector de caras (YuNet)
-        run: mkdir -p voz && curl -sL -o voz/yunet.onnx https://huggingface.co/opencv/face_detection_yunet/resolve/main/face_detection_yunet_2023mar.onnx
+      - run: pip install pillow "opencv-python-headless<5" onnxruntime numpy
+      - name: Modelos (detector de caras YuNet y recorte de fondo BiRefNet)
+        run: |
+          mkdir -p voz
+          curl -sL -o voz/yunet.onnx https://huggingface.co/opencv/face_detection_yunet/resolve/main/face_detection_yunet_2023mar.onnx
+          if [ "${{ github.event.inputs.style }}" = "1" ]; then curl -sL -o voz/birefnet.onnx https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx; fi
       - run: python3 photos.py
         env:
           RECROP: ${{ github.event.inputs.recrop || '0' }}
+          STYLE: ${{ github.event.inputs.style || '0' }}
+          ONLY: ${{ github.event.inputs.only || '' }}
       - name: Volver a generar la web con las fotos
         run: bash run.sh
       - name: Guardar fotos y web
