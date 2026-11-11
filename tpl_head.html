@@ -763,6 +763,20 @@ html[data-theme="light"] .bx-sheet{background:rgba(20,28,45,.55)}
 
 .bx-live{color:#e5484d;animation:pulse 1.6s ease-in-out infinite}
 #hoy .stt{gap:8px;flex-wrap:wrap}
+
+/* Jugadores destacados: colores unificados */
+.cromo{border:1px solid var(--line);background:var(--card)}
+.cromo::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--tc);z-index:2}
+.cromo.mvp{border-color:#ffc23d;box-shadow:0 0 0 1px #ffc23d,0 8px 22px rgba(255,194,61,.18)}
+.cromo.mvp::before{background:linear-gradient(90deg,#ffc23d,#ffe08a)}
+.cr-mvp{position:absolute;top:7px;left:6px;z-index:3;display:inline-flex;align-items:center;gap:3px;font:800 9.5px var(--f-label);letter-spacing:.12em;color:#2a1a00;background:#ffc23d;padding:2px 6px 2px 4px;border-radius:5px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.cr-mvp .ico{width:11px;height:11px;color:#2a1a00;filter:none}
+.cr-st div:first-child b{color:var(--fg)}
+.cr-st div:first-child small{color:var(--accent2)}
+.cr-ph.fb .cr-num{right:7px;top:5px;font-size:24px;color:rgba(255,255,255,.4)}
+.cromo.mvp .cr-ph.fb .cr-num{top:5px}
+html[data-theme="light"] .qchart text.qv{fill:#1b2333}
+html[data-theme="light"] .cromo{box-shadow:0 4px 12px rgba(20,30,60,.07)}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 

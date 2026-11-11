@@ -87,7 +87,7 @@ function qchart(g){
   let o=`<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Puntos por cuarto"><line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="#2c3954" stroke-width="1"/>`;
   for(let i=0;i<n;i++){const cx=cw*i+cw/2;
     [[A.ls[i],ca,-1],[H.ls[i],ch,1]].forEach(([v,c,dx])=>{const hgt=(v/mx)*(base-top);const x=cx+dx*(bw/2+2)-bw/2;
-      o+=`<rect x="${x}" y="${base-hgt}" width="${bw}" height="${hgt}" rx="4" fill="${c}"/><text x="${x+bw/2}" y="${base-hgt-4}" text-anchor="middle" font-size="11" fill="#eef2f8">${v}</text>`;});
+      o+=`<rect x="${x}" y="${base-hgt}" width="${bw}" height="${hgt}" rx="4" fill="${c}"/><text class="qv" x="${x+bw/2}" y="${base-hgt-4}" text-anchor="middle" font-size="11" fill="#eef2f8">${v}</text>`;});
     const d=A.ls[i]-H.ls[i];
     o+=`<text x="${cx}" y="${base+14}" text-anchor="middle" font-size="10" fill="#8d99ae">${i<4?(i+1)+'º C':'PR'}</text>`;
     o+=`<text x="${cx}" y="${base+24}" text-anchor="middle" font-size="9.5" fill="${d===0?'#5d6a82':(d>0?ca:ch)}">${d===0?'=':(d>0?A.abbr:H.abbr)+' +'+Math.abs(d)}</text>`;
@@ -110,7 +110,7 @@ function crEx(p){
 function topCol(s){
   const t=TEAMS[s.abbr];
   return `<div class="tcol" style="--tc:${tc(t)}"><h4><img src="${logo(s.abbr)}" alt="">${esc(t.short)} · Top 5</h4>
-  <div class="cromos">${s.top.map((p,i)=>{const ph=photo(p);return `<div class="cromo ${i===0?'mvp':''}">
+  <div class="cromos">${s.top.map((p,i)=>{const ph=photo(p);return `<div class="cromo ${i===0?'mvp':''}">${i===0?`<span class="cr-mvp">${ICO.crown}MVP</span>`:''}
      <div class="cr-ph ${ph?'':'fb'}">${ph||initials(p.n)}${ph?'':`<span class="cr-num">${esc(p.num)}</span>`}<span class="cr-pos">${p.pos?esc(p.pos)+' · ':''}${p.min}'</span></div>
      <div class="cr-nm">${esc(p.n)}</div>
      <div class="cr-st"><div><b>${p.pts}</b><small>PTS</small></div><div><b>${p.reb}</b><small>REB</small></div><div><b>${p.ast}</b><small>AST</small></div></div>
