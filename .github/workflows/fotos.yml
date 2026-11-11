@@ -10,9 +10,9 @@ on:
         required: false
         default: '0'
       style:
-        description: 'Aplicar el patrón Offcourt (1 = sí)'
+        description: 'Aplicar el patrón Offcourt (1 = sí, 0 = foto normal)'
         required: false
-        default: '0'
+        default: '1'
       only:
         description: 'Solo estos jugadores (ids separados por comas; vacío = todos)'
         required: false
@@ -39,11 +39,11 @@ jobs:
         run: |
           mkdir -p voz
           curl -sL -o voz/yunet.onnx https://huggingface.co/opencv/face_detection_yunet/resolve/main/face_detection_yunet_2023mar.onnx
-          if [ "${{ github.event.inputs.style }}" = "1" ]; then curl -sL -o voz/birefnet.onnx https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx; fi
+          if [ "${{ github.event.inputs.style || '1' }}" = "1" ]; then curl -sL -o voz/birefnet.onnx https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx; fi
       - run: python3 photos.py
         env:
           RECROP: ${{ github.event.inputs.recrop || '0' }}
-          STYLE: ${{ github.event.inputs.style || '0' }}
+          STYLE: ${{ github.event.inputs.style || '1' }}
           ONLY: ${{ github.event.inputs.only || '' }}
       - name: Volver a generar la web con las fotos
         run: bash run.sh
