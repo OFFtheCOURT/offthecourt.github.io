@@ -63,6 +63,7 @@ jobs:
                   cand = [('es-ES-AlvaroNeural', 'r'), ('es-ES-AlvaroNeural', 'o')]
                   cand += [(n, 'o') for n in sorted(nombres) if n.startswith('es-') and 'Multilingual' in n]
                   cand += [(n, 'o') for n in ('en-US-AndrewMultilingualNeural', 'en-US-BrianMultilingualNeural') if n in nombres]
+                  cand += [('es-ES-ElviraNeural', 'r')]
               print('voces:', cand)
               resumen = {}
               for n, m in cand:
@@ -73,17 +74,23 @@ jobs:
                   resumen[clave] = []
                   for s in G:
                       t = texto(s['t'], m)
-                      palabras = []
-                      try:
-                          c = edge_tts.Communicate(t, n, rate=RATE, boundary='WordBoundary')
-                      except TypeError:
-                          c = edge_tts.Communicate(t, n, rate=RATE)
-                      with open(f"out/{clave}/{s['id']}.mp3", 'wb') as f:
-                          async for ch in c.stream():
-                              if ch['type'] == 'audio':
-                                  f.write(ch['data'])
-                              elif ch['type'] in ('WordBoundary', 'SentenceBoundary'):
-                                  palabras.append({'w': ch['text'], 'o': ch['offset'] / 1e7, 'd': ch['duration'] / 1e7, 'k': ch['type']})
+                      for intento in range(4):
+                          palabras = []
+                          try:
+                              try:
+                                  c = edge_tts.Communicate(t, n, rate=RATE, boundary='WordBoundary')
+                              except TypeError:
+                                  c = edge_tts.Communicate(t, n, rate=RATE)
+                              with open(f"out/{clave}/{s['id']}.mp3", 'wb') as f:
+                                  async for ch in c.stream():
+                                      if ch['type'] == 'audio':
+                                          f.write(ch['data'])
+                                      elif ch['type'] in ('WordBoundary', 'SentenceBoundary'):
+                                          palabras.append({'w': ch['text'], 'o': ch['offset'] / 1e7, 'd': ch['duration'] / 1e7, 'k': ch['type']})
+                              break
+                          except Exception as e:
+                              print('reintento', clave, s['id'], repr(e))
+                              await asyncio.sleep(3 + 3 * intento)
                       resumen[clave].append({'id': s['id'], 'texto': t, 'palabras': palabras})
                       print(clave, s['id'], 'ok', len(palabras))
               json.dump(resumen, open('out/tiempos.json', 'w'), ensure_ascii=False, indent=1)
