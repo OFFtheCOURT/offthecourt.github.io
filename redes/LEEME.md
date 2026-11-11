@@ -1,4 +1,14 @@
-# FORMATO EUROLIGA / ACB (manda sobre el resto de este documento y sobre el máximo de 7 partidos)
+# FORMATO DE LOS VÍDEOS — NBA, EUROLIGA Y ACB (manda sobre el resto de este documento y sobre el máximo de 7 partidos)
+
+Es el mismo formato para las tres ligas; cada una tiene su color (NBA azul/rojo, EuroLiga naranja, ACB verde),
+que pone `montar` solo. **Voz por defecto: `en-US-AndrewMultilingualNeural:r`** (la que eligió el usuario). Con
+esa voz los nombres en inglés van igual en los dos lados (`{Paul George|Paul George}`); solo se adaptan las
+siglas: `{NBA|enebeá}`, `{Euroliga|Eurolíga}`, `{ACB|acebé}`. Cada segmento debe tener al menos 8 palabras
+(con frases muy cortas esta voz a veces devuelve audio vacío; `voz` lo reintenta con una variante).
+**NBA**: la portada muestra todos los resultados con figuritas y destaca solos los 2 partidos con más gancho
+(prórroga, final de infarto, paliza o 40+ puntos). La voz abre con UNA frase sobre lo más llamativo de la noche,
+luego un mini resumen por partido (máximo 5, los más interesantes, ~6 s cada uno, una tarjeta) y el cierre
+nombra 1-2 partidos de esta noche (`resaltar`) y termina con "Esto es {OFFCOURT|Offcourt}.".
 
 Duración **máxima 60 s** (`montar` avisa si se pasa). Vertical 9:16 con zona segura: todo el contenido va reducido
 al 86 % y subido, para que ni los bordes ni los subtítulos queden tapados por la interfaz de TikTok/Reels/Shorts.
@@ -15,7 +25,7 @@ al 86 % y subido, para que ni los bordes ni los subtítulos queden tapados por l
 3. **Final de partido decidido en el último tiro** (solo si el dato es seguro o lo indica el usuario): añade
    `"hero": true` al segmento de ese partido y la palabra clave "Hifi"/"canasta" en el texto; se anima la canasta ganadora.
 4. **Cierre (~7 s):** próximos partidos de esa liga, destacando uno o dos (`resaltar`), y la frase final
-   "Esto es {OFFCOURT|Ófkort}.", que dispara la tarjeta final con el logo.
+   "Esto es {OFFCOURT|Offcourt}." (con la voz de Andrew), que dispara la tarjeta final con el logo.
 
 # Vídeos resumen diarios de Offcourt (NBA, EuroLiga y ACB)
 
@@ -95,7 +105,7 @@ Desde la raíz del repo, con `main` al día (`git pull`):
 ```json
 {
  "fecha": "2026-11-10",
- "voz": "es-ES-AlvaroNeural:r",
+ "voz": "en-US-AndrewMultilingualNeural:r",
  "segmentos": [
   {"id": "intro", "t": "Buenos días. Esto es Offcourt, y esto es lo que pasó anoche en la {NBA|enebeá}. Seis partidos. Vamos allá."},
   {"id": "BOS", "partido": "BOS-PHI",
@@ -116,5 +126,5 @@ Desde la raíz del repo, con `main` al día (`git pull`):
 - Tarjeta de equipo: `"stat": "triples"` (usa los triples del partido) o
   `"valor"`, `"titulo"`, `"linea"` a mano.
 - `resaltar` del cierre: partido de esta noche → palabra del guion que lo ilumina.
-- `voz`: `es-ES-AlvaroNeural:r` (por defecto, nombres adaptados). Otras probadas:
+- `voz`: `en-US-AndrewMultilingualNeural:r` (por defecto). Otras probadas:
   `es-ES-ElviraNeural:r`, `en-US-AndrewMultilingualNeural:o` (nombres en inglés tal cual).

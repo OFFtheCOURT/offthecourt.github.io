@@ -126,7 +126,28 @@ def noche():
 
 
 def voz():
-    n = noche(); voice = n.get('voz', 'es-ES-AlvaroNeural:r')
+    _voz_una_vez()
+    n = noche(); vkey = n.get('voz', 'en-US-AndrewMultilingualNeural:r').replace(':', '_'); d = os.path.join(OUT, 'voz')
+    for intento in range(2):
+        vacios = [x['id'] for x in n['segmentos'] if os.path.getsize(os.path.join(d, vkey, x['id'] + '.mp3')) < 2000]
+        if not vacios: return
+        print('fragmentos vacíos, se regeneran con una variante:', vacios)
+        guardado = json.load(open(os.path.join(d, 'tiempos.json'))); arch = {x: open(os.path.join(d, vkey, x + '.mp3'), 'rb').read() for x in [y['id'] for y in n['segmentos']] if x not in vacios}
+        var = lambda t: (t.replace('. ', ', ', 1) if intento == 0 else 'Ojo: ' + t[0].lower() + t[1:])
+        n2 = dict(n, segmentos=[dict(x, t=var(x['t'])) for x in n['segmentos'] if x['id'] in vacios])
+        _voz_una_vez(n2)
+        nuevo = {x['id']: x for x in json.load(open(os.path.join(d, 'tiempos.json')))[vkey]}
+        guardado[vkey] = [nuevo.get(x['id'], x) for x in guardado[vkey]]
+        for x, b in arch.items(): open(os.path.join(d, vkey, x + '.mp3'), 'wb').write(b)
+        json.dump(guardado, open(os.path.join(d, 'tiempos.json'), 'w'), ensure_ascii=False)
+        for x in n['segmentos']:
+            if x['id'] in vacios: x['t'] = var(x['t'])
+        json.dump(n, open(os.path.join(OUT, 'noche.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+    sys.exit('la voz sigue saliendo vacía en: ' + ', '.join(vacios))
+
+
+def _voz_una_vez(n=None):
+    n = n or noche(); voice = n.get('voz', 'en-US-AndrewMultilingualNeural:r')
     guion = [{'id': s['id'], 't': s['t']} for s in n['segmentos']]
     payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+16%')}}
     pf = os.path.join(OUT, 'dispatch.json'); json.dump(payload, open(pf, 'w'))
@@ -248,7 +269,7 @@ def prof(pl):
 
 def montar():
     n = noche(); L, IMG, logo = web_data(); N = L[LIGA]; T = N['teams']; LOG = IMG['t'][LIGA]
-    vkey = n.get('voz', 'es-ES-AlvaroNeural:r').replace(':', '_'); mode = vkey.rsplit('_', 1)[1]
+    vkey = n.get('voz', 'en-US-AndrewMultilingualNeural:r').replace(':', '_'); mode = vkey.rsplit('_', 1)[1]
     vdir = os.path.join(OUT, 'voz'); TIMES = json.load(open(os.path.join(vdir, 'tiempos.json')))[vkey]
     if LIGA == 'nba': night = next(p for p in N['periods'] if p['key'] == n['fecha']); ronda = None
     else: _j, _p, ronda = partidos_del_dia(N, n['fecha']); night = {'games': _j}
@@ -297,7 +318,7 @@ def montar():
         scenes.append({'type': 'game', 'id': seg['id'], 'gi': narrated.index(seg), 'dur': round(d + PAD_IN + PAD_OUT, 2), 'off': PAD_IN,
                        'seed': int(re.sub(r'\D', '', str(g['id'])) or 1) % 100000, 'teams': [tA, tH], 'venue': g.get('venue') or '', 'cards': cards, 'marks': marks, 'words': w})
     for i, sc in enumerate(scenes[:-1]):
-        nx = scenes[i + 1]; sc['next'] = [nx['teams'][1]['c'], nx['teams'][0]['c']] if nx['type'] == 'game' else ['#ff7a1a', '#386eff']
+        nx = scenes[i + 1]; sc['next'] = [nx['teams'][1]['c'], nx['teams'][0]['c']] if nx['type'] == 'game' else [{'nba': '#2f7bff', 'el': '#ff7a1a', 'acb': '#1fbf75'}[LIGA], {'nba': '#e5383b', 'el': '#386eff', 'acb': '#2f6bff'}[LIGA]]
     f = datetime.date.fromisoformat(n['fecha']); f2 = f + datetime.timedelta(days=1)
     if LIGA != 'nba':
         pd = proximos(N, n['fecha'])[0]
@@ -313,10 +334,22 @@ def montar():
             'logos': {k: LOG[k] for k in used | {g['teams'][i]['abbr'] for g in night['games'] for i in (0, 1)} if k in LOG}, 'photos': photos,
             'logo': 'data:image/svg+xml;base64,' + base64.b64encode(logo.encode()).decode()}
     DATA['results'] = []
-    for _g in (night['games'] if LIGA != 'nba' else []):
+    DATA['theme'] = {'nba': {'a': '#2f7bff', 'b': '#e5383b'}, 'el': {'a': '#ff7a1a', 'b': '#386eff'}, 'acb': {'a': '#1fbf75', 'b': '#2f6bff'}}[LIGA]
+    for _g in night['games']:
         _H, _A = _g['teams']  # [visitante, local]
         if _A.get('score') is None or _H.get('score') is None: continue
-        DATA['results'].append({'l': team_obj(_A['abbr'], _A, T), 'v': team_obj(_H['abbr'], _H, T), 'ot': len(_A.get('ls') or []) > 4})
+        _ot = len(_A.get('ls') or []) > 4; _m = abs(_A['score'] - _H['score'])
+        _top = max([p for p in (_A.get('top') or []) + (_H.get('top') or [])], key=lambda p: p.get('pts', 0), default=None)
+        _tag, _sc = None, 0
+        if _ot: _tag, _sc = 'PRÓRROGA', 3
+        elif _m <= 3: _tag, _sc = 'FINAL DE INFARTO', 2.5
+        elif _m >= 25: _tag, _sc = f'PALIZA +{_m}', 2
+        if _top and _top.get('pts', 0) >= (40 if LIGA == 'nba' else 30) and _sc < 2.6: _tag, _sc = f"{_top['pts']} DE {_top['n'].split(' ')[-1].upper()}", 2.6
+        DATA['results'].append({'l': team_obj(_A['abbr'], _A, T), 'v': team_obj(_H['abbr'], _H, T), 'ot': _ot, 'tag': _tag, '_s': _sc + min(1, 10 / (1 + _m)) * .1})
+    _best = sorted(range(len(DATA['results'])), key=lambda i: -DATA['results'][i]['_s'])[:2]
+    for i, r in enumerate(DATA['results']):
+        r['hot'] = i in _best and r['tag'] is not None; r.pop('_s')
+    DATA['results'].sort(key=lambda r: (not r['hot'],))
     _hero = {x['id'] for x in n['segmentos'] if x.get('hero')}
     for _sc in scenes:
         if _sc.get('id') in _hero: _sc['hero'] = True
