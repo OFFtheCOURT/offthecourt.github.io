@@ -20,9 +20,10 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
-  group: offcourt
+  group: offcourt-fotos
   cancel-in-progress: false
 
 jobs:
@@ -40,7 +41,8 @@ jobs:
           mkdir -p voz
           curl -sL -o voz/yunet.onnx https://huggingface.co/opencv/face_detection_yunet/resolve/main/face_detection_yunet_2023mar.onnx
           if [ "${{ github.event.inputs.style || '1' }}" = "1" ]; then curl -sL -o voz/birefnet.onnx https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx; fi
-      - run: python3 photos.py
+      - name: Fotos (por tandas)
+        run: timeout 62m python3 -u photos.py || echo "tanda cortada, se guarda lo hecho"
         env:
           RECROP: ${{ github.event.inputs.recrop || '0' }}
           STYLE: ${{ github.event.inputs.style || '1' }}
@@ -55,3 +57,12 @@ jobs:
           git diff --cached --quiet || git commit -m "Fotos de jugadores"
           git pull --rebase -X theirs origin main || true
           git push
+      - name: Siguiente tanda (si quedan fotos por hacer)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          q=$(cat photos/pending.txt 2>/dev/null || echo 0)
+          echo "quedan $q"
+          if [ "$q" -gt 0 ] && [ "${{ github.event.inputs.recrop }}" = "1" ]; then
+            gh workflow run fotos.yml --ref main -f recrop=1 -f style="${{ github.event.inputs.style || '1' }}" -f only="${{ github.event.inputs.only }}"
+          fi

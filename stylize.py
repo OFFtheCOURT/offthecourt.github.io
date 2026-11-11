@@ -75,9 +75,9 @@ def card(src, color, alt, number='', W=300, H=219):
     d = ImageDraw.Draw(bg)
     for k in range(-H, W, 22): d.line([(k, H), (k + H * 0.45, 0)], fill=tuple(min(255, int(v * 1.22)) for v in c1) + (255,), width=3)
     if number:
-        try: fnt = ImageFont.truetype(FONT, int(H * 0.5))
+        try: fnt = ImageFont.truetype(FONT, int(H * 0.32))
         except Exception: fnt = ImageFont.load_default()
-        d.text((W - 12, int(H * 0.05)), str(number), font=fnt, fill=tuple(min(255, int(v * 1.45)) for v in c1) + (255,), anchor='ra')
+        d.text((W - 10, int(H * 0.04)), str(number), font=fnt, fill=tuple(min(255, int(v * 1.55)) for v in c1) + (255,), anchor='ra')
     # 5) sombra + borde del 2.º color + jugador
     sh = Image.new('RGBA', (pw, ph), (0, 0, 0, 0)); sh.putalpha(pm.point(lambda v: int(v * 0.5)))
     bg.alpha_composite(sh.filter(ImageFilter.GaussianBlur(8)), (ox + 8, oy + 6))
