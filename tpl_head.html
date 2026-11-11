@@ -684,6 +684,24 @@ html[data-theme="light"] .trow.win .score{text-shadow:none}
 html[data-theme="light"] .h-btns .btn{color:#fff}
 html[data-theme="light"] .h-btns .btn.primary{color:inherit}
 html[data-theme="light"] body{background-image:radial-gradient(1100px 520px at 10% -8%,var(--glow1),transparent 60%),radial-gradient(900px 520px at 100% 0%,var(--glow2),transparent 60%)}
+
+/* Ficha completa en móvil: pantalla completa, filas compactas y sin desenfoque (scroll fluido) */
+.bx-scroll{overscroll-behavior:contain}
+@media (max-width:640px){
+  .bx-sheet{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
+  .bx-box{height:100vh;height:100dvh;max-height:none;border-radius:0;border:0;box-shadow:none;animation:none;
+    padding:calc(8px + env(safe-area-inset-top,0px)) 10px calc(6px + env(safe-area-inset-bottom,0px))}
+  .bx-sub{margin:2px 0 8px;font-size:10px}
+  .bx-tabs{margin-bottom:8px;padding:3px}.bx-tabs button{padding:7px 6px;font-size:15px}.bx-tabs button img{width:20px;height:20px}
+  table.bx{font-size:13px}
+  .bx th,.bx td{padding:5px 5px}
+  .bx thead th button{padding:7px 5px;font-size:10px}.bx thead th:first-child{padding:7px 8px}
+  .bx td.pts{font-size:15px}
+  .bx-n b{font-size:12.5px}.bx-n i{font-size:11px;min-width:16px}.bx-n{gap:5px;max-width:124px}
+  .bx tr.sep td{padding:3px 8px;font-size:9.5px}
+  .bx-leg{font-size:9.5px;margin-top:6px;line-height:1.3}
+  .bx tbody th,.bx tfoot th{box-shadow:4px 0 6px -5px rgba(0,0,0,.4)}
+}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 
