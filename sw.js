@@ -6,6 +6,8 @@ self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.origin !== location.origin) return;   // los marcadores en directo van siempre a la red
-  e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put(e.request, c)); return r; })
-    .catch(() => caches.match(e.request).then(r => r || caches.match('./'))));
+  // fichas completas: se guarda solo la última de cada liga (sin la versión en la dirección)
+  const key = u.pathname.includes('/box/') ? new Request(u.origin + u.pathname) : e.request;
+  e.respondWith(fetch(e.request).then(r => { const c = r.clone(); if (r.ok) caches.open(CACHE).then(k => k.put(key, c)); return r; })
+    .catch(() => caches.match(key).then(r => r || caches.match('./'))));
 });

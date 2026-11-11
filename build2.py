@@ -41,6 +41,16 @@ for lg,fix in ((el,EL_FIX),(acb,ACB_FIX)):
         if n: t['short']=n
 
 LEAGUES={'nba':nba,'el':el,'acb':acb}
+# fichas completas (todos los jugadores) en archivos aparte: la web solo los descarga al pulsar "Ficha completa"
+os.makedirs(S+'/box',exist_ok=True)
+for k,lg in LEAGUES.items():
+    bx={}
+    for p in lg['periods']:
+        for g in p['games']:
+            rows=[t.pop('box',None) for t in g['teams']]
+            if all(rows): bx[str(g['id'])]=rows; g['bx']=1
+    json.dump(bx,open(f'{S}/box/{k}.json','w'),ensure_ascii=False,separators=(',',':'))
+    print('fichas',k,len(bx))
 
 # ---------- images ----------
 # fotos de jugadores (Wikimedia Commons), generadas por photos.py en la carpeta photos/

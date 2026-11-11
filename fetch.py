@@ -39,7 +39,7 @@ for day in days:
             teams[t['abbreviation']]={'id':tid,'abbr':t['abbreviation'],'name':t['displayName'],'short':t['shortDisplayName'],'color':t.get('color','333333'),'alt':t.get('alternateColor','ffffff'),'logo':t.get('logo','')}
             rec=next((r['summary'] for r in comp.get('records',[]) if r.get('type')=='total' or r.get('name')=='overall'), '')
             st={x['name']:x['displayValue'] for x in box.get(tid,{}).get('statistics',[])}
-            top=[]
+            top=[]; bx=[]
             if tid in pl:
                 grp=pl[tid]['statistics'][0]; names=grp['labels']
                 for a in grp['athletes']:
@@ -53,11 +53,14 @@ for day in days:
                     top.append({'pid':ath['id'],'n':ath['displayName'],'pos':ath.get('position',{}).get('abbreviation',''),'num':ath.get('jersey',''),
                         'st':a.get('starter',False),'min':m['MIN'],'pts':int(pts),'reb':int(reb),'ast':int(ast),'stl':int(stl),'blk':int(blk),'to':int(to),
                         'fg':m['FG'],'tp':m['3PT'],'ft':m['FT'],'pm':m['+/-'],'gs':round(gs,1)})
+                    bx.append({'pid':ath['id'],'n':ath['displayName'],'num':ath.get('jersey',''),'pos':ath.get('position',{}).get('abbreviation',''),'s':1 if a.get('starter') else 0,
+                        'min':m['MIN'],'pts':int(pts),'fg':m['FG'],'tp':m['3PT'],'ft':m['FT'],'or':int(num(m['OREB'])),'dr':int(num(m['DREB'])),'reb':int(reb),'ast':int(ast),
+                        'stl':int(stl),'blk':int(blk),'to':int(to),'pf':int(num(m['PF'])),'pm':m['+/-']})
                 top.sort(key=lambda x:-x['gs']); top=top[:5]
             g['teams'].append({'abbr':t['abbreviation'],'ha':comp['homeAway'],'score':int(comp.get('score',0) or 0),'win':comp.get('winner',False),'rec':rec,
                'ls':[int(num(l.get('value',l.get('displayValue',0)))) for l in comp.get('linescores',[])],
                'st':{k:st.get(k,'') for k in ['fieldGoalsMade-fieldGoalsAttempted','fieldGoalPct','threePointFieldGoalsMade-threePointFieldGoalsAttempted','threePointFieldGoalPct','freeThrowsMade-freeThrowsAttempted','freeThrowPct','totalRebounds','offensiveRebounds','assists','steals','blocks','totalTurnovers','pointsInPaint','fastBreakPoints','turnoverPoints','largestLead']},
-               'top':top})
+               'top':top,'box':bx})
         for v in s.get('videos',[])[:6]:
             g['videos'].append({'h':v['headline'],'d':v.get('duration',0),'u':v['links'].get('web',{}).get('href','')})
         games.append(g)

@@ -58,7 +58,12 @@ def box(mid):
         if 'players' in o: sides.append(o)
     q=[]; m=re.search(r'"quarterScores":',t)
     if m: q=dec.raw_decode(t[m.end():])[0]
-    return mid,{'comp':comp,'sides':sides,'q':q}
+    tb=[]   # ficha completa de cada jugador (página de estadísticas)
+    try:
+        e=page(f'https://live.acb.com/partidos/partido-{mid}/estadisticas'); m=re.search(r'"teamBoxscores":',e)
+        if m: tb=dec.raw_decode(e[m.end():])[0]
+    except Exception as ex: print('sin ficha completa', mid, ex)
+    return mid,{'comp':comp,'sides':sides,'q':q,'tb':tb}
 with cf.ThreadPoolExecutor(6) as ex: boxes=dict(ex.map(box,[m['id'] for m in played]))
 
 def num(x):
@@ -98,13 +103,24 @@ def mkside(m,bx,hk):
         a=season_players.setdefault(pid,{'pid':pid,'n':name,'abbr':ab,'num':rec['num'],'g':0,'min':0,'pts':0,'reb':0,'ast':0,'val':0,'pm':0})
         a['g']+=1; a['min']+=mn; a['pts']+=rec['pts']; a['reb']+=rec['reb']; a['ast']+=rec['ast']; a['val']+=val; a['pm']+=pm; a['abbr']=ab; a['num']=rec['num'] or a['num']
     top.sort(key=lambda z:(-z['gs'],-z['pts'])); top=top[:5]
+    bxl=[]
+    tbs=next((x for x in bx.get('tb',[]) if (x.get('team') or {}).get('abbreviatedName')==ab),None)
+    q0=next((p['stats'] for p in (tbs or {}).get('statsByPeriods',[]) if p.get('quarter')==0),None)
+    for p in (q0 or {}).get('players',[]):
+        if mins(p.get('playTime') or '0:00')<=0: continue
+        pl=p.get('player') or {}; i=lambda k:int(num(p.get(k,0))); pm=i('plusMinus')
+        fgm=i('twoPointersMade')+i('threePointersMade'); fga=i('twoPointersAttempted')+i('threePointersAttempted')
+        bxl.append({'pid':'acb'+str(pl.get('id','')),'n':pl.get('nickname') or pl.get('firstInitialAndLastName',''),'num':pl.get('shirtNumber') or '','pos':pl.get('gameRole') or '',
+          's':1 if p.get('isStarted') else 0,'min':str(round(mins(p.get('playTime') or '0:00'))),'pts':i('points'),'fg':f'{fgm}-{fga}','tp':f"{i('threePointersMade')}-{i('threePointersAttempted')}",
+          'ft':f"{i('freeThrowsMade')}-{i('freeThrowsAttempted')}",'or':i('offRebounds'),'dr':i('defRebounds'),'reb':i('totalRebounds'),'ast':i('assists'),'stl':i('steals'),
+          'blk':i('blocks'),'to':i('turnovers'),'pf':i('personalFouls'),'pm':('+' if pm>0 else '')+str(pm),'val':i('rating')})
     T=season_teams.setdefault(ab,{'g':0,'pts':0,'reb':0,'ast':0,'stl':0,'to':0,'oreb':0,'fgm':0,'fga':0,'tpm':0,'tpa':0,'ftm':0,'fta':0,'paint':0,'fb':0,'bench':0})
     score=m['hs'] if hk=='home' else m['as']
     T['g']+=1; T['pts']+=score
     for k,sk in [('reb','totalRebounds'),('ast','assists'),('stl','steals'),('to','totalTurnovers'),('oreb','offensiveRebounds'),('paint','pointsInPaint'),('fb','fastBreakPoints'),('bench','benchPoints')]: T[k]+=int(st[sk])
     T['fgm']+=fg[0];T['fga']+=fg[1];T['tpm']+=tp[0];T['tpa']+=tp[1];T['ftm']+=ft[0];T['fta']+=ft[1]
     ls=[q[hk] for q in bx['q']]
-    return {'abbr':ab,'ha':hk,'score':score,'win':(m['hs']>m['as'])==(hk=='home'),'rec':recs.get((m['id'],ab),''),'ls':ls,'st':st,'top':top}
+    return {'abbr':ab,'ha':hk,'score':score,'win':(m['hs']>m['as'])==(hk=='home'),'rec':recs.get((m['id'],ab),''),'ls':ls,'st':st,'top':top,'box':bxl}
 
 periods=[]
 for r in sorted({m['round'] for m in played},reverse=True):

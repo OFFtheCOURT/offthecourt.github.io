@@ -51,7 +51,7 @@ def team_side(g,side,bx):
       'totalRebounds':str(int(T['totalRebounds'])),'offensiveRebounds':str(int(T['offensiveRebounds'])),
       'assists':str(int(T['assistances'])),'steals':str(int(T['steals'])),'blocks':str(int(T['blocksFavour'])),
       'totalTurnovers':str(int(T['turnovers'])),'valuation':str(int(T['valuation'])),'foulsReceived':str(int(T['foulsReceived']))}
-    top=[]
+    top=[]; bxl=[]
     for pl in b['players']:
         x=pl['stats']
         if not x.get('timePlayed'): continue
@@ -60,8 +60,11 @@ def team_side(g,side,bx):
           'min':mmss(x['timePlayed']),'pts':int(x['points']),'reb':int(x['totalRebounds']),'ast':int(x['assistances']),'stl':int(x['steals']),'blk':int(x['blocksFavour']),
           'to':int(x['turnovers']),'fg':f"{int(x['fieldGoalsMadeTotal'])}-{int(x['fieldGoalsAttemptedTotal'])}",'tp':f"{int(x['fieldGoalsMade3'])}-{int(x['fieldGoalsAttempted3'])}",
           'ft':f"{int(x['freeThrowsMade'])}-{int(x['freeThrowsAttempted'])}",'pm':('+' if x['plusMinus']>0 else '')+str(int(x['plusMinus'])),'gs':x['valuation'],'val':int(x['valuation'])})
+        bxl.append({'pid':pid,'n':nice(per['name']),'num':str(x.get('dorsal','')),'pos':top[-1]['pos'],'s':1 if x.get('startFive') else 0,'min':mmss(x['timePlayed']),'pts':int(x['points']),
+          'fg':top[-1]['fg'],'tp':top[-1]['tp'],'ft':top[-1]['ft'],'or':int(x.get('offensiveRebounds',0)),'dr':int(x.get('defensiveRebounds',0)),'reb':int(x['totalRebounds']),
+          'ast':int(x['assistances']),'stl':int(x['steals']),'blk':int(x['blocksFavour']),'to':int(x['turnovers']),'pf':int(x.get('foulsCommited',0)),'pm':top[-1]['pm'],'val':int(x['valuation'])})
     top.sort(key=lambda z:(-z['gs'],-z['pts'])); top=top[:5]
-    return {'abbr':c,'ha':'home' if side=='local' else 'away','score':s['score'],'win':s['score']>opp['score'],'rec':recs.get((g['gameCode'],c),''),'ls':ls,'st':st,'top':top}
+    return {'abbr':c,'ha':'home' if side=='local' else 'away','score':s['score'],'win':s['score']>opp['score'],'rec':recs.get((g['gameCode'],c),''),'ls':ls,'st':st,'top':top,'box':bxl}
 
 def mkgame(g):
     bx=boxes[g['gameCode']]

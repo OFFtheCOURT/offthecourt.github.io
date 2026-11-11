@@ -120,7 +120,8 @@ function gameCard(g){
     <div class="stars">${g.teams.map(s=>{const p=s.top[0];if(!p)return '';const t=TEAMS[s.abbr];const ph=photo(p);
       return `<div class="star" style="--tc:${tc(t)}"><div class="av ${ph?'':'fb'}">${ph||initials(p.n)}</div><div class="who"><div class="tg">Mejor de ${esc(t.short)}</div><b>${esc(p.n)}</b><span><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast${CUR!=='nba'?' · '+p.val+' val':''}</span></div></div>`}).join('')}</div>
     <div class="g-foot">
-      <button class="btn grow" type="button" aria-expanded="false" aria-controls="${id}" data-toggle="${id}">Estadísticas y top 5 <span class="car">▾</span></button>
+      <button class="btn grow" type="button" aria-expanded="false" aria-controls="${id}" data-toggle="${id}"><span class="lbl-l">Estadísticas y top 5</span><span class="lbl-s">Detalles</span> <span class="car">▾</span></button>
+      ${g.bx?`<button class="btn bx-btn" type="button" data-box="${esc(g.id)}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></svg>Ficha completa</button>`:''}
       <a class="btn primary" href="${esc(g.yt)}" target="_blank" rel="noopener">▶ Resumen</a>
     </div>
     <div class="g-detail" id="${id}" hidden>
@@ -532,6 +533,63 @@ mBtn.addEventListener('click',e=>{e.stopPropagation();setMenu(mPanel.hidden)});
 mPanel.addEventListener('click',e=>{if(e.target.closest('a'))setMenu(false)});
 document.addEventListener('click',e=>{if(!mPanel.hidden&&!e.target.closest('.menu'))setMenu(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false)});
+/* ---------- ficha completa del partido (todos los jugadores) ---------- */
+const BOX={};let boxCur=null;
+function loadBox(lg){if(!BOX[lg])BOX[lg]=fetch('box/'+lg+'.json?v='+encodeURIComponent(UPDATED||'')).then(r=>{if(!r.ok)throw 0;return r.json()}).catch(e=>{delete BOX[lg];throw e});return BOX[lg]}
+function findGame(id){for(const p of L.periods)for(const g of p.games)if(String(g.id)===String(id))return Object.assign({},g,{_day:p.key});return null}
+const BXC=()=>[['min','Min','Minutos'],['pts','Pts','Puntos'],['reb','Reb','Rebotes'],['ast','Ast','Asistencias'],['fg','TC','Tiros de campo (anotados-intentados)'],['tp','T3','Triples'],['ft','TL','Tiros libres'],['or','RO','Rebotes ofensivos'],['dr','RD','Rebotes defensivos'],['stl','Rob','Robos'],['blk','Tap','Tapones'],['to','Pér','Pérdidas'],['pf','FP','Faltas personales'],['pm','+/-','Más/menos'],...(CUR!=='nba'?[['val','Val','Valoración']]:[])];
+const nv=v=>{if(typeof v==='number')return v;const s=String(v||'');if(s.includes('-')&&!s.startsWith('-')&&!s.startsWith('+'))return parseInt(s)||0;return parseFloat(s)||0};
+function boxTable(rows,side,sortK){
+  const C=BXC();let rs=rows.slice();
+  if(sortK)rs.sort((a,b)=>nv(b[sortK])-nv(a[sortK]));
+  const best={};C.forEach(([k])=>{if(['min','pf','to','pm'].includes(k))return;best[k]=Math.max(...rows.map(r=>nv(r[k])))});
+  const sum=k=>rows.reduce((t,r)=>t+nv(r[k]),0),pair=k=>{let m=0,a=0;rows.forEach(r=>{const x=String(r[k]||'0-0').split('-');m+=+x[0]||0;a+=+x[1]||0});return m+'-'+a};
+  const pc=k=>{const [m,a]=pair(k).split('-').map(Number);return a?Math.round(m/a*100)+'%':'—'};
+  const tr=(r,cls)=>`<tr class="${cls||''}"><th scope="row"><span class="bx-n">${r.num!==''&&r.num!=null?`<i>${esc(r.num)}</i>`:''}<b>${esc(r.n)}</b>${r.pos?`<small>${esc(r.pos)}</small>`:''}</span></th>${C.map(([k])=>{const v=r[k]??'';return `<td class="${best[k]&&nv(v)===best[k]&&best[k]>0?'top':''} ${k==='pts'?'pts':''}">${esc(v)}</td>`}).join('')}</tr>`;
+  let body='';
+  if(sortK){body=rs.map(r=>tr(r)).join('')}
+  else{const st=rs.filter(r=>r.s),bn=rs.filter(r=>!r.s);
+    body=(st.length?`<tr class="sep"><td colspan="${C.length+1}">Titulares</td></tr>`+st.map(r=>tr(r)).join(''):'')+(bn.length?`<tr class="sep"><td colspan="${C.length+1}">${st.length?'Banquillo':'Jugadores'}</td></tr>`+bn.map(r=>tr(r)).join(''):'')}
+  const tot={n:'Total equipo',num:'',min:'',pts:sum('pts'),reb:sum('reb'),ast:sum('ast'),fg:pair('fg'),tp:pair('tp'),ft:pair('ft'),or:sum('or'),dr:sum('dr'),stl:sum('stl'),blk:sum('blk'),to:sum('to'),pf:sum('pf'),pm:'',val:sum('val')};
+  const pct={n:'Porcentaje',num:'',fg:pc('fg'),tp:pc('tp'),ft:pc('ft')};
+  return `<div class="bx-scroll"><table class="bx"><thead><tr><th scope="col">Jugador</th>${C.map(([k,l,t])=>`<th scope="col"><button type="button" data-bxsort="${k}" title="Ordenar por ${t}" aria-pressed="${sortK===k}">${l}</button></th>`).join('')}</tr></thead>
+   <tbody>${body}</tbody><tfoot>${tr(tot,'tot').replace(/class="top ?/g,'class="')}${tr(pct,'pc').replace(/class="top ?/g,'class="')}</tfoot></table></div>`;
+}
+function renderBox(){
+  const {g,rows,side,sort}=boxCur,[A,H]=g.teams,t=g.teams[side],T=TEAMS[t.abbr];
+  const when=g.utc?madrid(g.utc,{weekday:'long',day:'numeric',month:'long'}):(/^\d{4}-\d\d-\d\d$/.test(g._day||'')?new Date(g._day+'T12:00:00Z').toLocaleDateString('es-ES',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'})+' (EE. UU.)':'');
+  $('boxSheet').innerHTML=`<div class="bx-box" role="dialog" aria-modal="true" aria-label="Ficha completa del partido">
+   <div class="bx-head"><div class="bx-score">${[A,H].map((s,i)=>`<span class="bx-tm ${s.win?'w':''}"><img src="${logo(s.abbr)}" alt=""><b>${esc(TEAMS[s.abbr].short)}</b><em>${s.score}</em></span>${i===0?'<i>–</i>':''}`).join('')}</div>
+    <button type="button" class="fp-x" data-boxclose aria-label="Cerrar">✕</button></div>
+   <div class="bx-sub">Ficha completa${when?' · '+esc(when):''}</div>
+   <div class="bx-tabs" role="tablist">${[A,H].map((s,i)=>`<button type="button" role="tab" data-bxside="${i}" aria-selected="${i===side}" style="--tc:${tc(TEAMS[s.abbr])}"><img src="${logo(s.abbr)}" alt="">${esc(TEAMS[s.abbr].short)}</button>`).join('')}</div>
+   ${boxTable(rows[side],side,sort)}
+   <div class="bx-leg">Toca una columna para ordenar · <b>en color</b>: mejor dato del equipo · TC: tiros de campo · T3: triples · TL: tiros libres · RO/RD: rebotes ofensivos/defensivos${CUR!=='nba'?' · Val: valoración':''}</div></div>`;
+}
+async function openBox(id){
+  const g=findGame(id);if(!g)return;
+  const sh=$('boxSheet');sh.hidden=false;document.body.classList.add('noscroll');
+  sh.innerHTML='<div class="bx-box"><div class="bx-load">Cargando ficha completa…</div></div>';
+  try{const all=await loadBox(CUR);const rows=all[String(id)];if(!rows)throw 0;
+    const fv=favAb();boxCur={g,rows,side:g.teams[1].abbr===fv?1:0,sort:null};renderBox();}
+  catch(e){sh.innerHTML='<div class="bx-box"><div class="bx-head"><b>Ficha no disponible</b><button type="button" class="fp-x" data-boxclose aria-label="Cerrar">✕</button></div><p class="bx-load">No se ha podido cargar la ficha de este partido. Prueba de nuevo en un rato.</p></div>'}
+}
+function closeBox(){$('boxSheet').hidden=true;document.body.classList.remove('noscroll');boxCur=null}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-box]');if(b){openBox(b.dataset.box);return}
+  if(!boxCur&&$('boxSheet').hidden)return;
+  if(e.target.closest('[data-boxclose]')||e.target.id==='boxSheet'){closeBox();return}
+  const sd=e.target.closest('[data-bxside]');if(sd&&boxCur){boxCur.side=+sd.dataset.bxside;renderBox();return}
+  const so=e.target.closest('[data-bxsort]');if(so&&boxCur){const k=so.dataset.bxsort;boxCur.sort=boxCur.sort===k?null:k;const x=$('boxSheet').querySelector('.bx-scroll').scrollLeft;renderBox();$('boxSheet').querySelector('.bx-scroll').scrollLeft=x}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('boxSheet').hidden)closeBox()});
+/* ---------- modo claro / oscuro ---------- */
+function setTheme(th){const r=document.documentElement;if(th==='light')r.dataset.theme='light';else delete r.dataset.theme;
+  try{localStorage.setItem('offcourt-theme',th)}catch(e){}
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=th==='light'?'#ffffff':'#070b13';
+  $('themeBtn').setAttribute('aria-label',th==='light'?'Cambiar a modo oscuro':'Cambiar a modo claro')}
+$('themeBtn').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'));
+if(document.documentElement.dataset.theme==='light')setTheme('light');
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
