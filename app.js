@@ -171,10 +171,28 @@ function facts(day){
 function periodTitle(p){return isDay()?cap(fmtLong(p.key)):`${p.label} · ${range(p.from,p.to)}`}
 
 /* ---------- portada ---------- */
+/* jornada en juego (EuroLiga/ACB): la última jornada con resultados es la misma que la próxima con partidos pendientes */
+function curRoundUp(){if(CUR==='nba')return null;const night=L.periods[0],u=(L.upcoming||[])[0];if(!night||!u)return null;
+  const r=+(String(u.label).match(/\d+/)||[0])[0];return r&&r===night.round?u:null}
+/* barra de marcadores de arriba: en EuroLiga/ACB, toda la jornada en juego (resultados y, si no se ha jugado, día y hora) */
+function renderTicker(){
+  const T=TXT[CUR],night=L.periods[0],u=curRoundUp(),fv=favAb();
+  const res=g=>`<a class="tk ${g.teams.some(s=>s.abbr===fv)?'fav':''}" href="#g${g.id}" data-teams="${g.teams.map(s=>esc(s.abbr)).join(',')}">${g.teams.map(s=>`<img src="${logo(s.abbr)}" alt=""><span class="${s.win?'w':'l'}">${esc(s.abbr)}</span><span class="s">${s.score}</span>`).join('')}</a>`;
+  let items=night.games.map(g=>({t:Date.parse(g.utc||0)||0,h:res(g)}));
+  if(u){const done=new Set(night.games.map(g=>String(g.id)));
+    u.games.filter(g=>!done.has(String(g.id))).forEach(g=>{const t=Date.parse(g.utc),live=g.state==='in',post=g.state==='post',[A,H]=g.teams;
+      const fvc=g.teams.some(s=>s.abbr===fv)?'fav':'';
+      if(live||post){items.push({t,h:`<a class="tk ${live?'live':''} ${fvc}" href="#hoy" data-teams="${g.teams.map(s=>esc(s.abbr)).join(',')}">${g.teams.map(s=>{const o=g.teams.find(x=>x!==s);const w=post&&s.score>o.score;return `<img src="${logo(s.abbr)}" alt=""><span class="${w||live?'w':'l'}">${esc(s.abbr)}</span><span class="s">${s.score}</span>`}).join('')}${live?'<i class="tk-live">●</i>':''}</a>`});return}
+      items.push({t,h:`<a class="tk pend ${fvc}" href="#proximos" data-teams="${g.teams.map(s=>esc(s.abbr)).join(',')}"><img src="${logo(A.abbr)}" alt=""><span class="w">${esc(A.abbr)}</span><span class="tk-when">${madrid(g.utc,{weekday:'short'}).replace('.','')}<b>${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}</b></span><img class="r2" src="${logo(H.abbr)}" alt=""><span class="w r2b">${esc(H.abbr)}</span></a>`})})
+    items.sort((a,b)=>a.t-b.t)}
+  $('ticker').innerHTML=`<span class="tk-lbl">${T.tick||('J'+night.round)}</span>`+items.map(x=>x.h).join('');
+}
 function renderTop(){
   const T=TXT[CUR], night=L.periods[0];
-  $('h1').innerHTML=T.h1;
-  $('nightEyebrow').innerHTML='<span>'+(isDay()?cap(fmtLong(night.key))+' · '+new Date(night.key+'T12:00').getFullYear():`${night.label} · ${range(night.from,night.to)} ${night.to.slice(0,4)}`)+'</span>';
+  const curUp=curRoundUp(),partial=!!curUp;
+  $('h1').innerHTML=partial?'Jornada <span class="hl">en juego</span>':T.h1;
+  if(partial){$('nightEyebrow').innerHTML=`<span>${night.label} · ${night.games.length} de ${night.games.length+curUp.games.filter(g=>!night.games.some(x=>x.id===g.id)).length} jugados</span>`}
+  else $('nightEyebrow').innerHTML='<span>'+(isDay()?cap(fmtLong(night.key))+' · '+new Date(night.key+'T12:00').getFullYear():`${night.label} · ${range(night.from,night.to)} ${night.to.slice(0,4)}`)+'</span>';
   const totalPts=night.games.reduce((s,g)=>s+g.teams[0].score+g.teams[1].score,0);
   $('nightSub').textContent=`${night.games.length} partidos · ${totalPts} puntos en total · media de ${(totalPts/night.games.length/2).toFixed(1)} por equipo`;
   $('facts').innerHTML=facts(night);
@@ -205,7 +223,7 @@ function renderTop(){
   </div>`}).join('');
   const fv=FAV[CUR];$('nightGames').innerHTML=[...night.games].sort((a,b)=>(b.teams.some(t=>t.abbr===fv)?1:0)-(a.teams.some(t=>t.abbr===fv)?1:0)).map(gameCard).join('');
   // ticker
-  $('ticker').innerHTML=`<span class="tk-lbl">${T.tick||('J'+night.round)}</span>`+night.games.map(g=>`<a class="tk" href="#g${g.id}" data-teams="${g.teams.map(s=>esc(s.abbr)).join(',')}">${g.teams.map(s=>`<img src="${logo(s.abbr)}" alt=""><span class="${s.win?'w':'l'}">${esc(s.abbr)}</span><span class="s">${s.score}</span>`).join('')}</a>`).join('');
+  renderTicker();
 }
 function countUp(){
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -696,7 +714,7 @@ async function liveTick(){
         }
       }
     }
-    renderHoy();
+    renderHoy();try{renderTicker()}catch(e){}
     if(boxCur&&LIVEBOX[boxCur.g.id]&&!$('boxSheet').hidden){const g=findGame(boxCur.g.id);if(g){boxCur.g=g;boxCur.rows=g.teams.map(t=>LIVEBOX[g.id][t.abbr]||[]);renderBox()}}
   }catch(e){/* sin conexión: se queda con los datos de la última actualización */}
 }
