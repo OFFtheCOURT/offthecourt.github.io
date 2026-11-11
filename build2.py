@@ -98,7 +98,16 @@ FAV=('<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,'+urllib.pa
 OUT=os.environ.get('OFFCOURT_OUT','noche-nba.html')
 if OUT=='index.html':  # web propia: documento HTML completo
     html=('<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
-          '<title>Offcourt</title>'+FAV+'<meta name="theme-color" content="#070b13">'
+          '<title>Offcourt · Resultados y estadísticas de NBA, EuroLiga y ACB</title>'+FAV+'<meta name="theme-color" content="#070b13">'
+          '<meta name="description" content="Resultados, estadísticas, clasificaciones, líderes y marcadores en directo de la NBA, la EuroLiga y la ACB, actualizados cada día.">'
+          '<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">'
+          '<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Offcourt">'
+          '<meta property="og:type" content="website"><meta property="og:site_name" content="Offcourt"><meta property="og:locale" content="es_ES">'
+          '<meta property="og:title" content="Offcourt · El baloncesto, fuera de la pista">'
+          '<meta property="og:description" content="Resultados, estadísticas y directo de NBA, EuroLiga y ACB. Actualizado cada día.">'
+          '<meta property="og:url" content="https://offthecourt.github.io/"><meta property="og:image" content="https://offthecourt.github.io/icons/og.png">'
+          '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
+          '<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://offthecourt.github.io/icons/og.png">'
           '<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style></head><body>'+html+'</body></html>')
 open(S+'/'+OUT,'w').write(html)
 print('photos',len(img['p']),'size',len(html))
