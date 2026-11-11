@@ -1,3 +1,21 @@
+# FORMATO EUROLIGA / ACB (manda sobre el resto de este documento y sobre el máximo de 7 partidos)
+
+Duración **máxima 60 s** (`montar` avisa si se pasa). Vertical 9:16 con zona segura: todo el contenido va reducido
+al 86 % y subido, para que ni los bordes ni los subtítulos queden tapados por la interfaz de TikTok/Reels/Shorts.
+
+1. **Intro (~4 s): pantalla de resultados.** Tarjetas con TODOS los partidos de la jornada (1 o 2 columnas según
+   cuántos haya, se adapta sola), local a la izquierda y visitante a la derecha, marcador que sube, ganador
+   iluminado, etiqueta FINAL/PRÓRROGA. La voz NO lee los partidos que ya se ven: una sola frase de resumen
+   por encima ("paliza en Belgrado y final de locura en París").
+2. **Un resumen por partido destacado**, dinámico y sin relleno, con marcador en directo, pantallazos con la cifra
+   del jugador (tarjetas) y detalle breve (último cuarto decisivo, mejores jugadores, balance). Reparto del tiempo
+   para no pasar de 60 s: 2 partidos → ~9 s cada uno; 3 → ~8 s; 4-5 → ~6 s (una frase y una tarjeta);
+   más de 5 partidos → narra solo los 5 más interesantes (el resto se ven en la pantalla de resultados).
+3. **Final de partido decidido en el último tiro** (solo si el dato es seguro o lo indica el usuario): añade
+   `"hero": true` al segmento de ese partido y la palabra clave "Hifi"/"canasta" en el texto; se anima la canasta ganadora.
+4. **Cierre (~7 s):** próximos partidos de esa liga, destacando uno o dos (`resaltar`), y la frase final
+   "Esto es {OFFCOURT|Ófkort}.", que dispara la tarjeta final con el logo.
+
 # Vídeos resumen diarios de Offcourt (NBA, EuroLiga y ACB)
 
 Un vídeo por cada liga que haya jugado: **NBA** cada mañana (la noche anterior), **EuroLiga**

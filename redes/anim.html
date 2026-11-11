@@ -463,10 +463,15 @@ function introResults(sc,t){
   X.font=`900 124px ${FD}`;const t1=(D.title1||'J').toString(),t2=(D.title2||'').toString();const w1=X.measureText(t1+' ').width,w2=X.measureText(t2).width,xx=-(w1+w2)/2;
   const gg=X.createLinearGradient(xx+w1,0,xx+w1+w2,0);gg.addColorStop(0,'#ff5a1f');gg.addColorStop(.5,'#ff8a1a');gg.addColorStop(1,'#ffc04d');X.textAlign='left';X.fillStyle=FG;X.fillText(t1,xx,0);X.fillStyle=gg;X.fillText(t2,xx+w1,0);
   X.textAlign='center';X.font=`700 32px ${FL}`;X.letterSpacing='8px';X.fillStyle=MUT;X.fillText((D.dateLong||'').toUpperCase(),0,52);X.letterSpacing='0px';X.restore();
-  G.forEach((g,i)=>{
-    const L=g.teams[0],V=g.teams[1],y=660+i*350,t0=.55+i*.45,sl=eo((t-t0)/.5);if(sl<=0)return;
-    const cn=eo((t-t0-.2)/.7),lw=L.score>V.score,done=t>t0+.95;
-    X.save();X.globalAlpha=clamp((t-t0)/.15);X.translate((1-sl)*(i%2?900:-900),0);
+  const RS=D.results&&D.results.length?D.results:G.map(g=>({l:g.teams[0],v:g.teams[1],ot:!!g.hero})),n=RS.length;
+  // reparto en 1 o 2 columnas: la que dé tarjetas más grandes
+  const AH=780,AW=980,fit=c=>{const r=Math.ceil(n/c);return Math.min(1,(AH-(r-1)*22)/r/320,(AW-(c-1)*22)/c/960)};
+  const cols=fit(2)>fit(1)*1.02?2:1,f=fit(cols),rows=Math.ceil(n/cols),cw0=960*f,ch0=320*f,gx=22,gy=22;
+  const totH=rows*ch0+(rows-1)*gy,oy=650+(AH-totH)/2,ox=(W-(cols*cw0+(cols-1)*gx))/2,stp=Math.min(.45,1.8/n);
+  RS.forEach((g,i)=>{
+    const L=g.l,V=g.v,col=i%cols,row=Math.floor(i/cols),X0=ox+col*(cw0+gx),Y0=oy+row*(ch0+gy),t0=.5+i*stp,sl=eo((t-t0)/.5);if(sl<=0)return;
+    const cn=eo((t-t0-.2)/.7),lw=L.score>V.score,done=t>t0+.95,y=0;
+    X.save();X.globalAlpha=clamp((t-t0)/.15);X.translate(X0+(1-sl)*((col||i%2)?900:-900),Y0);X.scale(f,f);X.translate(-60,0);
     X.shadowColor='rgba(0,0,0,.45)';X.shadowBlur=40;X.fillStyle=CARD;rr(60,y,960,320,38);X.fill();X.shadowBlur=0;
     X.save();rr(60,y,960,320,38);X.clip();
     let gr=X.createLinearGradient(60,0,600,0);gr.addColorStop(0,hex(L.c,.95));gr.addColorStop(1,hex(L.c,0));X.fillStyle=gr;X.fillRect(60,y,560,320);
@@ -480,13 +485,13 @@ function introResults(sc,t){
     X.font=`900 200px ${FD}`;[[L,400,lw],[V,680,!lw]].forEach(([T,cx,w])=>{X.save();if(w&&done){X.shadowColor=ACC;X.shadowBlur=40}X.fillStyle=w?FG:DIM;X.fillText(String(Math.round(T.score*cn)),cx,y+222);X.restore()});
     X.fillStyle=DIM;X.font=`700 70px ${FL}`;X.fillText('–',540,y+190);
     X.fillStyle=ACC;rr(lw?300:580,y+244,200,8,4);X.fill();
-    const pr=!!g.hero,lbl=pr?'PRÓRROGA':'FINAL';X.font=`800 28px ${FL}`;X.letterSpacing='5px';const cw_=X.measureText(lbl).width+44;X.fillStyle=pr?ACC:'rgba(7,11,19,.75)';rr(540-cw_/2,y+22,cw_,44,22);X.fill();X.fillStyle=pr?'#1a0b02':ACC2;X.fillText(lbl,540,y+53);X.letterSpacing='0px';
+    const pr=!!g.ot,lbl=pr?'PRÓRROGA':'FINAL';X.font=`800 28px ${FL}`;X.letterSpacing='5px';const cw_=X.measureText(lbl).width+44;X.fillStyle=pr?ACC:'rgba(7,11,19,.75)';rr(540-cw_/2,y+22,cw_,44,22);X.fill();X.fillStyle=pr?'#1a0b02':ACC2;X.fillText(lbl,540,y+53);X.letterSpacing='0px';
     X.restore()});
   captions(sc.words,t,1490);
   if(sc.next&&t>sc.dur-.18)wipe(sc.next,(t-(sc.dur-.18))/.18,true);
 }
 function sceneIntro(sc,t){
-  if(D.mini.length<=3&&D.scenes.some(q=>q.type=='game'))return introResults(sc,t);
+  if((D.results&&D.results.length||D.mini.length<=3)&&D.scenes.some(q=>q.type=='game'))return introResults(sc,t);
 
   bg('#ff7a1a','#386eff',t);
   const SM=D.mini.length<=3;X.save();if(SM){X.translate(540,30);X.scale(.64,.64);X.translate(-540,0)}
