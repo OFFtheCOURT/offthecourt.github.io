@@ -784,6 +784,13 @@ html[data-theme="light"] .cromo{box-shadow:0 4px 12px rgba(20,30,60,.07)}
 .tk.pend .tk-when b{font:800 14px/1.1 var(--f-label);letter-spacing:.02em;color:var(--fg)}
 .tk.pend .r2{grid-row:2;grid-column:1}.tk.pend .r2b{grid-row:2;grid-column:2}
 .tk.live{border-color:#e5484d;position:relative}.tk-live{position:absolute;top:2px;right:4px;font-size:8px;color:#e5484d;font-style:normal;animation:pulse 1.6s ease-in-out infinite}
+
+/* MVP / destacados: fondo del color del equipo, texto siempre claro (también en modo claro) */
+.leader{color:#fff}
+.leader .nm{color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.35)}
+.leader .line{color:rgba(255,255,255,.82)}.leader .line b{color:#fff}
+.leader .lbl{color:rgba(255,255,255,.78)}
+.leader img.ph{-webkit-mask-image:linear-gradient(to right,transparent,#000 35%),linear-gradient(to bottom,transparent,#000 22%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent,#000 35%),linear-gradient(to bottom,transparent,#000 22%);mask-composite:intersect}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 
