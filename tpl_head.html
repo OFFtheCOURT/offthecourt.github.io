@@ -702,6 +702,22 @@ html[data-theme="light"] body{background-image:radial-gradient(1100px 520px at 1
   .bx-leg{font-size:9.5px;margin-top:6px;line-height:1.3}
   .bx tbody th,.bx tfoot th{box-shadow:4px 0 6px -5px rgba(0,0,0,.4)}
 }
+
+/* Ficha completa en ordenador: más grande, sin desenfoque y filas compactas para verlo todo */
+.bx-sheet{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(3,5,10,.72);padding:2vh 16px}
+html[data-theme="light"] .bx-sheet{background:rgba(20,28,45,.55)}
+.bx-box{max-height:96vh;width:min(1180px,100%)}
+.bx-scroll{will-change:scroll-position;contain:paint}
+.bx tbody tr:hover td,.bx tbody tr:hover th{background:var(--card2)}
+@media (min-width:641px){
+  .bx th,.bx td{padding:5px 9px}
+  .bx thead th button{padding:7px 9px}
+  .bx tr.sep td{padding:3px 10px}
+  .bx td.pts{font-size:16px}
+  .bx-sub{margin:2px 0 8px}.bx-tabs{margin-bottom:8px}.bx-tabs button{padding:7px 8px}
+  .bx-leg{margin-top:6px}
+  .bx tbody th,.bx tfoot th{box-shadow:none;border-right:1px solid var(--line)}
+}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 
