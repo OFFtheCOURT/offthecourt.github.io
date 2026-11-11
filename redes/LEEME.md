@@ -1,7 +1,7 @@
 # FORMATO DE LOS VÍDEOS — NBA, EUROLIGA Y ACB (manda sobre el resto de este documento y sobre el máximo de 7 partidos)
 
 Es el mismo formato para las tres ligas; cada una tiene su color (NBA azul/rojo, EuroLiga naranja, ACB verde),
-que pone `montar` solo. **Voz: `es-ES-AlvaroNeural:r`** (la del vídeo de EuroLiga que eligió el usuario), con los nombres adaptados de
+que pone `montar` solo. **Voz: `es-ES-AlvaroNeural:r`** (la del vídeo de EuroLiga que eligió el usuario), a velocidad `+6%` y tono `-2Hz` (los valores por defecto; no subas la velocidad: suena robótica), con los nombres adaptados de
 `redes/pronunciacion.json` y las siglas `{NBA|enebeá}`, `{Euroliga|Eurolíga}`, `{ACB|acebé}`.
 **NBA — portada de SALA DE CINE**: una pantalla por partido con su resultado, público de figuritas y letrero.
 La intro dice **3 o 4 ganchos** en una sola frase (8 palabras o más) y el segmento `intro` lleva `"focos"`: uno por

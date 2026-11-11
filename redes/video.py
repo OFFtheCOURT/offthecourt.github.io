@@ -149,7 +149,7 @@ def voz():
 def _voz_una_vez(n=None):
     n = n or noche(); voice = n.get('voz', 'es-ES-AlvaroNeural:r')
     guion = [{'id': s['id'], 't': s['t']} for s in n['segmentos']]
-    payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+16%')}}
+    payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+6%'), 'tono': n.get('tono', '-2Hz')}}
     pf = os.path.join(OUT, 'dispatch.json'); json.dump(payload, open(pf, 'w'))
     before = subprocess.run(['gh', 'run', 'list', '-R', GH_REPO, '-w', 'voz.yml', '-L', '1', '--json', 'databaseId', '-q', '.[0].databaseId'], capture_output=True, text=True).stdout.strip()
     sh('gh', 'api', '-X', 'POST', f'repos/{GH_REPO}/actions/workflows/voz.yml/dispatches', '--input', pf)
@@ -220,7 +220,9 @@ def caption_words(tpl, mode, bounds, dur):
     return words
 
 
-KEEP = 0.13
+KEEP = 0.24
+# voz más cálida y menos robótica: cuerpo en graves, menos agudos duros, compresión suave y un toque de sala
+SUAVE = 'highpass=f=70,equalizer=f=170:t=q:w=1:g=2.5,equalizer=f=3200:t=q:w=1.4:g=-2,highshelf=f=7500:g=-3.5,acompressor=threshold=-20dB:ratio=2.5:attack=15:release=220,aecho=0.85:0.5:28|46:0.10|0.06'
 def tighten(src, out):
     """acorta los silencios largos entre frases; devuelve (duración, función para reajustar tiempos)"""
     log = subprocess.run(['ffmpeg', '-i', src, '-af', 'silencedetect=n=-40dB:d=0.3', '-f', 'null', '-'], capture_output=True, text=True).stderr
@@ -234,7 +236,7 @@ def tighten(src, out):
         if hi > lo: keep.append((cur, lo)); cuts.append((lo, hi)); cur = hi
     keep.append((cur, total)); keep = [(a, e) for a, e in keep if e - a > 0.01]
     flt = ''.join(f'[0:a]atrim={a:.3f}:{e:.3f},asetpts=PTS-STARTPTS[a{i}];' for i, (a, e) in enumerate(keep))
-    flt += ''.join(f'[a{i}]' for i in range(len(keep))) + f'concat=n={len(keep)}:v=0:a=1[o]'
+    flt += ''.join(f'[a{i}]' for i in range(len(keep))) + f'concat=n={len(keep)}:v=0:a=1[c];[c]{SUAVE}[o]'
     sh('ffmpeg', '-v', 'error', '-y', '-i', src, '-filter_complex', flt, '-map', '[o]', '-ar', '48000', '-ac', '1', out)
     def tm(t):
         r = t
