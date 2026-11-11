@@ -272,10 +272,10 @@ def montar():
             ton = []; hl = []
             for g in ((N['upcoming'][0]['games'] if N.get('upcoming') else []) if LIGA == 'nba' else proximos(N, n['fecha'])[1]):
                 a, h = g['teams'][0]['abbr'], g['teams'][1]['abbr']; used |= {a, h}
-                ton.append({'a': a, 'h': h, 'an': T[a]['short'], 'hn': T[h]['short'], 'time': hora_es(g.get('utc'))})
+                ton.append({'a': h, 'h': a, 'an': T[h]['short'], 'hn': T[a]['short'], 'time': hora_es(g.get('utc'))})  # local a la izquierda
                 k = (seg.get('resaltar') or {}).get(f'{a}-{h}'); hl.append(when(k) if k else None)
             scenes.append({'type': 'outro', 'id': 'outro', 'dur': round(d + PAD_IN + 1.7, 2), 'off': PAD_IN, 'words': w, 'hl': hl, 'tonight': ton}); continue
-        g = games[seg['partido']]; A, Hm = g['teams']; used |= {A['abbr'], Hm['abbr']}
+        g = games[seg['partido']]; Hm, A = g['teams']; used |= {A['abbr'], Hm['abbr']}  # A = local (izquierda), Hm = visitante (derecha)
         tA, tH = team_obj(A['abbr'], A, T), team_obj(Hm['abbr'], Hm, T)
         cards = []; marks = []
         for c in seg.get('tarjetas', []):
@@ -303,13 +303,13 @@ def montar():
         pd = proximos(N, n['fecha'])[0]
         if pd: f2 = datetime.date.fromisoformat(pd)
     ETQ = {'nba': ('LA NOCHE NBA', 'LA NOCHE', 'NBA', 'ESTA NOCHE'),
-           'el': (f"EUROLIGA · {(ronda or '').upper()}", (ronda or 'LA JORNADA').upper(), 'EUROLIGA', 'PRÓXIMOS'),
-           'acb': (f"ACB · {(ronda or '').upper()}", (ronda or 'LA JORNADA').upper(), 'ACB', 'PRÓXIMOS')}[LIGA]
+           'el': (f"EUROLIGA · {(ronda or '').upper()}", 'J' + re.sub(r'\D', '', ronda or '') if ronda else 'LA JORNADA', 'EUROLIGA', 'PRÓXIMOS'),
+           'acb': (f"ACB · {(ronda or '').upper()}", 'J' + re.sub(r'\D', '', ronda or '') if ronda else 'LA JORNADA', 'ACB', 'PRÓXIMOS')}[LIGA]
     outro = next((s for s in scenes if s['type'] == 'outro'), None); ton = outro['tonight'] if outro else []
     DATA = {'eyebrow': ETQ[0], 'title1': ETQ[1], 'title2': ETQ[2], 'outTitle': ETQ[3], 'dateLabel': f'{ABR_D[f.weekday()]} {f.day} {ABR_M[f.month - 1]}', 'dateLong': f'{DIAS[f.weekday()]} {f.day} de {MESES[f.month - 1]}',
             'tonightLabel': f'{ABR_D[f2.weekday()]} {f2.day} {ABR_M[f2.month - 1]}', 'tonightCount': f'{len(ton)} PARTIDOS · HORA ESPAÑOLA',
             'ngames': len(narrated), 'scenes': scenes, 'tonight': ton,
-            'mini': [{'a': g['teams'][0]['abbr'], 'h': g['teams'][1]['abbr'], 'as': g['teams'][0]['score'], 'hs': g['teams'][1]['score']} for g in night['games'] if g['teams'][0].get('score') is not None],
+            'mini': [{'a': g['teams'][1]['abbr'], 'h': g['teams'][0]['abbr'], 'as': g['teams'][1]['score'], 'hs': g['teams'][0]['score']} for g in night['games'] if g['teams'][0].get('score') is not None],
             'logos': {k: LOG[k] for k in used | {g['teams'][i]['abbr'] for g in night['games'] for i in (0, 1)} if k in LOG}, 'photos': photos,
             'logo': 'data:image/svg+xml;base64,' + base64.b64encode(logo.encode()).decode()}
     open(os.path.join(OUT, 'data.js'), 'w', encoding='utf-8').write('window.DATA=' + json.dumps(DATA, ensure_ascii=False) + ';')
