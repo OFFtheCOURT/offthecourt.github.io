@@ -43,6 +43,8 @@ function initials(n){return String(n).split(' ').filter(Boolean).map(s=>s[0]).sl
 function splitName(t){const nick=t.short;const city=t.name.replace(' '+nick,'').trim();return {city:(city===t.name||city===nick)?'':city,nick}}
 const qlbl=i=>i<4?(i+1)+'C':'PR'+(i>4?i-3:'');
 
+/* ---------- estadísticas de uso (GoatCounter: sin cookies ni datos personales) ---------- */
+function track(path,title){try{if(window.goatcounter&&window.goatcounter.count)window.goatcounter.count({path:'evento/'+path,title:title||path,event:true})}catch(e){}}
 /* ---------- iconos propios ---------- */
 const ICO={
  fire:'<svg class="ico fire" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.6 2.2c.4 3.1-1.4 4.6-2.9 6.2C8.2 10 7 11.6 7 14.2A5 5 0 0 0 12 19a5 5 0 0 0 5-4.8c0-1.5-.5-2.7-1.3-3.7-.2 1-.8 1.8-1.7 2.2.6-2.9-.2-6.4-1.4-10.5z" fill="currentColor"/><path d="M12 21.8a6.8 6.8 0 0 1-6.8-6.8c0-.5 0-1 .2-1.5.3 2.9 2.7 5.2 6.6 5.2s6.3-2.3 6.6-5.2c.1.5.2 1 .2 1.5a6.8 6.8 0 0 1-6.8 6.8z" fill="currentColor" opacity=".55"/></svg>',
@@ -471,7 +473,7 @@ function openPicker(){
 document.addEventListener('click',e=>{
   if(e.target.closest('[data-favpick]')){openPicker();return}
   const f=e.target.closest('[data-fav]');
-  if(f){if(f.dataset.fav)FAV[CUR]=f.dataset.fav;else delete FAV[CUR];saveFav();$('favPicker').hidden=true;renderAll();return}
+  if(f){if(f.dataset.fav)track('mi-equipo/'+CUR+'/'+f.dataset.fav,'Mi equipo: '+f.dataset.fav+' ('+CUR+')');if(f.dataset.fav)FAV[CUR]=f.dataset.fav;else delete FAV[CUR];saveFav();$('favPicker').hidden=true;renderAll();return}
   if(e.target.closest('[data-favclose]')||e.target.id==='favPicker')$('favPicker').hidden=true;
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('favPicker').hidden=true});
@@ -548,7 +550,7 @@ function renderAll(){
   $('leadersGrid').innerHTML=L.leaders.map(ldrCard).join('');
   calSel=null;renderTS();renderFav();renderCal();renderMenu();countUp();setHH();
 }
-function setLeague(k,scroll){try{delete $('ticker').dataset.user}catch(e){}setTimeout(()=>{try{liveTick()}catch(e){}},300);
+function setLeague(k,scroll){if(LG[k]&&k!==CUR&&scroll!==undefined)track('liga/'+k,'Liga: '+k);try{delete $('ticker').dataset.user}catch(e){}setTimeout(()=>{try{liveTick()}catch(e){}},300);
   if(!LG[k]||k===CUR&&scroll!==undefined)return;CUR=k;
   try{localStorage.setItem('offcourt-league',k)}catch(e){}
   renderAll();
@@ -583,7 +585,7 @@ const mBtn=$('menuBtn'),mPanel=$('menuPanel');
 function setMenu(o){if(o&&matchMedia('(max-width:560px)').matches){const t=Math.max(0,document.querySelector('header.top').getBoundingClientRect().bottom)+8;mPanel.style.top=t+'px';mPanel.style.maxHeight=(innerHeight-t-12)+'px'}else{mPanel.style.top=mPanel.style.maxHeight=''}
   mPanel.hidden=!o;mBtn.setAttribute('aria-expanded',o)}
 mBtn.addEventListener('click',e=>{e.stopPropagation();setMenu(mPanel.hidden)});
-mPanel.addEventListener('click',e=>{if(e.target.closest('a'))setMenu(false)});
+mPanel.addEventListener('click',e=>{const a=e.target.closest('a');if(a){track('menu/'+a.getAttribute('href').slice(1),'Menú: '+a.getAttribute('href'));setMenu(false)}});
 document.addEventListener('click',e=>{if(!mPanel.hidden&&!e.target.closest('.menu'))setMenu(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false)});
 /* ---------- ficha completa del partido (todos los jugadores) ---------- */
@@ -630,7 +632,7 @@ function fitBox(){
   if(sc.scrollHeight-sc.clientHeight<=2)sc.style.overflowY='hidden';
 }
 addEventListener('resize',()=>{if(boxCur)fitBox()});
-async function openBox(id){
+async function openBox(id){track('ficha-partido/'+CUR,'Ficha completa ('+CUR+')'+(LIVEBOX[id]?' en directo':''));
   const g=findGame(id);if(!g)return;
   const sh=$('boxSheet');sh.hidden=false;document.body.classList.add('noscroll');
   sh.innerHTML='<div class="bx-box"><div class="bx-load">Cargando ficha completa…</div></div>';
@@ -654,7 +656,7 @@ function setTheme(th,save=true){const r=document.documentElement;if(th==='light'
   if(save)try{localStorage.setItem('offcourt-theme',th)}catch(e){}
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=th==='light'?'#ffffff':'#070b13';
   $('themeBtn').setAttribute('aria-label',th==='light'?'Cambiar a modo oscuro':'Cambiar a modo claro')}
-$('themeBtn').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'));
+$('themeBtn').addEventListener('click',()=>{track('tema/'+(document.documentElement.dataset.theme==='light'?'oscuro':'claro'),'Cambio de tema')});$('themeBtn').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'));
 setTheme(document.documentElement.dataset.theme==='light'?'light':'dark',false);
 /* logo: vuelve arriba del todo */
 document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();setMenu&&setMenu(false);
@@ -753,7 +755,7 @@ function rankChart(h,col){
    ${h.pts.map((p,i)=>i%every===0||i===k-1?`<text x="${X(i)}" y="${H-8}" text-anchor="middle" class="ax">${lbl(p)}</text>`:'').join('')}
    <text x="${X(k-1)-10}" y="${Y(h.pts[k-1].rk)+(h.pts[k-1].rk>n/2?-12:24)}" text-anchor="end" class="lv">${h.pts[k-1].rk}º</text></svg>`}
 
-async function openTeam(ab){
+async function openTeam(ab){track('equipo/'+CUR+'/'+ab,'Ficha equipo: '+ab+' ('+CUR+')');
   const t=TEAMS[ab];if(!t)return;const r=ST[ab]||{},grp=L.standings.find(g=>g.rows.some(x=>x.abbr===ab)),col=ink(t);
   const C=(L.cal||[]).filter(g=>g.a===ab||g.h===ab).sort((a,b)=>a.utc<b.utc?-1:1),done=C.filter(g=>g.done),next=C.filter(g=>!g.done).slice(0,5);
   const form=(r.form||[]).slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('');
@@ -779,7 +781,7 @@ async function openTeam(ab){
   catch(e){const el=$('pfRoster');if(el)el.innerHTML='<p class="pf-empty">No se ha podido cargar la plantilla.</p>'}
 }
 
-async function openPlayer(pid){
+async function openPlayer(pid){track('jugador/'+CUR,'Ficha jugador ('+CUR+')');
   pfOpen(`${pfX}<div class="pf-load">Cargando ficha…</div>`);
   let P;try{P=await loadPlayers(CUR)}catch(e){pfOpen(`${pfX}<p class="pf-empty">No se ha podido cargar la ficha.</p>`);return}
   if(!location.hash.startsWith('#jugador/'))return;
@@ -869,6 +871,7 @@ if(LIVE){setInterval(liveTick,15000);setTimeout(liveTick,1500);document.addEvent
 
 if(LIVE&&'serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 try{const s=localStorage.getItem('offcourt-league');if(s&&LG[s])CUR=s}catch(e){}
+document.addEventListener('click',e=>{const a=e.target.closest('a[target=_blank]');if(!a)return;const t=/Seguir en directo/.test(a.textContent)?'directo':/Resumen/i.test(a.textContent)?'resumen':(a.classList.contains('clip')?'jugada':'');if(t)track('salida/'+t+'/'+CUR,'Enlace externo: '+t+' ('+CUR+')')},true);
 renderAll();
 if(/^#(equipo|jugador)\//.test(location.hash))route();
 </script>
