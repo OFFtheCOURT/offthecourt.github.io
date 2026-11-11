@@ -1,5 +1,10 @@
 <script>
 const LG = /*LEAGUES*/;
+/* EuroLiga y ACB: el local a la izquierda (arriba) y el visitante a la derecha, como en Europa */
+const HOME_FIRST=k=>k!=='nba';
+for(const k of Object.keys(LG)){const L0=LG[k];if(!L0)continue;
+  const fix=g=>{if(!g.teams||g.teams.length!==2)return;g.teams[0].home=false;g.teams[1].home=true;if(HOME_FIRST(k))g.teams.reverse()};
+  (L0.periods||[]).forEach(p=>p.games.forEach(fix));(L0.upcoming||[]).forEach(u=>u.games.forEach(fix));}
 const UPDATED = /*UPDATED*/;
 const IMG = /*IMG*/;
 const CR = /*CREDITS*/;
@@ -247,7 +252,7 @@ function renderUp(){
       <div class="up-top"><span class="hr">${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}<small>${madrid(g.utc,isDay()?{weekday:'short'}:{weekday:'short',day:'numeric'}).replace('.','')}</small></span><span>${esc(g.venue)}</span></div>
       <div class="up-mid">
         <div class="up-t"><img src="${logo(A.abbr)}" alt=""><b>${esc(ta.short)}</b><span>${esc(A.rec)}</span></div>
-        <div class="vs">@</div>
+        <div class="vs">${CUR==='nba'?'@':'vs'}</div>
         <div class="up-t"><img src="${logo(H.abbr)}" alt=""><b>${esc(th.short)}</b><span>${esc(H.rec)}</span></div>
       </div>
       <div class="up-bot">${(g.tv||[]).map(t=>`<span class="tv">TV · ${esc(t)}</span>`).join('')}${g.odds?`<span class="tv od">Favorito ${esc(g.odds)}</span>`:''}</div>
@@ -376,7 +381,7 @@ function renderHoy(){
     else if(now<t){st=`Empieza en ${left(t-now)}`}
     else {done++;st='Terminado · resultado en la próxima actualización';cls='done'}
     if(!btn&&g.live&&g.state!=='post'&&now>=t-30*60e3) btn=`<a class="btn primary" href="${esc(g.live)}" target="_blank" rel="noopener">● Seguir en directo</a>`;
-    const mid=sc?`<div class="lboard"><b class="${A.score>H.score?'w':''}" data-sk="${g.id}-a">${A.score}</b><i>–</i><b class="${H.score>A.score?'w':''}" data-sk="${g.id}-h">${H.score}</b>${cls==='live'&&g.detail?`<span class="lclock">${esc(g.detail)}</span>`:''}</div>`:'<div class="vs">@</div>';
+    const mid=sc?`<div class="lboard"><b class="${A.score>H.score?'w':''}" data-sk="${g.id}-a">${A.score}</b><i>–</i><b class="${H.score>A.score?'w':''}" data-sk="${g.id}-h">${H.score}</b>${cls==='live'&&g.detail?`<span class="lclock">${esc(g.detail)}</span>`:''}</div>`:`<div class="vs">${CUR==='nba'?'@':'vs'}</div>`;
     return `<article class="up ${cls}" style="--a:${tc(ta)};--h:${tc(th)}">
       <div class="up-top"><span class="hr">${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}<small>${madrid(g.utc,{weekday:'short'}).replace('.','')}</small></span><span>${esc(g.venue)}</span></div>
       <div class="up-mid${sc?' has-sc':''}"><div class="up-t"><img src="${logo(A.abbr)}" alt=""><b>${esc(ta.short)}</b><span>${esc(A.rec)}</span></div>${mid}
@@ -408,7 +413,7 @@ function renderFav(){
   if(last){const g=last.g,me=g.teams.find(x=>x.abbr===ab),op=g.teams.find(x=>x.abbr!==ab),p=me.top[0];
     lastHtml=`<a class="fav-res" href="#g${g.id}"><span class="wl ${me.win?'W':'L'}">${me.win?'V':'D'}</span><b>${me.score}-${op.score}</b><span>vs <img src="${logo(op.abbr)}" alt="">${esc(TEAMS[op.abbr].short)}</span></a>${p?`<small>Mejor: <b>${esc(p.n)}</b> · ${p.pts} pts · ${p.reb} reb · ${p.ast} ast</small>`:''}`}
   let nx=null;(L.upcoming||[]).forEach(u=>u.games.forEach(g=>{if(!nx&&g.teams.some(x=>x.abbr===ab)&&g.state!=='post')nx=g}));
-  const nxHtml=nx?(()=>{const op=nx.teams.find(x=>x.abbr!==ab),home=nx.teams[1].abbr===ab;return `<div class="fav-next"><img src="${logo(op.abbr)}" alt=""><div><b>${home?'vs':'@'} ${esc(TEAMS[op.abbr].short)}</b><small>${cap(madrid(nx.utc,{weekday:'long',day:'numeric',month:'short'}))} · ${madrid(nx.utc,{hour:'2-digit',minute:'2-digit'})} h</small></div></div>`})():'<small class="fav-none">Sin partido programado</small>';
+  const nxHtml=nx?(()=>{const op=nx.teams.find(x=>x.abbr!==ab),home=!!(nx.teams.find(x=>x.abbr===ab)||{}).home;return `<div class="fav-next"><img src="${logo(op.abbr)}" alt=""><div><b>${home?'vs':'@'} ${esc(TEAMS[op.abbr].short)}</b><small>${cap(madrid(nx.utc,{weekday:'long',day:'numeric',month:'short'}))} · ${madrid(nx.utc,{hour:'2-digit',minute:'2-digit'})} h</small></div></div>`})():'<small class="fav-none">Sin partido programado</small>';
   const form=(r.form||[]).slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('');
   box.innerHTML=`<div class="fav-card" style="--tc:${tc(t)};--ti:${ink(t)}">
     <img class="fav-logo" src="${logo(ab)}" alt="">
@@ -446,9 +451,10 @@ function calRow(g,showRound){
   const when=`${madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'')}<b>${g.done?'Final':madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}</b>`;
   return `<div class="cg ${g.done?'done':''} ${(g.a===fv||g.h===fv)?'fav':''}">
     <span class="cg-w">${showRound&&g.r?`<i>J${g.r}</i>`:''}${when}</span>
-    <span class="cg-t a ${aw?'w':''}"><b>${esc(A.short)}</b><img src="${logo(g.a)}" alt=""></span>
-    <span class="cg-s">${g.done?`<b class="${aw?'w':''}">${g.as}</b><i>–</i><b class="${hw?'w':''}">${g.hs}</b>`:'<em>vs</em>'}</span>
-    <span class="cg-t h ${hw?'w':''}"><img src="${logo(g.h)}" alt=""><b>${esc(H.short)}</b></span></div>`;
+    ${(()=>{const L1=HOME_FIRST(CUR)?{t:H,ab:g.h,s:g.hs,w:hw}:{t:A,ab:g.a,s:g.as,w:aw},R1=HOME_FIRST(CUR)?{t:A,ab:g.a,s:g.as,w:aw}:{t:H,ab:g.h,s:g.hs,w:hw};
+    return `<span class="cg-t a ${L1.w?'w':''}"><b>${esc(L1.t.short)}</b><img src="${logo(L1.ab)}" alt=""></span>
+    <span class="cg-s">${g.done?`<b class="${L1.w?'w':''}">${L1.s}</b><i>–</i><b class="${R1.w?'w':''}">${R1.s}</b>`:`<em>${CUR==='nba'?'@':'vs'}</em>`}</span>
+    <span class="cg-t h ${R1.w?'w':''}"><img src="${logo(R1.ab)}" alt=""><b>${esc(R1.t.short)}</b></span>`})()}</div>`;
 }
 function renderCal(){
   const C=L.cal||[],sec=$('calendario');
@@ -655,14 +661,14 @@ async function liveTick(){
       (LG.nba.upcoming||[]).forEach(u=>u.games.forEach(g=>{const e=by[g.id];if(!e)return;
         const st=e.status.type; g.state=st.state; g.detail=st.shortDetail;
         const c=e.competitions[0].competitors; const sc=ha=>+((c.find(x=>x.homeAway===ha)||{}).score||0);
-        g.teams[0].score=sc('away'); g.teams[1].score=sc('home');}));
+        g.teams.forEach(t=>t.score=sc(t.home?'home':'away'));}));
     } else if(CUR==='el'){
       const rounds=[...new Set((LG.el.upcoming||[]).map(u=>+(u.label.match(/\d+/)||[0])[0]).filter(Boolean))];
       for(const rn of rounds.slice(0,1)){
         const r=await fetch(`https://api-live.euroleague.net/v2/competitions/E/seasons/E2026/games?roundNumber=${rn}`,{cache:'no-store'});
         const d=(await r.json()).data; const by={}; d.forEach(x=>by['el'+x.gameCode]=x);
         LG.el.upcoming.forEach(u=>u.games.forEach(g=>{const x=by[g.id];if(!x)return;
-          g.teams[0].score=x.road.score||0; g.teams[1].score=x.local.score||0;
+          g.teams.forEach(t=>t.score=(t.home?x.local.score:x.road.score)||0);
           g.state=x.played?'post':((x.road.score||x.local.score)?'in':'pre'); g.detail='';}));
       }
     } else return;
