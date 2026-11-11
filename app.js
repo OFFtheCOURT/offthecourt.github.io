@@ -564,8 +564,19 @@ function renderBox(){
    <div class="bx-sub">Ficha completa${when?' · '+esc(when):''}</div>
    <div class="bx-tabs" role="tablist">${[A,H].map((s,i)=>`<button type="button" role="tab" data-bxside="${i}" aria-selected="${i===side}" style="--tc:${tc(TEAMS[s.abbr])}"><img src="${logo(s.abbr)}" alt="">${esc(TEAMS[s.abbr].short)}</button>`).join('')}</div>
    ${boxTable(rows[side],side,sort)}
-   <div class="bx-leg">Toca una columna para ordenar · <b>en color</b>: mejor dato del equipo · TC: tiros de campo · T3: triples · TL: tiros libres · RO/RD: rebotes ofensivos/defensivos${CUR!=='nba'?' · Val: valoración':''}</div></div>`;
+   <div class="bx-leg">Toca una columna para ordenar · <b>en color</b>: mejor dato del equipo · TC: tiros de campo · T3: triples · TL: tiros libres · RO/RD: rebotes ofensivos/defensivos${CUR!=='nba'?' · Val: valoración':''}</div></div>`;fitBox()
 }
+/* ajusta la tabla a la altura disponible para que no haga falta desplazarse */
+function fitBox(){
+  const sc=$('boxSheet').querySelector('.bx-scroll'),tb=sc&&sc.querySelector('table.bx');if(!tb)return;
+  const bx=sc.closest('.bx-box');tb.style.zoom='';sc.style.overflowY='';bx.classList.remove('tight');
+  const mob=matchMedia('(max-width:640px)').matches,minZ=mob?.8:.6;
+  if(sc.scrollHeight-sc.clientHeight>1)bx.classList.add('tight');   // primero se quitan fecha y leyenda
+  const over=sc.scrollHeight-sc.clientHeight;
+  if(over>1){let z=1;for(let k=0;k<6&&sc.scrollHeight-sc.clientHeight>1&&z>minZ;k++){z=Math.max(minZ,Math.floor(z*sc.clientHeight/sc.scrollHeight*100)/100-.01);tb.style.zoom=z}}
+  if(sc.scrollHeight-sc.clientHeight<=2)sc.style.overflowY='hidden';
+}
+addEventListener('resize',()=>{if(boxCur)fitBox()});
 async function openBox(id){
   const g=findGame(id);if(!g)return;
   const sh=$('boxSheet');sh.hidden=false;document.body.classList.add('noscroll');
