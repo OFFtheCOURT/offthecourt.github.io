@@ -1,11 +1,11 @@
 <script>
 const LG = /*LEAGUES*/;
+const UPDATED = /*UPDATED*/;
 /* EuroLiga y ACB: el local a la izquierda (arriba) y el visitante a la derecha, como en Europa */
 const HOME_FIRST=k=>k!=='nba';
 for(const k of Object.keys(LG)){const L0=LG[k];if(!L0)continue;
   const fix=g=>{if(!g.teams||g.teams.length!==2)return;g.teams[0].home=false;g.teams[1].home=true;if(HOME_FIRST(k))g.teams.reverse()};
   (L0.periods||[]).forEach(p=>p.games.forEach(fix));(L0.upcoming||[]).forEach(u=>u.games.forEach(fix));}
-const UPDATED = /*UPDATED*/;
 const IMG = /*IMG*/;
 const CR = /*CREDITS*/;
 let CUR='nba', L=LG.nba, TEAMS=L.teams;
