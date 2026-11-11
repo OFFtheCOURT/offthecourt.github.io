@@ -342,6 +342,7 @@ function hoyWindow(now){
   }
   const d=mdDate(now);return {day:now,test:t=>mdDate(t)===d,open:null};
 }
+const PREVSC={};
 function renderHoy(){
   const now=Date.now(),W=hoyWindow(now),sec=$('hoy');
   const gs=hoyPool().filter(g=>W.test(Date.parse(g.utc))).sort((a,b)=>Date.parse(a.utc)-Date.parse(b.utc));
@@ -355,17 +356,19 @@ function renderHoy(){
     const sc=(A.score||H.score)?`${A.score}-${H.score}`:'';
     let st,cls='',btn='';
     if(g.state==='post'){done++;st=`Final${sc?' · '+sc:''}`;cls='done';btn=g.yt?`<a class="btn primary" href="${esc(g.yt)}" target="_blank" rel="noopener">▶ Resumen</a>`:''}
-    else if(g.state==='in'||(now>=t&&now<t+2.5*3600e3)){live++;st=`● En directo${sc?' · '+sc:''}${g.state==='in'&&g.detail?' · '+esc(g.detail):''}`;cls='live';}
+    else if(g.state==='in'||(now>=t&&now<t+2.5*3600e3)){live++;st='● En directo';cls='live';}
     else if(now<t){st=`Empieza en ${left(t-now)}`}
     else {done++;st='Terminado · resultado en la próxima actualización';cls='done'}
     if(!btn&&g.live&&g.state!=='post'&&now>=t-30*60e3) btn=`<a class="btn primary" href="${esc(g.live)}" target="_blank" rel="noopener">● Seguir en directo</a>`;
-    return `<article class="up" style="--a:${tc(ta)};--h:${tc(th)}">
+    const mid=sc?`<div class="lboard"><b class="${A.score>H.score?'w':''}" data-sk="${g.id}-a">${A.score}</b><i>–</i><b class="${H.score>A.score?'w':''}" data-sk="${g.id}-h">${H.score}</b>${cls==='live'&&g.detail?`<span class="lclock">${esc(g.detail)}</span>`:''}</div>`:'<div class="vs">@</div>';
+    return `<article class="up ${cls}" style="--a:${tc(ta)};--h:${tc(th)}">
       <div class="up-top"><span class="hr">${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}<small>${madrid(g.utc,{weekday:'short'}).replace('.','')}</small></span><span>${esc(g.venue)}</span></div>
-      <div class="up-mid"><div class="up-t"><img src="${logo(A.abbr)}" alt=""><b>${esc(ta.short)}</b><span>${esc(A.rec)}</span>${sc?`<strong class="lsc ${A.score>H.score?'w':''}">${A.score}</strong>`:''}</div><div class="vs">@</div>
-        <div class="up-t"><img src="${logo(H.abbr)}" alt=""><b>${esc(th.short)}</b><span>${esc(H.rec)}</span>${sc?`<strong class="lsc ${H.score>A.score?'w':''}">${H.score}</strong>`:''}</div></div>
+      <div class="up-mid${sc?' has-sc':''}"><div class="up-t"><img src="${logo(A.abbr)}" alt=""><b>${esc(ta.short)}</b><span>${esc(A.rec)}</span></div>${mid}
+        <div class="up-t"><img src="${logo(H.abbr)}" alt=""><b>${esc(th.short)}</b><span>${esc(H.rec)}</span></div></div>
       <div class="stt"><span class="${cls}">${st}</span></div>
       ${btn?`<div class="stt">${btn}</div>`:''}
       <div class="up-bot">${(g.tv||[]).map(x=>`<span class="tv">TV · ${esc(x)}</span>`).join('')}${g.odds?`<span class="tv od">Favorito ${esc(g.odds)}</span>`:''}</div></article>`}).join('');
+  document.querySelectorAll('#hoyGrid [data-sk]').forEach(el=>{const k=el.dataset.sk,v=el.textContent;if(PREVSC[k]!==undefined&&PREVSC[k]!==v){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}PREVSC[k]=v});
   $('hoyEyebrow').innerHTML=`<span>${cap(new Date(W.day).toLocaleDateString('es-ES',{timeZone:'Europe/Madrid',weekday:'long',day:'numeric',month:'long'}))}</span>`;
   $('hoyH2').innerHTML=CUR==='nba'?'Esta noche se <span class="hl">juega</span>':'Hoy hay <span class="hl">jornada</span>';
   const upd=UPDATED?new Date(UPDATED).toLocaleString('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit'}):'';
@@ -462,7 +465,7 @@ async function liveTick(){
     renderHoy();
   }catch(e){/* sin conexión: se queda con los datos de la última actualización */}
 }
-if(LIVE){setInterval(liveTick,30000);setTimeout(liveTick,1500);document.addEventListener('visibilitychange',liveTick);}
+if(LIVE){setInterval(liveTick,15000);setTimeout(liveTick,1500);document.addEventListener('visibilitychange',liveTick);}
 
 try{const s=localStorage.getItem('offcourt-league');if(s&&LG[s])CUR=s}catch(e){}
 renderAll();

@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '23 4 * * 1'           # cada lunes de madrugada: busca fotos de jugadores nuevos
   workflow_dispatch:               # botón "Run workflow" para lanzarlo a mano
+    inputs:
+      recrop:
+        description: 'Volver a descargar y recortar todas las fotos (1 = sí)'
+        required: false
+        default: '0'
 
 permissions:
   contents: write
@@ -22,7 +27,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install pillow "opencv-python-headless<5"
+      - name: Detector de caras (YuNet)
+        run: mkdir -p voz && curl -sL -o voz/yunet.onnx https://huggingface.co/opencv/face_detection_yunet/resolve/main/face_detection_yunet_2023mar.onnx
       - run: python3 photos.py
+        env:
+          RECROP: ${{ github.event.inputs.recrop || '0' }}
       - name: Volver a generar la web con las fotos
         run: bash run.sh
       - name: Guardar fotos y web

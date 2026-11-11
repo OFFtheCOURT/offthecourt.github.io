@@ -9,6 +9,8 @@ REPO = os.environ.get('GITHUB_REPOSITORY', 'martisosa/OFFCOURT')
 OWNER, NAME = REPO.split('/')
 UA = {'User-Agent': f'OffcourtBot/1.0 (https://{OWNER.lower()}.github.io/{NAME}/; fotos de jugadores para una web personal)'}
 MAX_SEARCH = int(os.environ.get('MAX_SEARCH', '150'))   # búsquedas sueltas por ejecución
+RECROP = os.environ.get('RECROP') == '1'                 # volver a descargar y recortar todas las fotos
+import facecrop
 W, H = 200, 146
 
 def get(u, tries=5):
@@ -77,45 +79,26 @@ for pid in [p for p in names if p not in idx]:
 save()
 
 # --- 3) autor y licencia en Commons + descarga ---
-need = {v['file']: pid for pid, v in idx.items() if v.get('file') and pid in names and not os.path.exists(f'{PH}/{pid}.webp')}
+need = {v['file']: pid for pid, v in idx.items() if v.get('file') and (RECROP or (pid in names and not os.path.exists(f'{PH}/{pid}.webp')))}
 files = list(need)
 meta = {}
 for i in range(0, len(files), 40):
     r = api('commons.wikimedia.org', {'action': 'query', 'titles': '|'.join('File:' + f for f in files[i:i + 40]), 'prop': 'imageinfo',
-                                      'iiprop': 'url|extmetadata', 'iiurlwidth': 330, 'iiextmetadatafilter': 'Artist|LicenseShortName'})
+                                      'iiprop': 'url|extmetadata', 'iiurlwidth': 500, 'iiextmetadatafilter': 'Artist|LicenseShortName'})
     for pg in r.get('query', {}).get('pages', []):
         if 'imageinfo' not in pg: continue
         ii = pg['imageinfo'][0]; em = ii.get('extmetadata', {})
         art = html.unescape(re.sub('<[^>]+>', '', em.get('Artist', {}).get('value', ''))).strip()
         meta[pg['title'][5:].replace(' ', '_')] = {'thumb': ii.get('thumburl'), 'page': ii['descriptionurl'], 'artist': art[:120] or 'Autor desconocido',
                                                    'lic': em.get('LicenseShortName', {}).get('value', '')}
-try:
-    import cv2, numpy as np
-    CASC = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-except Exception:
-    CASC = None
 ok = 0
 for f, pid in need.items():
     mt = meta.get(f.replace(' ', '_'))
     if not mt or not mt['thumb']: continue
     raw = get(mt['thumb'].replace('https://thumb.wikimedia.org/', 'https://upload.wikimedia.org/').split('?')[0]); time.sleep(1.5)
     if not raw: continue
-    im = Image.open(io.BytesIO(raw)).convert('RGB'); w, h = im.size
-    face = None
-    if CASC is not None:
-        g = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2GRAY)
-        fs = CASC.detectMultiScale(g, 1.1, 5, minSize=(int(w * .06), int(w * .06)))
-        if len(fs): face = max(fs, key=lambda r: r[2] * r[3])
-    if face is not None:
-        x, y, fw, fh = face; cw = min(w, fw * 3.4); ch = cw * H / W
-        if ch > h: ch = h; cw = ch * W / H
-        cx, cy = x + fw / 2, y + fh * 0.95
-    else:
-        cw = w; ch = cw * H / W
-        if ch > h: ch = h; cw = ch * W / H
-        cx, cy = w / 2, ch / 2 + h * 0.05
-    l = max(0, min(w - cw, cx - cw / 2)); t = max(0, min(h - ch, cy - ch / 2))
-    im.crop((int(l), int(t), int(l + cw), int(t + ch))).resize((W, H), Image.LANCZOS).save(f'{PH}/{pid}.webp', 'WEBP', quality=80)
+    img, _ = facecrop.crop(Image.open(io.BytesIO(raw)), W, H)
+    img.save(f'{PH}/{pid}.webp', 'WEBP', quality=82)
     credits[pid] = {'a': mt['artist'], 'l': mt['lic'], 'u': mt['page']}; ok += 1
     if ok % 25 == 0: save()
 save()

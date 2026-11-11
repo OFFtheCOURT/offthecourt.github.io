@@ -255,8 +255,8 @@ a.fact:hover{border-color:#3b4a68}
 .lg-b[aria-pressed="true"]{background:var(--hot);color:#1a0b02;box-shadow:0 6px 18px rgba(255,110,26,.35)}
 .st-grid.one{grid-template-columns:1fr}
 .st .rel .sd span{background:rgba(255,93,108,.16);color:var(--loss)}
-.form{display:inline-flex;gap:3px}.form i{font:800 10px/16px var(--f-label);font-style:normal;width:16px;height:16px;border-radius:4px;text-align:center}
-.form i.W{background:rgba(61,220,151,.18);color:var(--win)}.form i.L{background:rgba(255,93,108,.16);color:var(--loss)}
+.form{display:inline-flex;gap:4px}.form i{font:800 11px/20px var(--f-label);font-style:normal;width:20px;height:20px;border-radius:5px;text-align:center}
+.form i.W{background:#1fbf73;color:#04210f}.form i.L{background:#e5484d;color:#fff}
 .ldr-hero .ph-fb{position:absolute;right:16px;bottom:14px;width:86px;height:86px;border-radius:50%;display:grid;place-items:center;font:900 34px var(--f-display);color:#fff;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.3)}
 .ldr li .av.fb{background:var(--card2)}
 .menu-btn{appearance:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:800 15px var(--f-label);letter-spacing:.14em;text-transform:uppercase}
@@ -321,13 +321,13 @@ table.st{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;m
 .st .tm{text-align:left}
 .st .tm div{display:flex;align-items:center;gap:8px;font:800 17px var(--f-display);text-transform:uppercase;white-space:nowrap}
 .st .tm img{width:26px;height:26px;object-fit:contain}
-.st .wl b{font:900 18px var(--f-display)}
+.st .wl b{font:900 18px var(--f-display);white-space:nowrap}
 .pbar{width:64px;height:7px;border-radius:99px;background:#202a3c;overflow:hidden;margin:3px auto 0}
 .pbar i{display:block;height:100%;background:var(--tcol);border-radius:99px}
 .st .pct{font:600 11px var(--f-label);color:var(--muted)}
 .strk{display:inline-block;padding:2px 7px;border-radius:6px;font:800 12px var(--f-label);letter-spacing:.06em}
-.strk.W{background:rgba(61,220,151,.15);color:var(--win)}.strk.L{background:rgba(255,93,108,.14);color:var(--loss)}
-.dots{display:inline-flex;gap:2px}.dots i{width:6px;height:12px;border-radius:2px;background:#2a3447}.dots i.on{background:var(--win)}
+.strk.W{background:#1fbf73;color:#04210f}.strk.L{background:#e5484d;color:#fff}
+.dots{display:inline-flex;gap:3px}.dots i{width:8px;height:16px;border-radius:2px;background:#e5484d}.dots i.on{background:#1fbf73}
 .pos{color:var(--win)}.neg{color:var(--loss)}
 /* Leaders */
 .ldr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
@@ -454,7 +454,13 @@ table.st{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;m
 .up .stt span.live{background:rgba(255,93,108,.16);color:#ff8a95;animation:pulse 1.6s ease-in-out infinite}
 .up .stt span.done{background:var(--card2);color:var(--muted)}
 @keyframes pulse{50%{opacity:.55}}
-#hoy .lsc{font:900 40px/1 var(--f-display);color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}#hoy .lsc.w{color:var(--fg)}
+#hoy .up-mid.has-sc{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}#hoy .has-sc .up-t img{width:44px;height:44px}#hoy .has-sc .up-t b{font-size:16px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hoy .lboard{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;font:900 60px/1 var(--f-display);font-variant-numeric:tabular-nums}
+#hoy .lboard b{color:var(--muted);display:inline-block}#hoy .lboard b.w{color:var(--fg)}#hoy .lboard i{font-style:normal;color:var(--dim);font-size:36px}
+#hoy .lclock{flex-basis:100%;text-align:center;font:800 13px var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:#ff8a95}
+#hoy .lboard b.bump{animation:bump 1.2s ease-out}
+@keyframes bump{0%{transform:scale(1.45);color:#ffd23f;text-shadow:0 0 24px rgba(255,200,60,.8)}100%{transform:none}}
+#hoy .up.live{border-color:rgba(255,93,108,.65);box-shadow:0 0 0 1px rgba(255,93,108,.35),0 0 30px rgba(255,93,108,.2)}
 #hoy .stt .btn{padding:7px 14px}
 #hoy .up{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
 @media (max-width:1100px){.facts{grid-template-columns:repeat(3,minmax(0,1fr))}}
