@@ -584,12 +584,12 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('boxSheet').hidden)closeBox()});
 /* ---------- modo claro / oscuro ---------- */
-function setTheme(th){const r=document.documentElement;if(th==='light')r.dataset.theme='light';else delete r.dataset.theme;
-  try{localStorage.setItem('offcourt-theme',th)}catch(e){}
+function setTheme(th,save=true){const r=document.documentElement;if(th==='light')r.dataset.theme='light';else delete r.dataset.theme;
+  if(save)try{localStorage.setItem('offcourt-theme',th)}catch(e){}
   const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=th==='light'?'#ffffff':'#070b13';
   $('themeBtn').setAttribute('aria-label',th==='light'?'Cambiar a modo oscuro':'Cambiar a modo claro')}
 $('themeBtn').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'));
-if(document.documentElement.dataset.theme==='light')setTheme('light');
+setTheme(document.documentElement.dataset.theme==='light'?'light':'dark',false);
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);

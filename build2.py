@@ -108,7 +108,7 @@ FAV=('<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,'+urllib.pa
 OUT=os.environ.get('OFFCOURT_OUT','noche-nba.html')
 if OUT=='index.html':  # web propia: documento HTML completo
     html=('<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
-          '<title>Offcourt · Resultados y estadísticas de NBA, EuroLiga y ACB</title>'+FAV+'<meta name="theme-color" content="#070b13">'
+          '<title>Offcourt · Resultados y estadísticas de NBA, EuroLiga y ACB</title>'+FAV+'<meta name="theme-color" content="#ffffff">'
           '<meta name="description" content="Resultados, estadísticas, clasificaciones, líderes y marcadores en directo de la NBA, la EuroLiga y la ACB, actualizados cada día.">'
           '<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">'
           '<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Offcourt">'
