@@ -1,0 +1,5 @@
+# archivos temporales y generados que no forman parte de la web
+__pycache__/
+build/
+voz/
+contenido/
