@@ -507,7 +507,7 @@ function cineScreen(g,r,t,i,lit,foc){
   X.save();rr(r.x,r.y,r.w,r.h,6);X.clip();
   const gr=X.createLinearGradient(r.x,r.y,r.x+r.w,r.y+r.h);gr.addColorStop(0,L.c);gr.addColorStop(.48,mix(L.c,'#05070d',.55));gr.addColorStop(.52,mix(V.c,'#05070d',.55));gr.addColorStop(1,V.c);X.fillStyle=gr;X.fillRect(r.x,r.y,r.w,r.h);
   const u=r.w/300,lg=58*u;if(IM['t_'+L.ab])X.drawImage(IM['t_'+L.ab],r.x+12*u,r.y+r.h-lg-12*u,lg,lg);if(IM['t_'+V.ab])X.drawImage(IM['t_'+V.ab],r.x+r.w-lg-12*u,r.y+r.h-lg-12*u,lg,lg);
-  const cn=eo((t-.15-i*.06)/.5),lw=L.score>V.score;X.textAlign='center';X.font=`900 ${78*u}px ${FD}`;
+  const cn=eo((t+.45-i*.03)/.45),lw=L.score>V.score;X.textAlign='center';X.font=`900 ${78*u}px ${FD}`;
   X.lineWidth=8*u;X.strokeStyle='rgba(0,0,0,.45)';X.strokeText(Math.round(L.score*cn),r.x+r.w*.3,r.y+r.h*.56);X.strokeText(Math.round(V.score*cn),r.x+r.w*.7,r.y+r.h*.56);
   X.fillStyle=lw?'#fff':'rgba(255,255,255,.55)';X.fillText(Math.round(L.score*cn),r.x+r.w*.3,r.y+r.h*.56);X.fillStyle=!lw?'#fff':'rgba(255,255,255,.55)';X.fillText(Math.round(V.score*cn),r.x+r.w*.7,r.y+r.h*.56);
   X.font=`800 ${15*u}px ${FL}`;X.letterSpacing=`${3*u}px`;X.fillStyle='rgba(255,255,255,.85)';X.fillText(g.tag||(g.ot?'PRÓRROGA':'FINAL'),r.x+r.w/2,r.y+24*u);X.letterSpacing='0px';X.textAlign='left';
@@ -541,6 +541,7 @@ function introCine(sc,t){
   const RS=D.results||[],n=RS.length,LY=cineLayout(n),F=(sc.focos||[]);
   // cámara: plano general → vuelo a cada foco → entra en el primero
   let cx=540,cy=900,z=1;const tend=sc.dur-.75;
+  if(F.length){const r0=LY[F[0].i],q0=eio(t/.42),z0=Math.min(3.2,W*.95/r0.w);cx=lerp(r0.x+r0.w/2,540,q0);cy=lerp(r0.y+r0.h/2,900,q0);z=lerp(z0,1,q0)}
   F.forEach((f,k)=>{if(t>=f.t){const r=LY[f.i],q=eio((t-f.t)/.35),zz=Math.min(2.4,W*.62/r.w);const pcx=cx,pcy=cy,pz=z;cx=lerp(pcx,r.x+r.w/2,q);cy=lerp(pcy,r.y+r.h/2+60,q);z=lerp(pz,zz,q)}});
   let dive=0;
   if(t>tend&&F.length){const r=LY[F[0].i],q1=eio((t-tend)/.25),zf=Math.max(W/r.w,H/r.h)*1.04;dive=clamp((t-tend-.25)/.35);
@@ -559,9 +560,17 @@ function introCine(sc,t){
     if(foc){const q=back((t-curF.t-.15)/.3);if(q>0&&curF.tag){X.save();X.translate(r.x+r.w/2,r.y-20);X.scale(q/z*1.6,q/z*1.6);X.font=`900 46px ${FD}`;const tw=X.measureText(curF.tag).width+40;
       X.fillStyle=ACC;rr(-tw/2,-52,tw,62,10);X.fill();X.fillStyle=INK;X.textAlign='center';X.fillText(curF.tag,0,-6);X.textAlign='left';X.restore()}}});
   cineMarquee(t);
-  const cheer=curF?clamp(1-(t-curF.t)/1.2):0;cineAudience(t,Math.max(cheer,t<.6?.6:0));
+  const cheer=curF?clamp(1-(t-curF.t)/1.2):0;cineAudience(t,Math.max(cheer,t<1.2?1:0));
   X.restore();
   if(curF&&t-curF.t<.12){X.save();X.globalAlpha=.45*(1-(t-curF.t)/.12);X.fillStyle='#fff';X.fillRect(0,0,W,H);X.restore()}
+  // golpe inicial: la etiqueta del primer foco a pantalla completa
+  if(F.length&&t<.75){const tg=F[0].tag||'',k=back((t+.08)/.22),a=clamp((.75-t)/.2);X.save();X.globalAlpha=a;X.translate(540+Math.sin(t*70)*10*(1-t),860+Math.cos(t*60)*8*(1-t));X.rotate(-.06);X.scale(lerp(1.6,1,clamp(k)),lerp(1.6,1,clamp(k)));
+    X.font=`900 ${tg.length>10?150:200}px ${FD}`;X.textAlign='center';X.lineJoin='round';X.lineWidth=26;X.strokeStyle='rgba(5,7,13,.92)';X.strokeText(tg,0,0);
+    const gq=X.createLinearGradient(-400,0,400,0);gq.addColorStop(0,G2);gq.addColorStop(.5,'#ffffff');gq.addColorStop(1,G2);X.fillStyle=gq;X.fillText(tg,0,0);X.textAlign='left';X.restore()}
+  // confeti en cada foco y al empezar
+  [{t:-.3}].concat(F).forEach(f=>{const q=t-f.t;if(q<0||q>1.4)return;const R4=rng(Math.floor(f.t*100)+3);X.save();for(let i=0;i<70;i++){const a=R4()*Math.PI*2,sp=500+R4()*900;const x=540+Math.cos(a)*sp*q,y=820+Math.sin(a)*sp*q-500*q+1100*q*q;X.globalAlpha=clamp(1-q/1.4);X.fillStyle=[ACC,TH.b,'#ffffff',G2,'#ffd23f'][i%5];X.save();X.translate(x,y);X.rotate(q*9+i);X.fillRect(-9,-5,18,10);X.restore()}X.restore()});
+  // destellos de color en los bordes al ritmo (primeros 5 s)
+  if(t>.45&&t<5){const beat=Math.pow(1-((t*2.5)%1),3)*(1-t/5)*.6;X.save();X.globalCompositeOperation='lighter';const eg=X.createRadialGradient(540,960,600,540,960,1150);eg.addColorStop(0,hex(TH.b,0));eg.addColorStop(1,hex(Math.floor(t*2.5)%2?TH.a:TH.b,.55*beat));X.fillStyle=eg;X.fillRect(0,0,W,H);X.restore()}
   if(dive>0&&dive<1){X.save();X.globalAlpha=Math.sin(dive*Math.PI)*.55;X.strokeStyle='#fff';X.lineCap='round';const R3=rng(3);
     for(let i=0;i<46;i++){const a=R3()*Math.PI*2,r0=200+R3()*500,len=120+dive*600*R3();X.lineWidth=2+R3()*5;X.beginPath();X.moveTo(540+Math.cos(a)*r0,960+Math.sin(a)*r0);X.lineTo(540+Math.cos(a)*(r0+len),960+Math.sin(a)*(r0+len));X.stroke()}X.restore()}
   // fundido con el primer fotograma del resumen

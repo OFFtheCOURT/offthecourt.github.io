@@ -446,6 +446,8 @@ def _sfx(d):
         w = wave.open(os.path.join(d, n), 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(x, -1, 1) * 32767).astype(np.int16).tobytes()); w.close()
     t = np.arange(int(SR * .7)) / SR; save('boom.wav', .9 * np.sin(2 * np.pi * (50 * t + 80 / 12 * (1 - np.exp(-t * 12)))) * np.exp(-t * 6))
     t = np.arange(int(SR * .22)) / SR; save('pop.wav', .6 * np.sin(2 * np.pi * (900 * t - 250 * t * t)) * np.exp(-t * 18))
+    t = np.arange(int(SR * 3.2)) / SR; r = np.random.default_rng(5).standard_normal(len(t)); r = np.convolve(r, np.ones(30) / 30, 'same') - np.convolve(r, np.ones(400) / 400, 'same')
+    env = np.minimum(1, t / .15) * np.exp(-np.maximum(0, t - 1.2) * 1.2) * (1 + .35 * np.sin(2 * np.pi * 3.1 * t) * np.sin(2 * np.pi * .7 * t)); save('crowd.wav', r * env * 2.2)
     t = np.arange(int(SR * .4)) / SR; r = np.random.default_rng(1).standard_normal(len(t)); r = np.convolve(r, np.ones(8) / 8, 'same') - np.convolve(r, np.ones(60) / 60, 'same'); save('whoosh.wav', r * np.sin(np.pi * t / .4) ** 2 * .5)
 
 
@@ -464,6 +466,9 @@ def render():
     starts = []; acc = 0
     for sc in D['scenes']: starts.append(acc); acc += sc['dur']
     ev = [('boom', 0.0)]
+    intro_ = next((x for x in D['scenes'] if x['type'] == 'intro'), {})
+    if intro_.get('focos'):
+        ev += [('crowd', 0.0), ('pop', .05)] + [x for f_ in intro_['focos'] for x in (('whoosh', max(0, f_['t'] - .12)), ('boom', f_['t']), ('pop', f_['t'] + .1))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
     nm = len(D['mini'])
     ev += [('pop', .15 + i * min(.1, .8 / max(1, nm))) for i in range(nm)]
     for i, sc in enumerate(D['scenes']):
@@ -471,7 +476,7 @@ def render():
         if sc['type'] == 'game':
             ev.append(('boom', starts[i] + .05)); ev += [('pop', starts[i] + c['t']) for c in sc.get('cards', [])]
         if sc['type'] == 'outro': ev += [('pop', starts[i] + h) for h in sc.get('hl', []) if h is not None]
-    vol = {'boom': .55, 'pop': .4, 'whoosh': .45}
+    vol = {'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .5}
     open(os.path.join(esc, 'v.txt'), 'w').write(''.join(f"file 's{i}.mp4'\n" for i in range(len(D['scenes']))))
     open(os.path.join(esc, 'a.txt'), 'w').write(''.join(f"file 'a{i}.wav'\n" for i in range(len(D['scenes']))))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'v.txt'), '-c', 'copy', os.path.join(esc, 'v.mp4'))
