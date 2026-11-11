@@ -51,14 +51,14 @@ const ICO={
  bolt:'<svg class="ico bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.6z" fill="currentColor"/></svg>',
  clock:'<svg class="ico clock" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.5l3.5 2"/></svg>',
  target:'<svg class="ico target" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>',
- star:'<svg class="ico star" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="currentColor"/></svg>'};
+ star:'<svg class="ico istar" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="currentColor"/></svg>'};
 const streakN=s=>parseInt(String(s||'').replace(/\D/g,''))||0;
 const streakIco=s=>{const n=streakN(s),k=String(s||'')[0];return n>=3?(k==='W'?ICO.fire:k==='L'?ICO.ice:''):''};
 const medal=i=>i<3?`<span class="medal m${i+1}">${i+1}</span>`:`${i+1}`;
 /* ---------- partido ---------- */
 function teamRow(g,side){
   const s=g.teams[side],t=TEAMS[s.abbr],nm=splitName(t);
-  return `<div class="trow ${s.win?'win':''}" style="--tc:${tc(t)};--ti:${ink(t)}">
+  return `<div class="trow ${s.win?'win':''}" data-team="${esc(s.abbr)}" style="--tc:${tc(t)};--ti:${ink(t)}">
     <div class="lg"><img src="${logo(s.abbr)}" alt="${esc(t.name)}"></div>
     <div class="tn"><div class="city">${esc(nm.city)}</div><div class="nick">${esc(nm.nick)}</div><div class="rec">${esc(s.rec)}${s.ha==='home'?'<svg viewBox="0 0 24 24" aria-label="Local"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg>':''}</div></div>
     <div class="qs">${s.ls.map(q=>`<span>${q}</span>`).join('')}</div>
@@ -110,7 +110,7 @@ function crEx(p){
 function topCol(s){
   const t=TEAMS[s.abbr];
   return `<div class="tcol" style="--tc:${tc(t)}"><h4><img src="${logo(s.abbr)}" alt="">${esc(t.short)} · Top 5</h4>
-  <div class="cromos">${s.top.map((p,i)=>{const ph=photo(p);return `<div class="cromo ${i===0?'mvp':''}">${i===0?`<span class="cr-mvp">${ICO.crown}MVP</span>`:''}
+  <div class="cromos">${s.top.map((p,i)=>{const ph=photo(p);return `<div class="cromo ${i===0?'mvp':''}" data-player="${esc(p.pid)}">${i===0?`<span class="cr-mvp">${ICO.crown}MVP</span>`:''}
      <div class="cr-ph ${ph?'':'fb'}">${ph||initials(p.n)}${ph?'':`<span class="cr-num">${esc(p.num)}</span>`}<span class="cr-pos">${p.pos?esc(p.pos)+' · ':''}${p.min}'</span></div>
      <div class="cr-nm">${esc(p.n)}</div>
      <div class="cr-st"><div><b>${p.pts}</b><small>PTS</small></div><div><b>${p.reb}</b><small>REB</small></div><div><b>${p.ast}</b><small>AST</small></div></div>
@@ -135,7 +135,7 @@ function gameCard(g){
     ${teamRow(g,0)}${teamRow(g,1)}
     <div class="margin" title="Reparto de puntos"><i style="width:${A.score/tot*100}%;background:${ca}"></i><i style="width:${H.score/tot*100}%;background:${ch}"></i></div>
     <div class="stars">${g.teams.map(s=>{const p=s.top[0];if(!p)return '';const t=TEAMS[s.abbr];const ph=photo(p);
-      return `<div class="star" style="--tc:${tc(t)}"><div class="av ${ph?'':'fb'}">${ph||initials(p.n)}</div><div class="who"><div class="tg">Mejor de ${esc(t.short)}</div><b>${esc(p.n)}${p.pts>=(CUR==='nba'?30:22)?`<span class="hot-hand" title="Mano caliente: ${p.pts} puntos">${ICO.fire}</span>`:''}</b><span><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast${CUR!=='nba'?' · '+p.val+' val':''}</span></div></div>`}).join('')}</div>
+      return `<div class="star" data-player="${esc(p.pid)}" style="--tc:${tc(t)}"><div class="av ${ph?'':'fb'}">${ph||initials(p.n)}</div><div class="who"><div class="tg">Mejor de ${esc(t.short)}</div><b>${esc(p.n)}${p.pts>=(CUR==='nba'?30:22)?`<span class="hot-hand" title="Mano caliente: ${p.pts} puntos">${ICO.fire}</span>`:''}</b><span><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast${CUR!=='nba'?' · '+p.val+' val':''}</span></div></div>`}).join('')}</div>
     <div class="g-foot">
       <button class="btn grow" type="button" aria-expanded="false" aria-controls="${id}" data-toggle="${id}"><span class="lbl-l">Estadísticas y top 5</span><span class="lbl-s">Detalles</span> <span class="car">▾</span></button>
       ${g.bx?`<button class="btn bx-btn" type="button" data-box="${esc(g.id)}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></svg>Ficha completa</button>`:''}
@@ -210,7 +210,7 @@ function renderTop(){
   // hero
   const sc=g=>{const d=Math.abs(g.teams[0].score-g.teams[1].score);return -d+(g.teams[0].ls.length>4?8:0)+(g.teams[0].score+g.teams[1].score)/60};
   const g=[...night.games].sort((a,b)=>sc(b)-sc(a))[0];const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr];
-  const team=(s,t)=>{const p=s.top[0];const src=p&&IMG.p[p.pid];return `<div class="h-team ${s.win?'':'lose'}"><img class="hl" src="${logo(s.abbr)}" alt="${esc(t.name)}"><div class="hn">${esc(t.short)}</div><div class="hr">${esc(s.rec)}</div>
+  const team=(s,t)=>{const p=s.top[0];const src=p&&IMG.p[p.pid];return `<div class="h-team ${s.win?'':'lose'}"><img class="hl" data-team="${esc(s.abbr)}" src="${logo(s.abbr)}" alt="${esc(t.name)}"><div class="hn" data-team="${esc(s.abbr)}">${esc(t.short)}</div><div class="hr">${esc(s.rec)}</div>
     ${p?`<div class="h-star"><span class="av">${src?`<img src="${src}" alt="" title="${credit(p.pid)}">`:initials(p.n)}</span><span class="hs"><b>${esc(p.n)}</b><small><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast</small></span></div>`:''}</div>`};
   const n=A.ls.length;
   $('hero').innerHTML=`<article class="hero" style="--a:${tc(ta)};--h:${tc(th)}"><div class="hero-in">
@@ -226,7 +226,7 @@ function renderTop(){
   const all=[];night.games.forEach(g=>g.teams.forEach(s=>s.top.forEach(p=>all.push({...p,abbr:s.abbr,opp:g.teams.find(x=>x!==s).abbr,win:s.win}))));
   all.sort((a,b)=>b.gs-a.gs);
   $('leaders').innerHTML=all.slice(0,3).map((p,i)=>{const t=TEAMS[p.abbr];const ph=photo(p);return `
-  <div class="leader" style="--tc:${tc(t)}"><div class="rank">${i+1}</div>
+  <div class="leader" data-player="${esc(p.pid)}" style="--tc:${tc(t)}"><div class="rank">${i+1}</div>
     ${ph?ph.replace('<img','<img class="ph"'):`<div class="ph fb" style="display:grid;place-items:center;font:900 40px var(--f-display);border-radius:50%;background:rgba(255,255,255,.12)">${initials(p.n)}</div>`}
     <div class="meta"><div class="lbl">${i===0?T.mvp:'Destacado'} · ${esc(t.short)} ${p.win?'gana a':'cae ante'} ${esc(TEAMS[p.opp].short)}</div>
     <div class="nm">${esc(p.n)}</div>
@@ -280,9 +280,9 @@ function renderUp(){
     return `<article class="up" style="--a:${tc(ta)};--h:${tc(th)}">
       <div class="up-top"><span class="hr">${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}<small>${madrid(g.utc,isDay()?{weekday:'short'}:{weekday:'short',day:'numeric'}).replace('.','')}</small></span><span>${esc(g.venue)}</span></div>
       <div class="up-mid">
-        <div class="up-t"><img src="${logo(A.abbr)}" alt=""><b>${esc(ta.short)}</b><span>${esc(A.rec)}</span></div>
+        <div class="up-t" data-team="${esc(A.abbr)}"><img src="${logo(A.abbr)}" alt=""><b>${esc(ta.short)}</b><span>${esc(A.rec)}</span></div>
         <div class="vs">${CUR==='nba'?'@':'vs'}</div>
-        <div class="up-t"><img src="${logo(H.abbr)}" alt=""><b>${esc(th.short)}</b><span>${esc(H.rec)}</span></div>
+        <div class="up-t" data-team="${esc(H.abbr)}"><img src="${logo(H.abbr)}" alt=""><b>${esc(th.short)}</b><span>${esc(H.rec)}</span></div>
       </div>
       <div class="up-bot">${(g.tv||[]).map(t=>`<span class="tv">TV · ${esc(t)}</span>`).join('')}${g.odds?`<span class="tv od">Favorito ${esc(g.odds)}</span>`:''}</div>
     </article>`}).join('');
@@ -298,7 +298,7 @@ function confTable(grp){
    const cls=r.seed<=z.po?'po':(z.pi&&r.seed<=z.pi?'pi':(z.rel&&r.seed>n-z.rel?'rel':''));
    const cut=(r.seed===z.po||r.seed===z.pi||(z.rel&&r.seed===n-z.rel))?'cut':'';
    const form=r.form?`<span class="form" title="Del más antiguo al más reciente">${r.form.slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('')}</span>`:`<span class="dots" title="${r.l10}">${Array.from({length:10},(_,i)=>`<i class="${i<(parseInt(r.l10)||0)?'on':''}"></i>`).join('')}</span>`;
-   return `<tr class="${cls} ${cut}" data-ab="${esc(r.abbr)}">
+   return `<tr class="${cls} ${cut}" data-ab="${esc(r.abbr)}" data-team="${esc(r.abbr)}">
     <td class="sd"><span>${r.seed===1?ICO.crown:r.seed}</span></td>
     <td class="tm"><div><img src="${logo(r.abbr)}" alt=""><span>${esc(t.short)}</span></div></td>
     <td class="wl"><b>${r.w}-${r.l}</b></td>
@@ -319,9 +319,9 @@ function renderStandings(){
 /* ---------- líderes ---------- */
 function ldrCard(c){
   const p=c.ls[0];if(!p)return '';const t=TEAMS[p.abbr]||{short:p.abbr,color:'333333',alt:'999999'};
-  const li=(x,j)=>{const tt=TEAMS[x.abbr]||t;const s=IMG.p[x.pid];return `<li style="--tc:${tc(tt)}" ${j>=5?'data-x hidden':''}><span class="r">${j+1}</span><span class="av ${s?'':'fb'}">${s?`<img src="${s}" alt="">`:`<img src="${logo(x.abbr)}" alt="" style="width:22px;height:22px;object-fit:contain;margin:auto">`}</span><span class="nm">${esc(x.n)}<small>${[x.abbr,x.pos].filter(Boolean).map(esc).join(' · ')}</small></span><span class="v">${x.v}</span></li>`};
+  const li=(x,j)=>{const tt=TEAMS[x.abbr]||t;const s=IMG.p[x.pid];return `<li data-player="${esc(x.pid)}" style="--tc:${tc(tt)}" ${j>=5?'data-x hidden':''}><span class="r">${j+1}</span><span class="av ${s?'':'fb'}">${s?`<img src="${s}" alt="">`:`<img src="${logo(x.abbr)}" alt="" style="width:22px;height:22px;object-fit:contain;margin:auto">`}</span><span class="nm">${esc(x.n)}<small>${[x.abbr,x.pos].filter(Boolean).map(esc).join(' · ')}</small></span><span class="v">${x.v}</span></li>`};
   const src=IMG.p[p.pid];
-  return `<article class="ldr"><div class="ldr-hero" style="--tc:${tc(t)}">
+  return `<article class="ldr"><div class="ldr-hero" data-player="${esc(p.pid)}" style="--tc:${tc(t)}">
     <span class="cat">${ICO.crown}${esc(c.t)}</span><span class="val">${p.v}</span>
     <img class="tl" src="${logo(p.abbr)}" alt="">
     ${src?`<img class="ph" src="${src}" alt="${esc(p.n)}" title="${credit(p.pid)}">`:`<span class="ph-fb">${initials(p.n)}</span>`}
@@ -343,7 +343,7 @@ function renderTS(){
   const rows=Object.keys(TEAMS).map(ab=>({ab,v:tsVal(ab,k)})).filter(r=>!isNaN(r.v)).sort((a,b)=>low?a.v-b.v:b.v-a.v);
   const vs=rows.map(r=>r.v),mn=Math.min(...vs),mx=Math.max(...vs);const span=(mx-mn)||1,lo=mn-span*0.35;
   $('tsList').innerHTML=rows.map((r,i)=>{const t=TEAMS[r.ab];const w=low?(mx-r.v+span*0.35)/(span*1.35)*100:(r.v-lo)/(mx-lo)*100;
-    return `<div class="ts-row ${i<3?'top3':''}"><span class="r">${medal(i)}</span><img src="${logo(r.ab)}" alt=""><span class="nm">${esc(t.short)}</span>
+    return `<div class="ts-row ${i<3?'top3':''}" data-team="${esc(r.ab)}"><span class="r">${medal(i)}</span><img src="${logo(r.ab)}" alt=""><span class="nm">${esc(t.short)}</span>
       <div class="ts-bar"><i style="width:${Math.max(4,Math.min(100,w))}%;--tcol:${ink(t)}"></i></div><span class="v">${k==='diff'&&r.v>0?'+':''}${r.v.toFixed(1)}${/Pct/.test(k)?'%':''}</span></div>`}).join('');
 }
 
@@ -419,8 +419,8 @@ function renderHoy(){
     const mid=sc?`<div class="lboard"><b class="${A.score>H.score?'w':''}" data-sk="${g.id}-a">${A.score}</b><i>–</i><b class="${H.score>A.score?'w':''}" data-sk="${g.id}-h">${H.score}</b>${cls==='live'&&g.detail?`<span class="lclock">${esc(g.detail)}</span>`:''}</div>`:`<div class="vs">${CUR==='nba'?'@':'vs'}</div>`;
     return `<article class="up ${cls}" style="--a:${tc(ta)};--h:${tc(th)}">
       <div class="up-top"><span class="hr">${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}<small>${madrid(g.utc,{weekday:'short'}).replace('.','')}</small></span><span>${esc(g.venue)}</span></div>
-      <div class="up-mid${sc?' has-sc':''}"><div class="up-t"><img src="${logo(A.abbr)}" alt=""><b>${esc(ta.short)}</b><span>${esc(A.rec)}</span></div>${mid}
-        <div class="up-t"><img src="${logo(H.abbr)}" alt=""><b>${esc(th.short)}</b><span>${esc(H.rec)}</span></div></div>
+      <div class="up-mid${sc?' has-sc':''}"><div class="up-t" data-team="${esc(A.abbr)}"><img src="${logo(A.abbr)}" alt=""><b>${esc(ta.short)}</b><span>${esc(A.rec)}</span></div>${mid}
+        <div class="up-t" data-team="${esc(H.abbr)}"><img src="${logo(H.abbr)}" alt=""><b>${esc(th.short)}</b><span>${esc(H.rec)}</span></div></div>
       <div class="stt"><span class="${cls}">${st}</span></div>
       ${btn?`<div class="stt">${btn}</div>`:''}
       <div class="up-bot">${(g.tv||[]).map(x=>`<span class="tv">TV · ${esc(x)}</span>`).join('')}${g.odds?`<span class="tv od">Favorito ${esc(g.odds)}</span>`:''}</div></article>`}).join('');
@@ -451,7 +451,7 @@ function renderFav(){
   const nxHtml=nx?(()=>{const op=nx.teams.find(x=>x.abbr!==ab),home=!!(nx.teams.find(x=>x.abbr===ab)||{}).home;return `<div class="fav-next"><img src="${logo(op.abbr)}" alt=""><div><b>${home?'vs':'@'} ${esc(TEAMS[op.abbr].short)}</b><small>${cap(madrid(nx.utc,{weekday:'long',day:'numeric',month:'short'}))} · ${madrid(nx.utc,{hour:'2-digit',minute:'2-digit'})} h</small></div></div>`})():'<small class="fav-none">Sin partido programado</small>';
   const form=(r.form||[]).slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('');
   box.innerHTML=`<div class="fav-card" style="--tc:${tc(t)};--ti:${ink(t)}">
-    <img class="fav-logo" src="${logo(ab)}" alt="">
+    <img class="fav-logo" data-team="${esc(ab)}" src="${logo(ab)}" alt="">
     <div class="fav-main"><small class="fav-k">★ Mi equipo</small><b class="fav-name">${esc(t.name)}</b>
       <div class="fav-meta"><span class="fav-pos">${r.seed?r.seed+'º':''}</span><span>${grp?esc(grp.name):''}</span><span class="fav-wl">${r.w??''}-${r.l??''}</span>${form?`<span class="form">${form}</span>`:''}</div></div>
     <div class="fav-col"><small class="fav-k">Último partido</small>${lastHtml}</div>
@@ -487,9 +487,9 @@ function calRow(g,showRound){
   return `<div class="cg ${g.done?'done':''} ${(g.a===fv||g.h===fv)?'fav':''}">
     <span class="cg-w">${showRound&&g.r?`<i>J${g.r}</i>`:''}${when}</span>
     ${(()=>{const L1=HOME_FIRST(CUR)?{t:H,ab:g.h,s:g.hs,w:hw}:{t:A,ab:g.a,s:g.as,w:aw},R1=HOME_FIRST(CUR)?{t:A,ab:g.a,s:g.as,w:aw}:{t:H,ab:g.h,s:g.hs,w:hw};
-    return `<span class="cg-t a ${L1.w?'w':''}"><b>${esc(L1.t.short)}</b><img src="${logo(L1.ab)}" alt=""></span>
+    return `<span class="cg-t a ${L1.w?'w':''}" data-team="${esc(L1.ab)}"><b>${esc(L1.t.short)}</b><img src="${logo(L1.ab)}" alt=""></span>
     <span class="cg-s">${g.done?`<b class="${L1.w?'w':''}">${L1.s}</b><i>–</i><b class="${R1.w?'w':''}">${R1.s}</b>`:`<em>${CUR==='nba'?'@':'vs'}</em>`}</span>
-    <span class="cg-t h ${R1.w?'w':''}"><img src="${logo(R1.ab)}" alt=""><b>${esc(R1.t.short)}</b></span>`})()}</div>`;
+    <span class="cg-t h ${R1.w?'w':''}" data-team="${esc(R1.ab)}"><img src="${logo(R1.ab)}" alt=""><b>${esc(R1.t.short)}</b></span>`})()}</div>`;
 }
 function renderCal(){
   const C=L.cal||[],sec=$('calendario');
@@ -598,7 +598,7 @@ function boxTable(rows,side,sortK){
   const best={};C.forEach(([k])=>{if(['min','pf','to','pm'].includes(k))return;best[k]=Math.max(...rows.map(r=>nv(r[k])))});
   const sum=k=>rows.reduce((t,r)=>t+nv(r[k]),0),pair=k=>{let m=0,a=0;rows.forEach(r=>{const x=String(r[k]||'0-0').split('-');m+=+x[0]||0;a+=+x[1]||0});return m+'-'+a};
   const pc=k=>{const [m,a]=pair(k).split('-').map(Number);return a?Math.round(m/a*100)+'%':'—'};
-  const tr=(r,cls)=>`<tr class="${cls||''}"><th scope="row"><span class="bx-n">${r.num!==''&&r.num!=null?`<i>${esc(r.num)}</i>`:''}<b>${esc(r.n)}</b>${r.pos?`<small>${esc(r.pos)}</small>`:''}</span></th>${C.map(([k])=>{const v=r[k]??'';return `<td class="${best[k]&&nv(v)===best[k]&&best[k]>0?'top':''} ${k==='pts'?'pts':''}">${esc(v)}</td>`}).join('')}</tr>`;
+  const tr=(r,cls)=>`<tr class="${cls||''}"><th scope="row" ${r.pid?`data-player="${esc(r.pid)}"`:''}><span class="bx-n">${r.num!==''&&r.num!=null?`<i>${esc(r.num)}</i>`:''}<b>${esc(r.n)}</b>${r.pos?`<small>${esc(r.pos)}</small>`:''}</span></th>${C.map(([k])=>{const v=r[k]??'';return `<td class="${best[k]&&nv(v)===best[k]&&best[k]>0?'top':''} ${k==='pts'?'pts':''}">${esc(v)}</td>`}).join('')}</tr>`;
   let body='';
   if(sortK){body=rs.map(r=>tr(r)).join('')}
   else{const st=rs.filter(r=>r.s),bn=rs.filter(r=>!r.s);
@@ -642,7 +642,7 @@ async function openBox(id){
 }
 function closeBox(){$('boxSheet').hidden=true;document.body.classList.remove('noscroll');boxCur=null}
 document.addEventListener('click',e=>{
-  const b=e.target.closest('[data-box]');if(b){openBox(b.dataset.box);return}
+  const b=e.target.closest('[data-box]');if(b){const inner=e.target.closest('[data-team],[data-player]');if(inner&&b.contains(inner)&&inner!==b)return;openBox(b.dataset.box);return}
   if(!boxCur&&$('boxSheet').hidden)return;
   if(e.target.closest('[data-boxclose]')||e.target.id==='boxSheet'){closeBox();return}
   const sd=e.target.closest('[data-bxside]');if(sd&&boxCur){boxCur.side=+sd.dataset.bxside;renderBox();return}
@@ -697,6 +697,116 @@ document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault()
   ['pointerdown','wheel','touchstart'].forEach(ev=>w.addEventListener(ev,()=>{w.dataset.user=1},{passive:true}));
   requestAnimationFrame(upd);
 })();
+/* ================= fichas de equipo y de jugador ================= */
+const PL={};   // jugadores de la temporada por liga (players/<liga>.json, se descarga al abrir una ficha)
+function loadPlayers(lg){if(!PL[lg])PL[lg]=fetch('players/'+lg+'.json?v='+encodeURIComponent(UPDATED||'')).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>d.p).catch(e=>{delete PL[lg];throw e});return PL[lg]}
+const G_={date:0,id:1,opp:2,home:3,res:4,my:5,ot:6,st:7,min:8,pts:9,reb:10,ast:11,stl:12,blk:13,to:14,fg:15,tp:16,ft:17,pm:18,val:19};
+const sumPair=(gs,k)=>gs.reduce((a,g)=>{const x=String(g[G_[k]]||'0-0').split('-');return [a[0]+(+x[0]||0),a[1]+(+x[1]||0)]},[0,0]);
+const pct=(m,a)=>a?(m/a*100).toFixed(1)+'%':'—';
+function avgs(p){const gs=p.g,n=gs.length||1,av=k=>gs.reduce((a,g)=>a+(parseFloat(g[G_[k]])||0),0)/n;
+  const fg=sumPair(gs,'fg'),tp=sumPair(gs,'tp'),ft=sumPair(gs,'ft');
+  return {gp:gs.length,min:av('min'),pts:av('pts'),reb:av('reb'),ast:av('ast'),stl:av('stl'),blk:av('blk'),to:av('to'),val:av('val'),fg,tp,ft,fgp:fg[1]?fg[0]/fg[1]:0}}
+const f1=x=>(Math.round(x*10)/10).toFixed(1);
+let pfPushed=false;
+function pfOpen(html){const sh=$('pfSheet');sh.hidden=false;document.body.classList.add('noscroll');sh.innerHTML=`<div class="pf-box" role="dialog" aria-modal="true">${html}</div>`;sh.querySelector('.pf-box').scrollTop=0}
+function pfClose(){const sh=$('pfSheet');if(sh.hidden)return;sh.hidden=true;sh.innerHTML='';if($('boxSheet').hidden)document.body.classList.remove('noscroll');
+  if(/^#(equipo|jugador)\//.test(location.hash)){if(pfPushed){pfPushed=false;history.back()}else history.replaceState(null,'',location.pathname+location.search)}}
+const pfX='<button type="button" class="pf-x" data-pfclose aria-label="Cerrar">✕</button>';
+function go(kind,id){const h=`#${kind}/${CUR}/${encodeURIComponent(id)}`;if(location.hash!==h){pfPushed=true;location.hash=h}else route()}
+function route(){const m=location.hash.match(/^#(equipo|jugador)\/(nba|el|acb)\/(.+)$/);if(!m){if(!$('pfSheet').hidden){$('pfSheet').hidden=true;$('pfSheet').innerHTML='';document.body.classList.remove('noscroll')}return}
+  const [,kind,lg,id]=m;if(lg!==CUR)setLeague(lg);(kind==='equipo'?openTeam:openPlayer)(decodeURIComponent(id))}
+addEventListener('hashchange',route);
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-pfclose]')||e.target.id==='pfSheet'){pfClose();return}
+  if(e.target.closest('a[href],button:not([data-team]):not([data-player])'))return;
+  const p=e.target.closest('[data-player]');if(p){if(!$('boxSheet').hidden)closeBox();go('jugador',p.dataset.player);return}
+  const t=e.target.closest('[data-team]');if(t&&TEAMS[t.dataset.team]){if(!$('boxSheet').hidden)closeBox();go('equipo',t.dataset.team)}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('pfSheet').hidden&&$('boxSheet').hidden)pfClose()});
+
+/* posición jornada a jornada (o semana a semana en la NBA) calculada con el calendario */
+function rankHistory(ab){
+  const grp=L.standings.find(g=>g.rows.some(r=>r.abbr===ab));if(!grp)return null;
+  const mem=new Set(grp.rows.map(r=>r.abbr)),done=(L.cal||[]).filter(g=>g.done).sort((a,b)=>a.utc<b.utc?-1:1);if(!done.length)return null;
+  const key=CUR==='nba'?(g=>monday(g.d||g.utc.slice(0,10))):(g=>g.r);
+  const steps=[...new Set(done.map(key))];const W={},Lo={};mem.forEach(a=>{W[a]=0;Lo[a]=0});
+  const out=[];let i=0;
+  for(const s of steps){while(i<done.length&&key(done[i])===s){const g=done[i++];const hw=g.hs>g.as;
+      if(mem.has(g.h)){hw?W[g.h]++:Lo[g.h]++}if(mem.has(g.a)){hw?Lo[g.a]++:W[g.a]++}}
+    const ord=[...mem].sort((a,b)=>{const pa=W[a]/Math.max(1,W[a]+Lo[a]),pb=W[b]/Math.max(1,W[b]+Lo[b]);return pb-pa||W[b]-W[a]||Lo[a]-Lo[b]});
+    out.push({s,rk:ord.indexOf(ab)+1,w:W[ab],l:Lo[ab]})}
+  return {pts:out,n:mem.size,z:grp.zones||{}}}
+function rankChart(h,col){
+  if(!h||h.pts.length<2)return '<p class="pf-empty">Aún no hay suficientes jornadas para el gráfico.</p>';
+  const mob=innerWidth<640,W=mob?360:620,H=mob?190:200,pl=30,pr=mob?18:14,pt=26,pb=26,n=h.n,k=h.pts.length,X=i=>pl+(W-pl-pr)*i/(k-1),Y=r=>pt+(H-pt-pb)*(r-1)/(n-1);
+  const zone=(a,b,c)=>a?`<rect x="${pl}" y="${Y(1)-6}" width="${W-pl-pr}" height="${Y(a)-Y(1)+12}" fill="${c}"/>`:'';
+  const po=h.z.po?zone(h.z.po,0,'rgba(61,220,151,.10)'):'';
+  const pi=h.z.pi?`<rect x="${pl}" y="${Y(h.z.po+1)-6}" width="${W-pl-pr}" height="${Y(h.z.pi)-Y(h.z.po+1)+12}" fill="rgba(77,124,255,.08)"/>`:'';
+  const rel=h.z.rel?`<rect x="${pl}" y="${Y(n-h.z.rel+1)-6}" width="${W-pl-pr}" height="${Y(n)-Y(n-h.z.rel+1)+12}" fill="rgba(229,72,77,.10)"/>`:'';
+  const path=h.pts.map((p,i)=>`${i?'L':'M'}${X(i).toFixed(1)},${Y(p.rk).toFixed(1)}`).join('');
+  const lbl=p=>CUR==='nba'?new Date(p.s+'T12:00Z').toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'UTC'}).replace('.',''):'J'+p.s;
+  const every=Math.ceil(k/(mob?5:8));
+  return `<svg viewBox="0 0 ${W} ${H}" class="pf-chart" role="img" aria-label="Evolución de la posición">${po}${pi}${rel}
+   ${[1,Math.ceil(n/2),n].map(r=>`<text x="${pl-8}" y="${Y(r)+4}" text-anchor="end" class="ax">${r}º</text><line x1="${pl}" x2="${W-pr}" y1="${Y(r)}" y2="${Y(r)}" class="gl"/>`).join('')}
+   <path d="${path}" fill="none" stroke="${col}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+   ${h.pts.map((p,i)=>`<circle cx="${X(i)}" cy="${Y(p.rk)}" r="${i===k-1?6:3.5}" fill="${i===k-1?col:'var(--card)'}" stroke="${col}" stroke-width="2.5"><title>${lbl(p)}: ${p.rk}º (${p.w}-${p.l})</title></circle>`).join('')}
+   ${h.pts.map((p,i)=>i%every===0||i===k-1?`<text x="${X(i)}" y="${H-8}" text-anchor="middle" class="ax">${lbl(p)}</text>`:'').join('')}
+   <text x="${X(k-1)-10}" y="${Y(h.pts[k-1].rk)+(h.pts[k-1].rk>n/2?-12:24)}" text-anchor="end" class="lv">${h.pts[k-1].rk}º</text></svg>`}
+
+async function openTeam(ab){
+  const t=TEAMS[ab];if(!t)return;const r=ST[ab]||{},grp=L.standings.find(g=>g.rows.some(x=>x.abbr===ab)),col=ink(t);
+  const C=(L.cal||[]).filter(g=>g.a===ab||g.h===ab).sort((a,b)=>a.utc<b.utc?-1:1),done=C.filter(g=>g.done),next=C.filter(g=>!g.done).slice(0,5);
+  const form=(r.form||[]).slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('');
+  const gRow=g=>{const home=g.h===ab,op=home?g.a:g.h,my=home?g.hs:g.as,ot=home?g.as:g.hs,w=my>ot,inP=findGame(g.id);
+    return `<div class="pf-g ${g.done?(w?'W':'L'):''}" ${inP?`data-box="${esc(g.id)}"`:''}><span class="d">${madrid(g.utc,{day:'numeric',month:'short'}).replace('.','')}${CUR!=='nba'&&g.r?`<small>J${g.r}</small>`:''}</span>
+      <span class="o" data-team="${esc(op)}"><em>${home?'vs':'@'}</em><img src="${logo(op)}" alt="">${esc((TEAMS[op]||{short:op}).short)}</span>
+      ${g.done?`<span class="r"><b class="wl ${w?'W':'L'}">${w?'V':'D'}</b>${my}-${ot}</span>`:`<span class="r t">${madrid(g.utc,{weekday:'short'}).replace('.','')} ${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}</span>`}</div>`};
+  pfOpen(`${pfX}<header class="pf-head" style="--tc:${tc(t)};--ti:${col}"><img class="pf-logo" src="${logo(ab)}" alt="">
+     <div class="pf-ttl"><small>${esc(grp?grp.name:'')}</small><h3>${esc(t.name)}</h3>
+      <div class="pf-sub"><b>${r.w??'–'}-${r.l??'–'}</b>${r.seed?`<span>${r.seed===1?ICO.crown:''}${r.seed}º</span>`:''}${r.strk?`<span class="strk ${(r.strk||'-')[0]} ${streakN(r.strk)>=3?'hot':''}">${streakIco(r.strk)}${String(r.strk).replace(/^W/,'V').replace(/^L/,'D')}</span>`:''}<span class="form">${form}</span></div></div>
+     <button type="button" class="pf-fav ${favAb()===ab?'on':''}" data-pffav="${esc(ab)}" title="Marcar como mi equipo">${ICO.star}<span>${favAb()===ab?'Mi equipo':'Hacer mi equipo'}</span></button></header>
+   <div class="pf-tiles">${[['Puntos a favor',r.ppg],['Puntos en contra',r.opp],['Diferencia',r.diff],['En casa',r.home],['Fuera',r.road]].filter(x=>x[1]!=null&&x[1]!=='').map(x=>`<div><small>${x[0]}</small><b>${esc(x[1])}</b></div>`).join('')}</div>
+   <h4 class="pf-h">Posición ${CUR==='nba'?'semana a semana':'jornada a jornada'}</h4><div class="pf-card">${rankChart(rankHistory(ab),col)}</div>
+   <div class="pf-2col"><div><h4 class="pf-h">Últimos resultados</h4><div class="pf-card pf-list">${done.slice(-8).reverse().map(gRow).join('')||'<p class="pf-empty">Sin partidos todavía.</p>'}</div></div>
+     <div><h4 class="pf-h">Próximos partidos</h4><div class="pf-card pf-list">${next.map(gRow).join('')||'<p class="pf-empty">No hay partidos programados.</p>'}</div></div></div>
+   <h4 class="pf-h">Plantilla</h4><div class="pf-card" id="pfRoster"><p class="pf-empty">Cargando plantilla…</p></div>`);
+  try{const P=await loadPlayers(CUR);if(!location.hash.startsWith('#equipo/'))return;
+    const ros=Object.entries(P).filter(([,p])=>p.ab===ab).map(([pid,p])=>({pid,p,a:avgs(p)})).sort((a,b)=>b.a.min*b.a.gp-a.a.min*a.a.gp);
+    const el=$('pfRoster');if(!el)return;
+    el.innerHTML=ros.length?`<div class="pf-tbl"><table><thead><tr><th>Jugador</th><th>PJ</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th>TC%</th>${CUR!=='nba'?'<th>Val</th>':''}</tr></thead><tbody>
+      ${ros.map(({pid,p,a})=>{const src=IMG.p[pid];return `<tr data-player="${esc(pid)}"><th><span class="pf-pl"><span class="av" style="--tc:${tc(t)}">${src?`<img src="${src}" alt="">`:initials(p.n)}</span><span><b>${esc(p.n)}</b><small>${[p.num?'#'+p.num:'',p.pos].filter(Boolean).map(esc).join(' · ')}</small></span></span></th>
+        <td>${a.gp}</td><td>${f1(a.min)}</td><td class="k">${f1(a.pts)}</td><td>${f1(a.reb)}</td><td>${f1(a.ast)}</td><td>${a.fg[1]?(a.fgp*100).toFixed(0)+'%':'—'}</td>${CUR!=='nba'?`<td>${f1(a.val)}</td>`:''}</tr>`}).join('')}</tbody></table></div>`:'<p class="pf-empty">Sin datos de jugadores.</p>'}
+  catch(e){const el=$('pfRoster');if(el)el.innerHTML='<p class="pf-empty">No se ha podido cargar la plantilla.</p>'}
+}
+
+async function openPlayer(pid){
+  pfOpen(`${pfX}<div class="pf-load">Cargando ficha…</div>`);
+  let P;try{P=await loadPlayers(CUR)}catch(e){pfOpen(`${pfX}<p class="pf-empty">No se ha podido cargar la ficha.</p>`);return}
+  if(!location.hash.startsWith('#jugador/'))return;
+  const p=P[pid];if(!p){pfOpen(`${pfX}<p class="pf-empty">No hay datos de este jugador esta temporada.</p>`);return}
+  const t=TEAMS[p.ab]||{short:p.ab,name:p.ab,color:'333333',alt:'999999'},col=ink(t),a=avgs(p),src=IMG.p[pid];
+  // posición en la liga (jugadores con al menos la mitad de partidos del que más ha jugado)
+  const all=Object.values(P).map(x=>({x,a:avgs(x)})),mx=Math.max(...all.map(o=>o.a.gp)),q=all.filter(o=>o.a.gp>=Math.max(1,mx*0.5));
+  const rk=k=>{if(a.gp<Math.max(1,mx*0.5))return '';const v=a[k];return 1+q.filter(o=>o.a[k]>v).length};
+  const tile=(lbl,v,k)=>{const r=k?rk(k):'';return `<div class="${r&&r<=10?'top':''}"><small>${lbl}</small><b>${v}</b>${r&&r<=50?`<em>${r<=3?ICO.crown:''}${r}º de la liga</em>`:''}</div>`};
+  const gs=p.g.slice().reverse(),best=p.g.reduce((b,g)=>(!b||g[G_.pts]>b[G_.pts])?g:b,null);
+  const maxP=Math.max(10,...p.g.map(g=>g[G_.pts]));
+  const bars=p.g.map((g,i)=>{const h=Math.max(3,g[G_.pts]/maxP*100);return `<span class="b ${g[G_.res]==='V'?'W':'L'}" style="height:${h}%" title="${g[G_.date]} · ${g[G_.home]?'vs':'@'} ${g[G_.opp]} · ${g[G_.pts]} pts"><i>${g[G_.pts]}</i></span>`}).join('');
+  const avg=a.pts;
+  pfOpen(`${pfX}<header class="pf-head pl" style="--tc:${tc(t)};--ti:${col}">
+     <div class="pf-photo ${src?'':'fb'}">${src?`<img src="${src}" alt="${esc(p.n)}" title="${credit(pid)}">`:`<span>${initials(p.n)}</span>`}</div>
+     <div class="pf-ttl"><small>${[p.num?'#'+p.num:'',p.pos].filter(Boolean).map(esc).join(' · ')}</small><h3>${esc(p.n)}</h3>
+      <div class="pf-sub"><span class="pf-team" data-team="${esc(p.ab)}"><img src="${logo(p.ab)}" alt="">${esc(t.short)}</span><span>${a.gp} partidos</span></div></div></header>
+   <div class="pf-tiles big">${tile('Puntos',f1(a.pts),'pts')}${tile('Rebotes',f1(a.reb),'reb')}${tile('Asistencias',f1(a.ast),'ast')}${CUR!=='nba'?tile('Valoración',f1(a.val),'val'):tile('Minutos',f1(a.min),'min')}</div>
+   <div class="pf-tiles">${tile('Robos',f1(a.stl),'stl')}${tile('Tapones',f1(a.blk),'blk')}${tile('Tiros de campo',pct(...a.fg))}${tile('Triples',pct(...a.tp))}${tile('Tiros libres',pct(...a.ft))}${CUR!=='nba'?tile('Minutos',f1(a.min)):''}</div>
+   <h4 class="pf-h">Puntos partido a partido</h4><div class="pf-card"><div class="pf-bars" style="--avg:${avg/maxP*100}%">${bars}<span class="avg" title="Media">${f1(avg)}</span></div></div>
+   ${best?`<h4 class="pf-h">Mejor partido</h4><div class="pf-card pf-best" ${findGame(best[G_.id])?`data-box="${esc(best[G_.id])}"`:''}><b>${best[G_.pts]}<small>pts</small></b><span>${best[G_.reb]} reb · ${best[G_.ast]} ast · ${best[G_.min]} min</span>
+     <span class="o">${best[G_.home]?'vs':'@'} <img src="${logo(best[G_.opp])}" alt="">${esc((TEAMS[best[G_.opp]]||{short:best[G_.opp]}).short)} · <b class="wl ${best[G_.res]==='V'?'W':'L'}">${best[G_.res]}</b> ${best[G_.my]}-${best[G_.ot]} · ${new Date(best[G_.date]+'T12:00Z').toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'UTC'})}</span></div>`:''}
+   <h4 class="pf-h">Todos sus partidos</h4><div class="pf-card"><div class="pf-tbl"><table class="log"><thead><tr><th>Partido</th><th>Res.</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th>TC</th><th>T3</th><th>TL</th><th>Rob</th><th>Tap</th><th>+/-</th>${CUR!=='nba'?'<th>Val</th>':''}</tr></thead><tbody>
+    ${gs.map(g=>`<tr ${findGame(g[G_.id])?`data-box="${esc(g[G_.id])}"`:''}><th><span class="pf-o"><small>${new Date(g[G_.date]+'T12:00Z').toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'UTC'}).replace('.','')}</small>${g[G_.home]?'vs':'@'} <img src="${logo(g[G_.opp])}" alt="">${esc(g[G_.opp])}</span></th>
+      <td><b class="wl ${g[G_.res]==='V'?'W':'L'}">${g[G_.res]}</b> ${g[G_.my]}-${g[G_.ot]}</td><td>${esc(g[G_.min])}</td><td class="k">${g[G_.pts]}</td><td>${g[G_.reb]}</td><td>${g[G_.ast]}</td><td>${esc(g[G_.fg])}</td><td>${esc(g[G_.tp])}</td><td>${esc(g[G_.ft])}</td><td>${g[G_.stl]}</td><td>${g[G_.blk]}</td><td>${esc(g[G_.pm])}</td>${CUR!=='nba'?`<td>${g[G_.val]}</td>`:''}</tr>`).join('')}</tbody></table></div></div>`);
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-pffav]');if(!b)return;const ab=b.dataset.pffav;if(favAb()===ab)delete FAV[CUR];else FAV[CUR]=ab;saveFav();renderAll();openTeam(ab)});
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
@@ -760,4 +870,5 @@ if(LIVE){setInterval(liveTick,15000);setTimeout(liveTick,1500);document.addEvent
 if(LIVE&&'serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 try{const s=localStorage.getItem('offcourt-league');if(s&&LG[s])CUR=s}catch(e){}
 renderAll();
+if(/^#(equipo|jugador)\//.test(location.hash))route();
 </script>

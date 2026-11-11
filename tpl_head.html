@@ -805,6 +805,86 @@ html[data-theme="light"] .cromo{box-shadow:0 4px 12px rgba(20,30,60,.07)}
 .tk-arr.l{left:6px}.tk-arr.r{right:6px}
 .tk-arr:hover{border-color:var(--accent);color:var(--accent)}
 @media (hover:none){.tk-arr{display:none!important}}
+
+/* ===== Fichas de equipo y de jugador ===== */
+[data-team],[data-player]{cursor:pointer}
+.trow[data-team]:hover .nick,.ts-row[data-team]:hover .nm,.cg-t[data-team]:hover b,.up-t[data-team]:hover b,tr[data-team]:hover .tm span{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.cromo[data-player]:hover,.leader[data-player]:hover{transform:translateY(-2px)}.cromo,.leader{transition:transform .15s}
+.bx-sheet{z-index:96}.pf-sheet{z-index:92;place-items:center;padding:2vh 16px;backdrop-filter:none;background:rgba(3,5,10,.72)}
+html[data-theme="light"] .pf-sheet{background:rgba(20,28,45,.55)}
+.pf-box{position:relative;width:min(980px,100%);max-height:96vh;overflow:auto;overscroll-behavior:contain;background:var(--bg);border:1px solid var(--line);border-radius:22px;padding:0 0 20px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.pf-x{position:sticky;top:10px;float:right;margin:10px 10px -46px 0;z-index:5;width:36px;height:36px;border-radius:50%;border:0;background:rgba(5,8,14,.55);color:#fff;font-size:18px;cursor:pointer;backdrop-filter:blur(4px)}
+.pf-load,.pf-empty{padding:26px 18px;text-align:center;color:var(--muted)}
+.pf-head{display:flex;align-items:center;gap:18px;padding:24px 22px 22px;color:#fff;
+  background:repeating-linear-gradient(64deg,rgba(255,255,255,.07) 0 3px,transparent 3px 24px),linear-gradient(120deg,var(--tc),color-mix(in srgb,var(--tc) 35%,#05070c));border-radius:22px 22px 0 0}
+.pf-logo{width:92px;height:92px;object-fit:contain;flex:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4));background:rgba(255,255,255,.1);border-radius:22px;padding:8px}
+.pf-ttl{min-width:0;flex:1}.pf-ttl small{font:700 11px var(--f-label);letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.75)}
+.pf-ttl h3{margin:2px 0 8px;font:900 clamp(30px,5vw,46px)/.95 var(--f-display);text-transform:uppercase;text-shadow:0 3px 14px rgba(0,0,0,.35)}
+.pf-sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:700 14px var(--f-label);letter-spacing:.06em}
+.pf-sub>b{font:900 26px var(--f-display)}.pf-sub>span{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.28)}
+.pf-sub .form{background:none;padding:0}.pf-sub .ico.crown{width:14px;height:14px}
+.pf-team{cursor:pointer}.pf-team img{width:20px;height:20px;object-fit:contain}
+.pf-fav{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.25);color:#fff;border-radius:999px;padding:6px 12px;font:800 11px var(--f-label);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;margin-right:40px}
+.pf-fav .ico{width:14px;height:14px}.pf-fav.on{background:#ffc23d;color:#2a1a00;border-color:#ffc23d}
+.pf-head.pl{align-items:flex-end;padding-bottom:18px}
+.pf-photo{width:220px;aspect-ratio:300/219;flex:none;border-radius:16px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.4);background:rgba(255,255,255,.1)}
+.pf-photo img{width:100%;height:100%;object-fit:cover}.pf-photo.fb{display:grid;place-items:center;font:900 64px var(--f-display);color:rgba(255,255,255,.9)}
+.pf-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:16px 18px 0}
+.pf-tiles>div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;position:relative}
+.pf-tiles small{display:block;font:700 10.5px var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.pf-tiles b{font:900 26px/1.1 var(--f-display)}.pf-tiles.big b{font-size:38px}
+.pf-tiles em{display:inline-flex;align-items:center;gap:3px;font:800 10.5px var(--f-label);font-style:normal;letter-spacing:.08em;color:var(--muted);margin-top:2px}
+.pf-tiles .top{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}.pf-tiles .top em{color:var(--accent2)}.pf-tiles em .ico{width:12px;height:12px}
+.pf-h{margin:22px 18px 8px;font:800 12px var(--f-label);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.pf-card{margin:0 18px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;overflow:hidden}
+.pf-2col{display:grid;grid-template-columns:1fr 1fr}.pf-2col .pf-card{margin-right:9px}.pf-2col>div+div .pf-card{margin:0 18px 0 9px}
+.pf-chart{width:100%;height:auto;display:block}.pf-chart .ax{font:700 11px var(--f-label);fill:var(--dim)}.pf-chart .gl{stroke:var(--line);stroke-dasharray:3 4}.pf-chart .lv{font:900 16px var(--f-display);fill:var(--fg)}
+.pf-list{padding:4px 0}
+.pf-g{display:grid;grid-template-columns:62px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);font:700 14px var(--f-label)}
+.pf-g:last-child{border-bottom:0}.pf-g[data-box]{cursor:pointer}.pf-g[data-box]:hover{background:var(--card2)}
+.pf-g .d{color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.06em;display:flex;flex-direction:column}.pf-g .d small{color:var(--accent2)}
+.pf-g .o{display:flex;align-items:center;gap:6px;min-width:0;font:800 15px var(--f-display);text-transform:uppercase;white-space:nowrap;overflow:hidden}
+.pf-g .o em{font:700 11px var(--f-label);font-style:normal;color:var(--dim);text-transform:none}.pf-g .o img{width:22px;height:22px;object-fit:contain}
+.pf-g .r{font:800 16px var(--f-display);display:flex;align-items:center;gap:6px}.pf-g .r.t{font:700 12px var(--f-label);color:var(--muted);text-transform:uppercase}
+.wl{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;font:800 11px var(--f-label);color:#fff}.wl.W{background:#1fbf73;color:#04210f}.wl.L{background:#e5484d}
+.pf-tbl{overflow-x:auto;margin:-12px -14px}
+.pf-tbl table{border-collapse:separate;border-spacing:0;width:100%;font:600 13.5px var(--f-label);font-variant-numeric:tabular-nums}
+.pf-tbl th,.pf-tbl td{padding:7px 8px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
+.pf-tbl thead th{font:800 10.5px var(--f-label);letter-spacing:.12em;text-transform:uppercase;color:var(--dim);background:var(--card2)}
+.pf-tbl tbody th,.pf-tbl thead th:first-child{text-align:left;position:sticky;left:0;background:var(--card);z-index:1}.pf-tbl thead th:first-child{background:var(--card2)}
+.pf-tbl td.k{font:900 16px var(--f-display);color:var(--fg)}.pf-tbl td{color:var(--muted)}
+.pf-tbl tr[data-player]:hover th,.pf-tbl tr[data-player]:hover td,.pf-tbl tr[data-box]:hover th,.pf-tbl tr[data-box]:hover td{background:var(--card2)}.pf-tbl tr[data-box]{cursor:pointer}
+.pf-pl{display:flex;align-items:center;gap:9px}.pf-pl b{display:block;font:700 14px var(--f-body)}.pf-pl small{font:700 10px var(--f-label);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.pf-pl .av{width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none;background:var(--tc);display:grid;place-items:center;font:800 12px var(--f-display);color:#fff}.pf-pl .av img{width:47px;height:34px;object-fit:cover;max-width:none}
+.pf-o{display:flex;align-items:center;gap:5px;font:800 13px var(--f-label)}.pf-o small{color:var(--dim);font-size:11px;min-width:44px}.pf-o img{width:18px;height:18px;object-fit:contain}
+.pf-bars{position:relative;display:flex;align-items:flex-end;gap:4px;height:150px;padding-top:18px}
+.pf-bars .b{flex:1;min-width:6px;border-radius:5px 5px 2px 2px;position:relative;background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 55%,transparent))}
+.pf-bars .b.L{opacity:.55}
+.pf-bars .b i{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font:800 11px var(--f-label);font-style:normal;color:var(--muted)}
+.pf-bars .avg{position:absolute;left:0;right:0;bottom:var(--avg);border-top:2px dashed var(--fg);opacity:.5;font:800 11px var(--f-label);color:var(--fg);text-align:right;padding-right:2px;line-height:1;transform:translateY(-100%)}
+.pf-best{display:flex;align-items:center;gap:14px;flex-wrap:wrap;cursor:pointer}.pf-best>b{font:900 44px/1 var(--f-display);color:var(--accent2)}.pf-best>b small{font-size:16px;margin-left:3px;color:var(--muted)}
+.pf-best>span{font:700 14px var(--f-label);color:var(--muted)}.pf-best .o{display:flex;align-items:center;gap:6px;color:var(--fg)}.pf-best .o img{width:20px;height:20px;object-fit:contain}
+@media (max-width:640px){
+  .pf-sheet{padding:0;place-items:stretch}
+  .pf-box{max-height:none;height:100vh;height:100dvh;border-radius:0;border:0;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+  .pf-head{border-radius:0;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 18px;gap:12px;flex-wrap:wrap}
+  .pf-logo{width:64px;height:64px;border-radius:16px}
+  .pf-head.pl{flex-direction:column;align-items:flex-start}.pf-photo{width:100%;max-width:340px}
+  .pf-fav{margin-right:0}
+  .pf-tiles{grid-template-columns:repeat(2,1fr);padding:12px 12px 0;gap:8px}.pf-tiles.big b{font-size:32px}
+  .pf-h{margin:18px 12px 8px}.pf-card{margin:0 12px}
+  .pf-2col{grid-template-columns:1fr}.pf-2col .pf-card,.pf-2col>div+div .pf-card{margin:0 12px}
+  .pf-bars{gap:2px;height:130px}.pf-bars .b i{display:none}
+}
+
+.pf-tiles em{display:flex}
+@media (max-width:640px){
+  .pf-head:not(.pl){display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center}
+  .pf-head:not(.pl) .pf-fav{grid-column:1/-1;justify-self:start;margin:4px 0 0}
+  .pf-ttl h3{font-size:30px;padding-right:34px}
+  .pf-photo{max-width:260px}
+  .pf-chart .ax{font-size:12px}.pf-chart .lv{font-size:18px}
+}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 
@@ -926,6 +1006,7 @@ html[data-theme="light"] .cromo{box-shadow:0 4px 12px rgba(20,30,60,.07)}
 
 <div id="favPicker" class="fp" hidden></div>
 <div id="boxSheet" class="fp bx-sheet" hidden></div>
+<div id="pfSheet" class="fp pf-sheet" hidden></div>
 <footer>
   <div class="wrap"><b style="color:var(--fg)">Offcourt</b> · Datos de partidos y estadísticas: <span id="srcTxt">ESPN</span> · Actualizado: <span id="updTxt"></span> · Jugadores destacados ordenados por <span id="valTxt">valoración</span>. Fotos de jugadores: Wikimedia Commons, con licencias libres; cuando no hay foto libre se muestran las iniciales.
     <details class="credits"><summary>Créditos de las fotos</summary><div class="cr-list" id="crList"></div></details></div>

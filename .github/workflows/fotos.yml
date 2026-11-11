@@ -53,7 +53,7 @@ jobs:
         run: |
           git config user.name "offcourt-bot"
           git config user.email "offcourt-bot@users.noreply.github.com"
-          git add photos index.html box
+          git add photos index.html box players data
           git diff --cached --quiet || git commit -m "Fotos de jugadores"
           git pull --rebase -X theirs origin main || true
           git push
