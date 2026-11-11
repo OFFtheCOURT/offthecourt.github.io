@@ -15,10 +15,8 @@ Desde la raíz del repo, con `main` al día (`git pull`):
 0. **¿Ha acabado la noche?** `python3 redes/video.py estado` devuelve una línea JSON:
    - `HECHO`: el vídeo de esta noche ya se envió → no hagas nada más (termina sin avisar).
    - `SIN_PARTIDOS`: no hubo NBA → avisa en una línea y termina.
-   - `ESPERANDO` con `minutos_restantes`: si son más de 55, termina sin avisar (la siguiente
-     pasada lo volverá a mirar). Si son 55 o menos, ejecuta `python3 redes/video.py esperar`
-     (fuerza la actualización de la web cada ~4 min, hasta 9 min por llamada) y repítelo hasta
-     que salga `LISTO`. Si tras ~70 min sigue sin acabar, termina sin avisar.
+   - `ESPERANDO`: ejecuta `python3 redes/video.py esperar` (fuerza la actualización de la web cada
+     ~4 min, hasta 9 min por llamada) y repítelo hasta que salga `LISTO`, como mucho 100 minutos.
    - `LISTO`: todos los partidos terminados y con estadísticas → sigue.
 
 1. **Borrador**: `python3 redes/video.py borrador`

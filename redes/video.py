@@ -356,11 +356,11 @@ def actualizar_web():
     sh('git', '-C', REPO, 'pull', '-q', '--rebase', 'origin', 'main')
 
 def esperar():
-    """hasta ~9 min: actualiza la web cada ~4 min y sale en cuanto la noche está LISTA (o si falta más de 55 min)"""
+    """hasta ~9 min: actualiza la web cada ~4 min y sale en cuanto la noche está LISTA (o si falta más de 100 min)"""
     t0 = time.time()
     while True:
         e = estado(False)
-        if e['estado'] != 'ESPERANDO' or e.get('minutos_restantes', 0) > 55: break
+        if e['estado'] != 'ESPERANDO' or e.get('minutos_restantes', 0) > 100: break
         if time.time() - t0 > 7 * 60: break
         actualizar_web(); time.sleep(max(0, 240 - 60))
     print(json.dumps(estado(False), ensure_ascii=False))
