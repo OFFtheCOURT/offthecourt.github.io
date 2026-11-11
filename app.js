@@ -113,7 +113,7 @@ function gameCard(g){
   const tot=(A.score+H.score)||1;
   const when=CUR==='nba'?'':madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
   return `<article class="game" id="g${g.id}" data-teams="${esc(A.abbr)},${esc(H.abbr)}" style="--ca:${ca};--ch:${ch}">
-    <div class="g-head"><span class="badges"><span class="st">${when?esc(when):'Final'}</span>${b.join('')}</span><span class="ven">${esc(g.venue)}${g.city?' · '+esc(g.city):''}</span></div>
+    <div class="g-head"><span class="badges"><span class="st">${when?esc(when):'Final'}</span>${b.join('')}</span><span class="ven">${esc(g.venue)}${g.city?'<span class="vc"> · '+esc(g.city)+'</span>':''}</span></div>
     <div class="qhead"><span></span><span></span><span class="qs">${qlabels}</span><span style="text-align:right">TOTAL</span></div>
     ${teamRow(g,0)}${teamRow(g,1)}
     <div class="margin" title="Reparto de puntos"><i style="width:${A.score/tot*100}%;background:${ca}"></i><i style="width:${H.score/tot*100}%;background:${ch}"></i></div>
@@ -245,7 +245,7 @@ function renderUp(){
 function confTable(grp){
   const z=grp.zones,n=grp.rows.length;
   const leg=[z.po?`<span><i style="background:var(--win)"></i>${CUR==='acb'?'Playoffs':'Playoffs'}</span>`:'',z.pi?`<span><i style="background:var(--accent)"></i>Play-in</span>`:'',z.rel?`<span><i style="background:var(--loss)"></i>Descenso</span>`:''].join('');
-  return `<div class="conf"><h3>${esc(grp.name)}<span>${leg}</span></h3><div class="tbl-wrap"><table class="st">
+  return `<div class="conf"><h3>${esc(grp.name)}<span>${leg}</span></h3><div class="tbl-hint">Desliza para ver más →</div><div class="tbl-wrap"><table class="st">
   <thead><tr><th></th><th>Equipo</th><th>V-D</th><th>%</th><th>PF</th><th>PC</th><th>Dif.</th><th>Casa</th><th>Fuera</th><th>Racha</th><th title="Últimos 5 partidos, del más antiguo (izquierda) al más reciente (derecha)">Últimos 5 →</th></tr></thead><tbody>
   ${grp.rows.map(r=>{const t=TEAMS[r.abbr];const df=parseFloat(r.diff);
    const cls=r.seed<=z.po?'po':(z.pi&&r.seed<=z.pi?'pi':(z.rel&&r.seed>n-z.rel?'rel':''));
@@ -253,7 +253,7 @@ function confTable(grp){
    const form=r.form?`<span class="form" title="Del más antiguo al más reciente">${r.form.slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('')}</span>`:`<span class="dots" title="${r.l10}">${Array.from({length:10},(_,i)=>`<i class="${i<(parseInt(r.l10)||0)?'on':''}"></i>`).join('')}</span>`;
    return `<tr class="${cls} ${cut}" data-ab="${esc(r.abbr)}">
     <td class="sd"><span>${r.seed}</span></td>
-    <td class="tm"><div><img src="${logo(r.abbr)}" alt="">${esc(t.short)}</div></td>
+    <td class="tm"><div><img src="${logo(r.abbr)}" alt=""><span>${esc(t.short)}</span></div></td>
     <td class="wl"><b>${r.w}-${r.l}</b></td>
     <td><span class="pct">${r.pct}</span><div class="pbar"><i style="width:${(r.w/Math.max(r.w+r.l,1))*100}%;--tcol:${ink(t)}"></i></div></td>
     <td>${r.ppg}</td><td>${r.opp}</td>
@@ -463,12 +463,12 @@ function renderCal(){
     const days=new Set(C.map(g=>g.d));
     if(calSel===null||!days.has(calSel)){const t=etToday();calSel=[...days].sort().find(d=>d>=t)||[...days].sort().pop()}
     const m0=monday(calSel),week=[0,1,2,3,4,5,6].map(i=>addDays(m0,i));
-    $('calCtl').innerHTML=`<button class="cal-arr" type="button" data-calw="-7" aria-label="Semana anterior">‹</button><div class="cal-chips">${week.map(d=>{const n=C.filter(g=>g.d===d).length,dt=new Date(d+'T12:00:00Z');return `<button type="button" class="cal-c ${d<etToday()?'past':''} ${n?'':'empty'}" ${n?`data-cald="${d}"`:'disabled'} aria-pressed="${d===calSel}"><small>${dt.toLocaleDateString('es-ES',{weekday:'short',timeZone:'UTC'}).replace('.','')}</small><b>${dt.getUTCDate()}</b><i>${n?n+' p.':'—'}</i></button>`}).join('')}</div><button class="cal-arr" type="button" data-calw="7" aria-label="Semana siguiente">›</button>${favBtn}`;
+    $('calCtl').innerHTML=`<button class="cal-arr" type="button" data-calw="-7" aria-label="Semana anterior">‹</button><div class="cal-chips" id="calChips">${week.map(d=>{const n=C.filter(g=>g.d===d).length,dt=new Date(d+'T12:00:00Z');return `<button type="button" class="cal-c ${d<etToday()?'past':''} ${n?'':'empty'}" ${n?`data-cald="${d}"`:'disabled'} aria-pressed="${d===calSel}"><small>${dt.toLocaleDateString('es-ES',{weekday:'short',timeZone:'UTC'}).replace('.','')}</small><b>${dt.getUTCDate()}</b><i>${n?n+' p.':'—'}</i></button>`}).join('')}</div><button class="cal-arr" type="button" data-calw="7" aria-label="Semana siguiente">›</button>${favBtn}`;
     const gs=C.filter(g=>g.d===calSel);
     $('calSub').textContent=`${cap(new Date(calSel+'T12:00:00Z').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'}))} (fecha de EE. UU.) · ${gs.length} partidos · horario de España`;
     $('calList').innerHTML=gs.map(g=>calRow(g,false)).join('');
   }
-  const on=document.querySelector('#calChips [aria-pressed="true"]');if(on)on.scrollIntoView({block:'nearest',inline:'center'});
+  const on=document.querySelector('#calChips [aria-pressed="true"]');if(on){const box=on.parentElement;box.scrollLeft=on.offsetLeft-(box.clientWidth-on.offsetWidth)/2}
 }
 document.addEventListener('click',e=>{
   const C=L.cal||[];let b;
@@ -526,12 +526,14 @@ $('leadersGrid').addEventListener('click',e=>{const b=e.target.closest('[data-mo
 $('tsTabs').addEventListener('click',e=>{const b=e.target.closest('[data-ts]');if(!b)return;tsSel=+b.dataset.ts;renderTS()});
 $('leagues').addEventListener('click',e=>{const b=e.target.closest('[data-lg]');if(b)setLeague(b.dataset.lg,true)});
 const mBtn=$('menuBtn'),mPanel=$('menuPanel');
-function setMenu(o){mPanel.hidden=!o;mBtn.setAttribute('aria-expanded',o)}
+function setMenu(o){if(o&&matchMedia('(max-width:560px)').matches){const t=Math.max(0,document.querySelector('header.top').getBoundingClientRect().bottom)+8;mPanel.style.top=t+'px';mPanel.style.maxHeight=(innerHeight-t-12)+'px'}else{mPanel.style.top=mPanel.style.maxHeight=''}
+  mPanel.hidden=!o;mBtn.setAttribute('aria-expanded',o)}
 mBtn.addEventListener('click',e=>{e.stopPropagation();setMenu(mPanel.hidden)});
 mPanel.addEventListener('click',e=>{if(e.target.closest('a'))setMenu(false)});
 document.addEventListener('click',e=>{if(!mPanel.hidden&&!e.target.closest('.menu'))setMenu(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false)});
-function setHH(){document.documentElement.style.setProperty('--hh',document.querySelector('header.top').offsetHeight+'px')}
+function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
+  document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
 
 /* créditos */

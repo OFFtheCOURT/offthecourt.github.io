@@ -501,7 +501,7 @@ html[data-league="acb"]{--hot:linear-gradient(100deg,#00b3a4,#19d38f 50%,#b8f23a
 body{transition:background-color .4s}
 /* Calendario */
 .cal-ctl{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.cal-chips{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;padding:2px;scrollbar-width:thin}
+.cal-chips{position:relative;display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;padding:2px;scrollbar-width:thin}
 .cal-c{appearance:none;flex:none;min-width:58px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
 .cal-c small{font:700 10px var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.cal-c b{font:900 24px/1 var(--f-display)}.cal-c i{font:700 10px var(--f-label);font-style:normal;color:var(--dim)}
 .cal-c.past{opacity:.6}.cal-c.empty{opacity:.35;cursor:default}
@@ -544,6 +544,46 @@ body{transition:background-color .4s}
   .leader img.ph{width:150px;height:109px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== Móvil vertical ===== */
+.st tr.fav .tm div::after{flex:none}
+@media (max-width:640px){
+  .h-star{flex-direction:column;border-radius:16px;padding:8px 8px 9px;gap:5px;width:100%}
+  .h-star .hs{align-items:center;text-align:center}
+  .h-star .hs small{font-size:11.5px}
+}
+@media (max-width:560px){
+  .g-head .vc{display:none}
+  /* clasificación: columna de equipo fija al deslizar */
+  .conf h3{font-size:21px;padding:12px 14px}.conf h3 span{flex-basis:100%}
+  table.st{min-width:600px}
+  .st .sd,.st .tm{position:sticky;z-index:1;background:var(--card)}
+  .st .sd{left:0;min-width:34px}.st .tm{left:34px;box-shadow:6px 0 8px -6px rgba(0,0,0,.6)}
+  .st thead th:nth-child(1),.st thead th:nth-child(2){position:sticky;z-index:2;background:var(--card)}
+  .st thead th:nth-child(1){left:0}.st thead th:nth-child(2){left:34px}
+  .st tr.fav td.sd,.st tr.fav td.tm{background:#2a2a24}
+  .st .tm div{font-size:14px;max-width:118px}.st .tm div span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .st .tm img{width:22px;height:22px}
+  .conf .tbl-hint{display:block}
+  /* calendario: cada equipo en su línea */
+  .cal-ctl .cal-fav{order:5;flex-basis:100%;justify-content:center}
+  .cal-arr{width:34px}
+  .cg{grid-template-columns:62px minmax(0,1fr) auto;grid-template-areas:"w a s" "w h s";row-gap:4px;column-gap:10px;padding:9px 12px}
+  .cg-w{grid-area:w;font-size:10px;border-right:1px solid var(--line);padding-right:6px;align-self:stretch;justify-content:center}.cg-w b{font-size:17px}
+  .cg-t.a{grid-area:a;flex-direction:row-reverse;justify-content:flex-end;text-align:left}.cg-t.h{grid-area:h}
+  .cg-t{font-size:15px}.cg-t img{width:22px;height:22px}
+  .cg-s{grid-area:s;flex-direction:column;gap:4px;font-size:19px;align-items:flex-end}.cg-s i{display:none}.cg-s b{line-height:22px}
+}
+.tbl-hint{display:none;font:700 10px var(--f-label);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);padding:6px 14px 0;text-align:right}
+
+@media (max-width:640px){
+  /* la barra de marcadores va arriba y se va con el scroll; logo y ligas quedan fijos */
+  header.top{display:flex;flex-direction:column;top:calc(env(safe-area-inset-top,0px) - var(--tkh,0px))}
+  header.top .ticker{order:-1;border-top:0;border-bottom:1px solid var(--line)}
+  #tsTabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding:2px 16px 6px}
+  #tsTabs::-webkit-scrollbar{display:none}#tsTabs .tab{flex:none}
+  .conf h3 span{justify-content:flex-start;gap:16px}
+}
 </style>
 
 <header class="top">
