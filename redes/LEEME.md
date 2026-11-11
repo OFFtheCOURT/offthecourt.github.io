@@ -33,6 +33,10 @@ Desde la raíz del repo, con `main` al día (`git pull`):
      terminados. Si la web no está al día o no hubo partidos, no hagas vídeo y avisa.
 
 2. **Guion**: escribe `redes/salida/<liga>/noche.json` (formato abajo). Criterio editorial:
+   - **Ritmo de redes**: nada de "Buenos días" ni presentaciones. La intro es UNA frase de impacto
+     con el dato más fuerte de la noche ("¡Remontada en París y 33 de Payne!"). Cada partido: 15–25
+     palabras, empezando por lo más llamativo (paliza, final apretado, récord, quién la rompió).
+     Frases cortas, verbos de acción, sin relleno. El cierre, una sola frase.
    - Español de España, tono de narrador deportivo con chispa, frases cortas. Nada de inventar:
      solo datos del borrador (la crónica de ESPN sirve para el contexto, p. ej. rachas o lesiones).
    - Intro de una o dos frases ("Buenos días. Esto es Offcourt…"), un segmento por partido

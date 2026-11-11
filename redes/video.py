@@ -128,7 +128,7 @@ def noche():
 def voz():
     n = noche(); voice = n.get('voz', 'es-ES-AlvaroNeural:r')
     guion = [{'id': s['id'], 't': s['t']} for s in n['segmentos']]
-    payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+8%')}}
+    payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+16%')}}
     pf = os.path.join(OUT, 'dispatch.json'); json.dump(payload, open(pf, 'w'))
     before = subprocess.run(['gh', 'run', 'list', '-R', GH_REPO, '-w', 'voz.yml', '-L', '1', '--json', 'databaseId', '-q', '.[0].databaseId'], capture_output=True, text=True).stdout.strip()
     sh('gh', 'api', '-X', 'POST', f'repos/{GH_REPO}/actions/workflows/voz.yml/dispatches', '--input', pf)
@@ -156,13 +156,14 @@ def run_url(rid): return f'https://github.com/{GH_REPO}/actions/runs/{rid}'
 # ---------------------------------------------------------------- montar
 def units(tpl):
     out = []
-    for m in re.finditer(r'\{([^|}]*)\|([^}]*)\}|(\S+)', tpl):
-        if m.group(3) is not None:
-            w = m.group(3)
+    for m in re.finditer(r'([¡¿"(]*)\{([^|}]*)\|([^}]*)\}([^\s{]*)|(\S+)', tpl):
+        if m.group(5) is not None:
+            w = m.group(5)
             if out and re.fullmatch(r'[.,:;!?…]+', w): out[-1]['o'] += w; out[-1]['r'] += w; continue
             out.append({'o': w, 'r': w})
         else:
-            out.append({'o': m.group(1), 'r': m.group(2), 'name': True})
+            pre, post = m.group(1), m.group(4)
+            out.append({'o': pre + m.group(2) + post, 'r': pre + m.group(3) + post, 'name': True, 'key': m.group(2)})
     # puntuación pegada a un bloque: "{Utah|Iúta}," -> la coma va en la siguiente palabra suelta
     for i, u in enumerate(out):
         mm = re.match(r'^([.,:;!?…]+)(.*)$', u['o']) if not u.get('name') else None
@@ -194,11 +195,11 @@ def caption_words(tpl, mode, bounds, dur):
     for x in out:
         disp = x['u']['o'].split(' '); step = (x['e'] - x['o']) / len(disp)
         for k, w in enumerate(disp):
-            words.append({'w': w, 'o': round(x['o'] + k * step, 3), 'd': round(step, 3), 'name': bool(x['u'].get('name')), 'src': x['u']['o'].strip('.,:;!?…')})
+            words.append({'w': w, 'o': round(x['o'] + k * step, 3), 'd': round(step, 3), 'name': bool(x['u'].get('name')), 'src': x['u'].get('key') or x['u']['o'].strip('.,:;!?…¡¿')})
     return words
 
 
-KEEP = 0.28
+KEEP = 0.13
 def tighten(src, out):
     """acorta los silencios largos entre frases; devuelve (duración, función para reajustar tiempos)"""
     log = subprocess.run(['ffmpeg', '-i', src, '-af', 'silencedetect=n=-40dB:d=0.3', '-f', 'null', '-'], capture_output=True, text=True).stderr
@@ -253,7 +254,7 @@ def montar():
     else: _j, _p, ronda = partidos_del_dia(N, n['fecha']); night = {'games': _j}
     games = {g['teams'][0]['abbr'] + '-' + g['teams'][1]['abbr']: g for g in night['games']}
     os.makedirs(os.path.join(OUT, 'audio'), exist_ok=True)
-    PAD_IN, PAD_OUT = 0.55, 0.45
+    PAD_IN, PAD_OUT = 0.22, 0.18
     scenes = []; photos = {}; used = set(); narrated = [s for s in n['segmentos'] if s.get('partido')]
     for seg in n['segmentos']:
         b = next(x['palabras'] for x in TIMES if x['id'] == seg['id'])
@@ -266,14 +267,14 @@ def montar():
             if t is None: t = next((x['o'] for x in w if key.split()[-1] in x['src']), None)
             return t if t is not None else PAD_IN
         if seg['id'] == 'intro':
-            scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(5.2, d + PAD_IN + .5), 2), 'off': PAD_IN, 'words': w}); continue
+            scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(3.6, d + PAD_IN + .35), 2), 'off': PAD_IN, 'words': w}); continue
         if seg['id'] == 'outro':
             ton = []; hl = []
             for g in ((N['upcoming'][0]['games'] if N.get('upcoming') else []) if LIGA == 'nba' else proximos(N, n['fecha'])[1]):
                 a, h = g['teams'][0]['abbr'], g['teams'][1]['abbr']; used |= {a, h}
                 ton.append({'a': a, 'h': h, 'an': T[a]['short'], 'hn': T[h]['short'], 'time': hora_es(g.get('utc'))})
                 k = (seg.get('resaltar') or {}).get(f'{a}-{h}'); hl.append(when(k) if k else None)
-            scenes.append({'type': 'outro', 'id': 'outro', 'dur': round(d + PAD_IN + 2.6, 2), 'off': PAD_IN, 'words': w, 'hl': hl, 'tonight': ton}); continue
+            scenes.append({'type': 'outro', 'id': 'outro', 'dur': round(d + PAD_IN + 1.7, 2), 'off': PAD_IN, 'words': w, 'hl': hl, 'tonight': ton}); continue
         g = games[seg['partido']]; A, Hm = g['teams']; used |= {A['abbr'], Hm['abbr']}
         tA, tH = team_obj(A['abbr'], A, T), team_obj(Hm['abbr'], Hm, T)
         cards = []; marks = []
@@ -327,6 +328,21 @@ def fotogramas(lst):
     sh('node', os.path.join(R, 'render.js'), 'frames', lst)
 
 
+def _sfx(d):
+    """efectos sintetizados (sin derechos): golpe, pop y barrido"""
+    import wave
+    try:
+        import numpy as np
+    except ImportError:
+        return
+    SR = 48000
+    def save(n, x):
+        w = wave.open(os.path.join(d, n), 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(x, -1, 1) * 32767).astype(np.int16).tobytes()); w.close()
+    t = np.arange(int(SR * .7)) / SR; save('boom.wav', .9 * np.sin(2 * np.pi * (50 * t + 80 / 12 * (1 - np.exp(-t * 12)))) * np.exp(-t * 6))
+    t = np.arange(int(SR * .22)) / SR; save('pop.wav', .6 * np.sin(2 * np.pi * (900 * t - 250 * t * t)) * np.exp(-t * 18))
+    t = np.arange(int(SR * .4)) / SR; r = np.random.default_rng(1).standard_normal(len(t)); r = np.convolve(r, np.ones(8) / 8, 'same') - np.convolve(r, np.ones(60) / 60, 'same'); save('whoosh.wav', r * np.sin(np.pi * t / .4) ** 2 * .5)
+
+
 def render():
     shutil.copy(os.path.join(OUT, 'data.js'), os.path.join(R, 'salida', 'data.js'))
     D = json.loads(open(os.path.join(OUT, 'data.js'), encoding='utf-8').read()[len('window.DATA='):-1]); n = noche()
@@ -337,10 +353,29 @@ def render():
         vd = dur_of(os.path.join(esc, f's{i}.mp4'))
         sh('ffmpeg', '-v', 'error', '-y', '-i', os.path.join(OUT, 'audio', sc['id'] + '.wav'), '-af', f"adelay={int(sc['off'] * 1000)},apad=whole_dur={vd:.3f},loudnorm=I=-15:TP=-1.5:LRA=7",
            '-ar', '48000', '-ac', '2', os.path.join(esc, f'a{i}.wav'))
+    # efectos de sonido: barrido en cada cambio, golpe al entrar cada partido, pop en cada tarjeta
+    sfx = os.path.join(OUT, 'sfx'); os.makedirs(sfx, exist_ok=True); _sfx(sfx)
+    starts = []; acc = 0
+    for sc in D['scenes']: starts.append(acc); acc += sc['dur']
+    ev = [('boom', 0.0)]
+    nm = len(D['mini'])
+    ev += [('pop', .15 + i * min(.1, .8 / max(1, nm))) for i in range(nm)]
+    for i, sc in enumerate(D['scenes']):
+        if i: ev.append(('whoosh', starts[i] - .15))
+        if sc['type'] == 'game':
+            ev.append(('boom', starts[i] + .05)); ev += [('pop', starts[i] + c['t']) for c in sc.get('cards', [])]
+        if sc['type'] == 'outro': ev += [('pop', starts[i] + h) for h in sc.get('hl', []) if h is not None]
+    vol = {'boom': .55, 'pop': .4, 'whoosh': .45}
     open(os.path.join(esc, 'v.txt'), 'w').write(''.join(f"file 's{i}.mp4'\n" for i in range(len(D['scenes']))))
     open(os.path.join(esc, 'a.txt'), 'w').write(''.join(f"file 'a{i}.wav'\n" for i in range(len(D['scenes']))))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'v.txt'), '-c', 'copy', os.path.join(esc, 'v.mp4'))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'a.txt'), '-c:a', 'pcm_s16le', os.path.join(esc, 'a.wav'))
+    inp = ['-i', os.path.join(esc, 'a.wav')]; flt = []
+    for k, (nme, tt) in enumerate(ev):
+        inp += ['-i', os.path.join(sfx, nme + '.wav')]; flt.append(f'[{k + 1}]adelay={int(max(0, tt) * 1000)}|{int(max(0, tt) * 1000)},volume={vol[nme]}[e{k}]')
+    flt.append('[0]' + ''.join(f'[e{k}]' for k in range(len(ev))) + f'amix=inputs={len(ev) + 1}:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=9[o]')
+    sh('ffmpeg', '-v', 'error', '-y', *inp, '-filter_complex', ';'.join(flt), '-map', '[o]', '-ar', '48000', '-ac', '2', os.path.join(esc, 'mix.wav'))
+    shutil.move(os.path.join(esc, 'mix.wav'), os.path.join(esc, 'a.wav'))
     final = os.path.join(OUT, f"offcourt_{'noche_nba' if LIGA == 'nba' else LIGA}_{n['fecha']}.mp4")
     sh('ffmpeg', '-v', 'error', '-y', '-i', os.path.join(esc, 'v.mp4'), '-i', os.path.join(esc, 'a.wav'), '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
        '-shortest', '-movflags', '+faststart', final)
