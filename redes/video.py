@@ -297,7 +297,78 @@ def render():
     print('vídeo:', final, f'{dur_of(final):.1f}s', '· control:', os.path.join(OUT, 'control.jpg'))
 
 
+# ---------------------------------------------------------------- estado de la noche
+HECHO = os.path.join(R, 'hecho.json')
+def _restante(detail):
+    """minutos reales que faltan, aproximados, a partir del estado de ESPN ("4th 2:31", "Halftime"...)"""
+    d = (detail or '').strip()
+    if d.lower().startswith('final'): return 0
+    if 'half' in d.lower(): return 24 * 2.4 + 15
+    m = re.match(r'(?:End of )?(\d)(?:st|nd|rd|th)(?:\s*Qtr)?(?:\s*(\d+):(\d+))?', d)
+    if m:
+        q = int(m.group(1)); clk = int(m.group(2)) + int(m.group(3) or 0) / 60 if m.group(2) else 0
+        if d.startswith('End of'): clk = 0
+        return ((4 - q) * 12 + clk) * 2.4 + 4
+    m = re.match(r'(\d*)OT\s*(\d+):(\d+)', d)
+    if m: return (int(m.group(2)) + int(m.group(3)) / 60) * 2.4 + 4
+    m = re.match(r'End of (\d*)OT', d)
+    if m: return 3
+    return None
+
+def estado(imprimir=True):
+    """LISTO / ESPERANDO (con hora estimada) / HECHO / SIN_PARTIDOS para la noche NBA más reciente"""
+    L, _, _ = web_data(); N = L['nba']
+    h = open(os.path.join(REPO, 'index.html'), encoding='utf-8').read()
+    m = re.search(r'const UPDATED\s*=\s*"([^"]+)"', h); upd = datetime.datetime.fromisoformat(m.group(1)) if m else None
+    now = datetime.datetime.now(datetime.timezone.utc)
+    et = now - datetime.timedelta(hours=5)  # hora del este aproximada (vale para decidir la noche)
+    night = (et - datetime.timedelta(hours=12)).date().isoformat()  # la noche "en curso o recién acabada"
+    hecho = json.load(open(HECHO)) if os.path.exists(HECHO) else {}
+    res = {'noche': night, 'datos_web': upd.isoformat() if upd else None, 'ahora': now.isoformat()}
+    per = next((p for p in N['periods'] if p['key'] == night), None)
+    upc = next((u for u in N.get('upcoming', []) if u.get('date') == night), None)
+    if hecho.get('fecha') == night: res['estado'] = 'HECHO'
+    elif per and per['games'] and all(g.get('completed') for g in per['games']): res['estado'] = 'LISTO'
+    elif not per and not (upc and upc['games']): res['estado'] = 'SIN_PARTIDOS'
+    else:
+        etas = []
+        for g in (per['games'] if per else upc['games']):
+            if g.get('completed') or g.get('state') == 'post': etas.append(0); continue
+            if g.get('state', 'in') == 'pre' and g.get('utc'):
+                tip = datetime.datetime.fromisoformat(g['utc'].replace('Z', '+00:00')); etas.append(max(0, (tip - now).total_seconds() / 60) + 140); continue
+            r = _restante(g.get('status') or g.get('detail')); etas.append(r if r is not None else 30)
+        mins = max(etas) if etas else 0
+        # los datos de la web van con retraso: cuenta desde la última actualización
+        if upd: mins = max(0, mins - (now - upd).total_seconds() / 60)
+        res['estado'] = 'ESPERANDO'; res['minutos_restantes'] = round(mins); res['fin_estimado'] = hora_es((now + datetime.timedelta(minutes=mins)).strftime('%Y-%m-%dT%H:%MZ'))
+        res['partidos'] = [(g['teams'][0]['abbr'] + '-' + g['teams'][1]['abbr'], g.get('status') or g.get('detail')) for g in (per['games'] if per else upc['games'])]
+    if imprimir: print(json.dumps(res, ensure_ascii=False))
+    return res
+
+def actualizar_web():
+    """lanza el workflow de la web y espera a que suba los datos nuevos"""
+    before = subprocess.run(['gh', 'run', 'list', '-R', GH_REPO, '-w', 'actualizar.yml', '-L', '1', '--json', 'databaseId', '-q', '.[0].databaseId'], capture_output=True, text=True).stdout.strip()
+    sh('gh', 'api', '-X', 'POST', f'repos/{GH_REPO}/actions/workflows/actualizar.yml/dispatches', '-f', 'ref=main')
+    for _ in range(60):
+        time.sleep(5)
+        j = json.loads(subprocess.run(['gh', 'run', 'list', '-R', GH_REPO, '-w', 'actualizar.yml', '-L', '1', '--json', 'databaseId,status'], capture_output=True, text=True).stdout or '[]')
+        if j and str(j[0]['databaseId']) != before and j[0]['status'] == 'completed': break
+    sh('git', '-C', REPO, 'pull', '-q', '--rebase', 'origin', 'main')
+
+def esperar():
+    """hasta ~9 min: actualiza la web cada ~4 min y sale en cuanto la noche está LISTA (o si falta más de 55 min)"""
+    t0 = time.time()
+    while True:
+        e = estado(False)
+        if e['estado'] != 'ESPERANDO' or e.get('minutos_restantes', 0) > 55: break
+        if time.time() - t0 > 7 * 60: break
+        actualizar_web(); time.sleep(max(0, 240 - 60))
+    print(json.dumps(estado(False), ensure_ascii=False))
+
+def marcar_hecho():
+    n = noche(); json.dump({'fecha': n['fecha'], 'hora': datetime.datetime.now(datetime.timezone.utc).isoformat()}, open(HECHO, 'w')); print('hecho', n['fecha'])
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
-    {'borrador': borrador, 'voz': voz, 'montar': montar, 'render': render,
+    {'estado': estado, 'esperar': esperar, 'hecho': marcar_hecho, 'borrador': borrador, 'voz': voz, 'montar': montar, 'render': render,
      'fotogramas': lambda: fotogramas(sys.argv[2])}.get(cmd, lambda: print(__doc__))()
