@@ -846,7 +846,7 @@ html[data-theme="light"] .pf-sheet{background:rgba(20,28,45,.55)}
 .pf-g .o{display:flex;align-items:center;gap:6px;min-width:0;font:800 15px var(--f-display);text-transform:uppercase;white-space:nowrap;overflow:hidden}
 .pf-g .o em{font:700 11px var(--f-label);font-style:normal;color:var(--dim);text-transform:none}.pf-g .o img{width:22px;height:22px;object-fit:contain}
 .pf-g .r{font:800 16px var(--f-display);display:flex;align-items:center;gap:6px}.pf-g .r.t{font:700 12px var(--f-label);color:var(--muted);text-transform:uppercase}
-.wl{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;font:800 11px var(--f-label);color:#fff}.wl.W{background:#1fbf73;color:#04210f}.wl.L{background:#e5484d}
+.wlb{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;font:800 11px var(--f-label);color:#fff}.wlb.W{background:#1fbf73;color:#04210f}.wlb.L{background:#e5484d}
 .pf-tbl{overflow-x:auto;margin:-12px -14px}
 .pf-tbl table{border-collapse:separate;border-spacing:0;width:100%;font:600 13.5px var(--f-label);font-variant-numeric:tabular-nums}
 .pf-tbl th,.pf-tbl td{padding:7px 8px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
@@ -885,6 +885,18 @@ html[data-theme="light"] .pf-sheet{background:rgba(20,28,45,.55)}
   .pf-photo{max-width:260px}
   .pf-chart .ax{font-size:12px}.pf-chart .lv{font-size:18px}
 }
+
+/* revisión: iniciales legibles y etiquetas con contraste en modo claro */
+.star .av.fb{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+.h-star .av{color:#fff}
+html[data-theme="light"] .bdg.blow{color:#c62f3b;border-color:rgba(229,72,77,.45);background:rgba(229,72,77,.08)}
+html[data-theme="light"] .bdg.close{color:#0b8a55;border-color:rgba(17,156,98,.45);background:rgba(17,156,98,.08)}
+html[data-theme="light"] .bdg.ot{color:#2f55c8;border-color:rgba(47,85,200,.4);background:rgba(47,85,200,.07)}
+html[data-theme="light"] .bdg.big{border-color:color-mix(in srgb,var(--accent2) 45%,transparent);background:color-mix(in srgb,var(--accent2) 8%,transparent)}
+html[data-theme="light"] .bdg .ico.fire{filter:none}
+
+/* modo oscuro: escudos oscuros visibles sobre fondo oscuro */
+html:not([data-theme="light"]) :is(.up-t img,.tk img,.cg-t img,.ts-row img,.st .tm img,.pf-g .o img,.fav-next img,.fav-res img,.day .mini img){filter:drop-shadow(0 0 1px rgba(255,255,255,.55)) drop-shadow(0 0 4px rgba(255,255,255,.12))}
 </style>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
 
