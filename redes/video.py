@@ -280,9 +280,9 @@ def montar():
         cards = []; marks = []
         for c in seg.get('tarjetas', []):
             wt = when(c['clave'])
-            if c.get('stat'):
+            if c.get('stat') or 'pid' not in c:
                 ti = 0 if c['equipo'] == A['abbr'] else 1; tm_ = (A, Hm)[ti]; st = tm_.get('st') or {}
-                if c['stat'] == 'triples':
+                if c.get('stat') == 'triples':
                     m_, a_ = st['threePointFieldGoalsMade-threePointFieldGoalsAttempted'].split('-'); big, line, last = m_, f'{m_} DE {a_} EN TRIPLES', 'Lluvia de triples'
                 else:
                     big, line, last = str(c.get('valor', '')), c.get('linea', ''), c.get('titulo', '')
