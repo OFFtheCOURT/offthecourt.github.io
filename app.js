@@ -175,15 +175,26 @@ function periodTitle(p){return isDay()?cap(fmtLong(p.key)):`${p.label} · ${rang
 function curRoundUp(){if(CUR==='nba')return null;const night=L.periods[0],u=(L.upcoming||[])[0];if(!night||!u)return null;
   const r=+(String(u.label).match(/\d+/)||[0])[0];return r&&r===night.round?u:null}
 /* barra de marcadores de arriba: en EuroLiga/ACB, toda la jornada en juego (resultados y, si no se ha jugado, día y hora) */
+function tkChip(g){
+  const fv=favAb(),now=Date.now(),t=Date.parse(g.utc),[A,H]=g.teams,fvc=g.teams.some(s=>s.abbr===fv)?'fav':'',dt=`data-teams="${g.teams.map(s=>esc(s.abbr)).join(',')}"`;
+  const live=g.state==='in',post=g.state==='post';
+  if(live||post){return `<a class="tk ${live?'live':''} ${fvc}" href="${post&&findGame(g.id)?'#g'+g.id:'#hoy'}" ${dt}>${g.teams.map(s=>{const o=g.teams.find(x=>x!==s);const w=post&&s.score>o.score;return `<img src="${logo(s.abbr)}" alt=""><span class="${w||live?'w':'l'}">${esc(s.abbr)}</span><span class="s">${s.score}</span>`}).join('')}${live?'<i class="tk-live">●</i>':''}</a>`}
+  const started=now>=t;   // ya debería haber empezado pero aún no hay marcador
+  return `<a class="tk pend ${fvc}" href="#hoy" ${dt}><img src="${logo(A.abbr)}" alt=""><span class="w">${esc(A.abbr)}</span><span class="tk-when">${started?'<b class="tk-on">●</b>':madrid(g.utc,{weekday:'short'}).replace('.','')+'<b>'+madrid(g.utc,{hour:'2-digit',minute:'2-digit'})+'</b>'}</span><img class="r2" src="${logo(H.abbr)}" alt=""><span class="w r2b">${esc(H.abbr)}</span></a>`;
+}
+/* barra de marcadores de arriba:
+   NBA: si ya está la jornada de esta noche, sus partidos (en directo, finales y hora de inicio); si no, los de anoche.
+   EuroLiga/ACB: toda la jornada en juego (resultados y, si no se ha jugado, día y hora). */
 function renderTicker(){
-  const T=TXT[CUR],night=L.periods[0],u=curRoundUp(),fv=favAb();
+  const T=TXT[CUR],night=L.periods[0],fv=favAb();
   const res=g=>`<a class="tk ${g.teams.some(s=>s.abbr===fv)?'fav':''}" href="#g${g.id}" data-teams="${g.teams.map(s=>esc(s.abbr)).join(',')}">${g.teams.map(s=>`<img src="${logo(s.abbr)}" alt=""><span class="${s.win?'w':'l'}">${esc(s.abbr)}</span><span class="s">${s.score}</span>`).join('')}</a>`;
+  if(CUR==='nba'){const h=hoyList();
+    if(h.open&&h.gs.length){const lv=h.gs.some(g=>g.state==='in');
+      $('ticker').innerHTML=`<span class="tk-lbl">${lv?'En directo':'Esta noche'}</span>`+h.gs.map(tkChip).join('');return}}
   let items=night.games.map(g=>({t:Date.parse(g.utc||0)||0,h:res(g)}));
+  const u=curRoundUp();
   if(u){const done=new Set(night.games.map(g=>String(g.id)));
-    u.games.filter(g=>!done.has(String(g.id))).forEach(g=>{const t=Date.parse(g.utc),live=g.state==='in',post=g.state==='post',[A,H]=g.teams;
-      const fvc=g.teams.some(s=>s.abbr===fv)?'fav':'';
-      if(live||post){items.push({t,h:`<a class="tk ${live?'live':''} ${fvc}" href="#hoy" data-teams="${g.teams.map(s=>esc(s.abbr)).join(',')}">${g.teams.map(s=>{const o=g.teams.find(x=>x!==s);const w=post&&s.score>o.score;return `<img src="${logo(s.abbr)}" alt=""><span class="${w||live?'w':'l'}">${esc(s.abbr)}</span><span class="s">${s.score}</span>`}).join('')}${live?'<i class="tk-live">●</i>':''}</a>`});return}
-      items.push({t,h:`<a class="tk pend ${fvc}" href="#proximos" data-teams="${g.teams.map(s=>esc(s.abbr)).join(',')}"><img src="${logo(A.abbr)}" alt=""><span class="w">${esc(A.abbr)}</span><span class="tk-when">${madrid(g.utc,{weekday:'short'}).replace('.','')}<b>${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}</b></span><img class="r2" src="${logo(H.abbr)}" alt=""><span class="w r2b">${esc(H.abbr)}</span></a>`})})
+    u.games.filter(g=>!done.has(String(g.id))).forEach(g=>items.push({t:Date.parse(g.utc),h:tkChip(g)}));
     items.sort((a,b)=>a.t-b.t)}
   $('ticker').innerHTML=`<span class="tk-lbl">${T.tick||('J'+night.round)}</span>`+items.map(x=>x.h).join('');
 }
@@ -382,12 +393,17 @@ function hoyWindow(now){
   const d=mdDate(now);return {day:now,test:t=>mdDate(t)===d,open:null};
 }
 const PREVSC={};
-function renderHoy(){
-  const now=Date.now(),W=hoyWindow(now),sec=$('hoy');
+/* partidos de "Hoy" (los mismos para la sección y para la barra de arriba) */
+function hoyList(){
+  const now=Date.now(),W=hoyWindow(now);
   const gs=hoyPool().filter(g=>W.test(Date.parse(g.utc))).sort((a,b)=>Date.parse(a.utc)-Date.parse(b.utc));
   const first=gs.length?Date.parse(gs[0].utc):0;
-  const open=gs.length&&(W.open!==null?W.open:(mdHour(now)>=OPEN_H[CUR]||now>=first-2*3600e3));
-    if(open&&CUR==='nba'&&mdHour(now)<12&&gs.every(g=>g.state==='post'||now>Date.parse(g.utc)+3.5*3600e3)){sec.hidden=true;$('hoyGrid').innerHTML='';return}
+  let open=!!gs.length&&(W.open!==null?W.open:(mdHour(now)>=OPEN_H[CUR]||now>=first-2*3600e3));
+  if(open&&CUR==='nba'&&mdHour(now)<12&&gs.every(g=>g.state==='post'||now>Date.parse(g.utc)+3.5*3600e3))open=false;
+  return {now,W,gs,open};
+}
+function renderHoy(){
+  const {now,W,gs,open}=hoyList(),sec=$('hoy');
   sec.hidden=!open; if(!open){$('hoyGrid').innerHTML='';return}
   const left=ms=>{const m=Math.round(ms/60000);return m>=60?`${Math.floor(m/60)} h${m%60?' '+m%60+' min':''}`:`${m} min`};
   let live=0,done=0;
@@ -415,7 +431,7 @@ function renderHoy(){
   $('hoySub').textContent=`${gs.length} partido${gs.length>1?'s':''} · primer salto a las ${madrid(gs[0].utc,{hour:'2-digit',minute:'2-digit'})} (hora de España)${upd?' · datos actualizados a las '+upd:''}`;
   $('hoyChip').textContent=live?`● ${live} en directo`:(done===gs.length?'● Terminados':'● Próximamente');
 }
-setInterval(()=>{try{renderHoy()}catch(e){}},60000);
+setInterval(()=>{try{renderHoy();renderTicker()}catch(e){}},60000);
 
 
 /* ---------- mi equipo (se guarda en el navegador de cada persona) ---------- */
