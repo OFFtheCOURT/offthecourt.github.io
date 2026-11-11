@@ -601,6 +601,10 @@ function setTheme(th,save=true){const r=document.documentElement;if(th==='light'
   $('themeBtn').setAttribute('aria-label',th==='light'?'Cambiar a modo oscuro':'Cambiar a modo claro')}
 $('themeBtn').addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'));
 setTheme(document.documentElement.dataset.theme==='light'?'light':'dark',false);
+/* logo: vuelve arriba del todo */
+document.querySelector('.brand').addEventListener('click',e=>{e.preventDefault();setMenu&&setMenu(false);
+  window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  if(location.hash)history.replaceState(null,'',location.pathname+location.search)});
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
