@@ -87,6 +87,7 @@ jobs:
                                           f.write(ch['data'])
                                       elif ch['type'] in ('WordBoundary', 'SentenceBoundary'):
                                           palabras.append({'w': ch['text'], 'o': ch['offset'] / 1e7, 'd': ch['duration'] / 1e7, 'k': ch['type']})
+                              if os.path.getsize(f"out/{clave}/{s['id']}.mp3") < 2000: raise RuntimeError('audio vacío')
                               break
                           except Exception as e:
                               print('reintento', clave, s['id'], repr(e))
