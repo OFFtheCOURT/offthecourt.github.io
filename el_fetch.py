@@ -80,7 +80,11 @@ for r in range(last_round,0,-1):
     gs=[g for g in played if g['round']==r]
     if not gs: continue
     ds=sorted(g['utcDate'] for g in gs)
-    periods.append({'key':f'r{r}','round':r,'label':f'Jornada {r}','from':ds[0][:10],'to':ds[-1][:10],'games':[mkgame(g) for g in sorted(gs,key=lambda x:x['utcDate'])]})
+    games=[]
+    for g in sorted(gs,key=lambda x:x['utcDate']):
+        try: games.append(mkgame(g))
+        except (TypeError,KeyError) as e: print('partido sin estadísticas todavía, se omite:',g.get('gameCode'),e)   # p. ej. recién terminado
+    if games: periods.append({'key':f'r{r}','round':r,'label':f'Jornada {r}','from':ds[0][:10],'to':ds[-1][:10],'games':games})
 
 # upcoming: next two rounds
 upcoming=[]
