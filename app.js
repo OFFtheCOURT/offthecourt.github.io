@@ -448,6 +448,38 @@ function renderHoy(){
 setInterval(()=>{try{renderHoy();renderTicker()}catch(e){}},60000);
 
 
+/* ---------- avisos de "Mi equipo" (notificaciones del navegador) ---------- */
+let AV={};try{AV=JSON.parse(localStorage.getItem('offcourt-avisos')||'{}')||{}}catch(e){AV={}}
+const AVSENT=(()=>{try{return JSON.parse(localStorage.getItem('offcourt-avisos-env')||'{}')}catch(e){return {}}})();
+const avisosOn=()=>Object.keys(AV).length>0&&'Notification' in window&&Notification.permission==='granted';
+function saveAv(){try{localStorage.setItem('offcourt-avisos',JSON.stringify(AV));localStorage.setItem('offcourt-avisos-env',JSON.stringify(AVSENT))}catch(e){}}
+async function notify(title,body,tag,url){
+  try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
+    const opt={body,tag,icon:'icons/icon-192.png',badge:'icons/icon-192.png',data:{url},renotify:true};
+    if(reg&&reg.showNotification)await reg.showNotification(title,opt);else{const n=new Notification(title,opt);n.onclick=()=>{window.focus();location.href=url}}}catch(e){}
+}
+function avisoCheck(lg){
+  const ab=AV[lg];if(!ab||!avisosOn())return;const T=LG[lg].teams,now=Date.now();
+  (LG[lg].upcoming||[]).forEach(u=>u.games.forEach(g=>{
+    if(!g.teams.some(t=>t.abbr===ab))return;const t0=Date.parse(g.utc),[A,H]=g.teams,nm=x=>(T[x.abbr]||{short:x.abbr}).short,key=k=>lg+':'+g.id+':'+k;
+    const vs=`${nm(A)} ${lg==='nba'?'@':'vs'} ${nm(H)}`,url=location.origin+location.pathname+(g.state==='post'?`#partido/${lg}/${g.id}`:'#hoy');
+    if(g.state==='pre'&&t0-now<16*60e3&&t0-now>0&&!AVSENT[key('pre')]){AVSENT[key('pre')]=now;notify('🏀 Empieza en '+Math.max(1,Math.round((t0-now)/60e3))+' min',`${vs} · ${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})} h`,key('pre'),url)}
+    if(g.state==='in'&&!AVSENT[key('in')]){AVSENT[key('in')]=now;notify('🔴 ¡Ya ha empezado!',`${vs} · síguelo en Offcourt`,key('in'),url)}
+    if(g.state==='post'&&!AVSENT[key('post')]&&now-t0<6*3600e3){AVSENT[key('post')]=now;const me=g.teams.find(t=>t.abbr===ab),op=g.teams.find(t=>t.abbr!==ab),w=me.score>op.score;
+      notify(`${w?'✅ Victoria':'❌ Derrota'} de ${nm(me)}`,`${nm(A)} ${A.score} - ${H.score} ${nm(H)} · toca para ver las estadísticas`,key('post'),url)}
+  }));
+  for(const k in AVSENT)if(now-AVSENT[k]>3*86400e3)delete AVSENT[k];saveAv();
+}
+async function toggleAviso(){
+  const ab=favAb();if(!ab)return;
+  if(AV[CUR]===ab){delete AV[CUR];saveAv();renderFav();track('avisos/quitar/'+CUR,'Avisos: quitar');return}
+  if(!('Notification' in window)){alert('Este navegador no permite notificaciones. En iPhone, añade Offcourt a la pantalla de inicio (Compartir → Añadir a pantalla de inicio) y actívalas desde ahí.');return}
+  let p=Notification.permission;if(p==='default')p=await Notification.requestPermission();
+  if(p!=='granted'){alert('Las notificaciones están bloqueadas para esta web. Actívalas en los ajustes del navegador (icono del candado junto a la dirección).');return}
+  AV[CUR]=ab;saveAv();renderFav();track('avisos/activar/'+CUR+'/'+ab,'Avisos: activar '+ab);
+  notify('🔔 Avisos activados',`Te avisaremos antes, al empezar y al terminar cada partido de ${TEAMS[ab].short}.`,'av-'+CUR,location.href);
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-aviso]'))toggleAviso()});
 /* ---------- mi equipo (se guarda en el navegador de cada persona) ---------- */
 let FAV={};try{FAV=JSON.parse(localStorage.getItem('offcourt-fav')||'{}')||{}}catch(e){FAV={}}
 const favAb=()=>FAV[CUR]&&TEAMS[FAV[CUR]]?FAV[CUR]:null;
@@ -467,7 +499,8 @@ function renderFav(){
   box.innerHTML=`<div class="fav-card" style="--tc:${tc(t)};--ti:${ink(t)}">
     <img class="fav-logo" data-team="${esc(ab)}" src="${logo(ab)}" alt="">
     <div class="fav-main"><small class="fav-k">★ Mi equipo</small><b class="fav-name">${esc(t.name)}</b>
-      <div class="fav-meta"><span class="fav-pos">${r.seed?r.seed+'º':''}</span><span>${grp?esc(grp.name):''}</span><span class="fav-wl">${r.w??''}-${r.l??''}</span>${form?`<span class="form">${form}</span>`:''}</div></div>
+      <div class="fav-meta"><span class="fav-pos">${r.seed?r.seed+'º':''}</span><span>${grp?esc(grp.name):''}</span><span class="fav-wl">${r.w??''}-${r.l??''}</span>${form?`<span class="form">${form}</span>`:''}</div>
+      <button class="fav-bell ${AV[CUR]===ab&&avisosOn()?'on':''}" type="button" data-aviso title="Avisos de los partidos de ${esc(t.short)}">${AV[CUR]===ab&&avisosOn()?'🔔 Avisos activados':'🔔 Avisarme de sus partidos'}</button></div>
     <div class="fav-col"><small class="fav-k">Último partido</small>${lastHtml}</div>
     <div class="fav-col"><small class="fav-k">Próximo partido</small>${nxHtml}</div>
     <button class="fav-change" type="button" data-favpick>Cambiar</button></div>`;
@@ -1033,10 +1066,11 @@ function elRows(players){return players.filter(p=>p.stats&&p.stats.timePlayed).m
   return {pid:'el'+per.code,n:nm,num:String(y.dorsal??''),pos:'',s:y.startFive?1:0,min:String(Math.round(y.timePlayed/60)),pts:y.points|0,fg:`${y.fieldGoalsMadeTotal|0}-${y.fieldGoalsAttemptedTotal|0}`,
    tp:`${y.fieldGoalsMade3|0}-${y.fieldGoalsAttempted3|0}`,ft:`${y.freeThrowsMade|0}-${y.freeThrowsAttempted|0}`,or:y.offensiveRebounds|0,dr:y.defensiveRebounds|0,reb:y.totalRebounds|0,ast:y.assistances|0,
    stl:y.steals|0,blk:y.blocksFavour|0,to:y.turnovers|0,pf:y.foulsCommited|0,pm:(y.plusMinus>0?'+':'')+(y.plusMinus|0),val:y.valuation|0}})}
-async function liveTick(){
-  if(!LIVE||document.hidden) return;
+async function liveTick(lg){
+  if(typeof lg!=='string')lg=CUR;const quiet=lg!==CUR;
+  if(!LIVE||(document.hidden&&!avisosOn()))return;
   try{
-    if(CUR==='nba'){
+    if(lg==='nba'){
       const r=await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',{cache:'no-store'});
       const d=await r.json(); const by={};
       d.events.forEach(e=>by[e.id]=e);
@@ -1047,11 +1081,11 @@ async function liveTick(){
     } else {
       // 1) live.json: lo genera GitHub Actions cada 2 min mientras hay partidos (ACB y EuroLiga)
       try{const r=await fetch('live.json?t='+Date.now(),{cache:'no-store'});if(r.ok){const d=await r.json();
-        (LG[CUR].upcoming||[]).forEach(u=>u.games.forEach(g=>{const e=(d.g||{})[g.id];if(!e)return;
+        (LG[lg].upcoming||[]).forEach(u=>u.games.forEach(g=>{const e=(d.g||{})[g.id];if(!e)return;
           if(e.st!=='pre'||g.state!=='post')g.state=e.st;g.teams.forEach(t=>{if(e.s&&e.s[t.abbr]!=null)t.score=e.s[t.abbr]});
           if(e.box&&Object.values(e.box).some(x=>x.length))LIVEBOX[g.id]=e.box;}))}}catch(e){}
       // 2) EuroLiga: su API pública permite consultarla directamente (más inmediato)
-      if(CUR==='el'){
+      if(lg==='el'){
         const API='https://api-live.euroleague.net/v2/competitions/E/seasons/E2026';
         const rounds=[...new Set((LG.el.upcoming||[]).map(u=>+(u.label.match(/\d+/)||[0])[0]).filter(Boolean))];
         for(const rn of rounds.slice(0,1)){
@@ -1070,11 +1104,12 @@ async function liveTick(){
         }
       }
     }
+    avisoCheck(lg);if(quiet||document.hidden)return;
     renderHoy();try{renderTicker()}catch(e){}
     if(boxCur&&LIVEBOX[boxCur.g.id]&&!$('boxSheet').hidden){const g=findGame(boxCur.g.id);if(g){boxCur.g=g;boxCur.rows=g.teams.map(t=>LIVEBOX[g.id][t.abbr]||[]);renderBox()}}
   }catch(e){/* sin conexión: se queda con los datos de la última actualización */}
 }
-if(LIVE){setInterval(liveTick,15000);setTimeout(liveTick,1500);document.addEventListener('visibilitychange',liveTick);}
+if(LIVE){setInterval(()=>{if(!avisosOn())return;for(const lg of Object.keys(AV))if(lg!==CUR||document.hidden)liveTick(lg)},60000);setInterval(liveTick,15000);setTimeout(liveTick,1500);document.addEventListener('visibilitychange',liveTick);}
 
 if(LIVE&&'serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 try{const s=localStorage.getItem('offcourt-league');if(s&&LG[s])CUR=s}catch(e){}
