@@ -10,6 +10,8 @@
 html,body{margin:0;background:#000}canvas{display:block}
 </style></head><body><canvas id="c" width="1080" height="1920"></canvas>
 <script src="salida/data.js"></script>
+<!-- FX: animación (GSAP), gráficos (D3), Lottie y post-procesado WebGL (PixiJS) — ver fx.js -->
+<script src="lib/gsap.min.js"></script><script src="lib/CustomEase.min.js"></script><script src="lib/CustomBounce.min.js"></script><script src="lib/CustomWiggle.min.js"></script><script src="lib/EasePack.min.js"></script><script src="lib/MotionPathPlugin.min.js"></script><script src="lib/Physics2DPlugin.min.js"></script><script src="lib/ScrambleTextPlugin.min.js"></script><script src="lib/d3.min.js"></script><script src="lib/lottie_canvas.min.js"></script><script src="lib/pixi.min.js"></script><script src="lib/pixi-filters.js"></script><script src="fx.js"></script>
 <script>
 const W=1080,H=1920,cv=document.getElementById('c'),MX=cv.getContext('2d'),oc=document.createElement('canvas');oc.width=1080;oc.height=1920;let X=oc.getContext('2d');const WQ=[];const SAFE_S=.86,SAFE_T=110;
 const D=window.DATA;
@@ -641,5 +643,13 @@ window.draw=(i,t)=>{WQ.length=0;const OX=X;X=OX;X.setTransform(1,0,0,1,0,0);X.gl
   const M=MX;M.setTransform(1,0,0,1,0,0);M.globalAlpha=1;M.fillStyle=TH.bg||'#070b13';M.fillRect(0,0,W,H);
   M.save();M.filter='blur(36px)';M.drawImage(oc,-130,-230,W+260,H+460);M.restore();
   M.drawImage(oc,540-540*SAFE_S,SAFE_T,W*SAFE_S,H*SAFE_S);
-  const XS=X;X=M;for(const w of WQ)wipeDraw(...w);X=XS;};
+  const XS=X;X=M;for(const w of WQ)wipeDraw(...w);X=XS;
+  if(window.FX&&D.fx!==false)fxPost(sc,t);};
+/* acabado de imagen y golpes de efecto (redes/fx.js); se desactiva con "fx": false en el guion */
+function fxPost(sc,t){const o={bloom:.42,vignette:.32,grain:D.grano||0},map=(x,y)=>[540-540*SAFE_S+x*SAFE_S,SAFE_T+y*SAFE_S];
+  if(sc.type!=='intro'&&!sc.fromCine&&t<.34){o.zoom={t0:0,x:540,y:860,dur:.3,strength:.14};if(t<.12)o.rgb=3}
+  if(sc.type==='intro'&&t<.5){o.zoom={t0:0,x:540,y:760,dur:.45,strength:.16};if(t<.15)o.rgb=4}
+  const cs=sc.cards||[];if(cs.length){const n=cs.length,cw=n>=3?316:350,gap=16,tot=n*cw+(n-1)*gap,x0=(W-tot)/2;
+    cs.forEach((c,i)=>{if(t>=c.t&&t<c.t+.7){const [x,y]=map(540,860);o.shock={t0:c.t,x,y,dur:.7,amp:12,radius:420};if(t<c.t+.12)o.rgb=3}})}
+  FX.post.frame(MX,t,o)}
 </script></body></html>

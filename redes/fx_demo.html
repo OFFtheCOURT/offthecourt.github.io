@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8">
+<!-- Demo de redes/fx.js: node redes/fx_demo.js -> redes/salida/fx_demo.mp4 -->
+<style>
+@font-face{font-family:BigS;src:url(fuentes/bigs900.ttf);font-weight:900}
+@font-face{font-family:BarlowC;src:url(fuentes/barlowc700.ttf);font-weight:700}
+html,body{margin:0;background:#000}canvas{display:block}
+</style></head><body><canvas id="c" width="1080" height="1920"></canvas>
+<script src="lib/gsap.min.js"></script><script src="lib/CustomEase.min.js"></script><script src="lib/CustomBounce.min.js"></script>
+<script src="lib/CustomWiggle.min.js"></script><script src="lib/EasePack.min.js"></script><script src="lib/MotionPathPlugin.min.js"></script>
+<script src="lib/Physics2DPlugin.min.js"></script><script src="lib/ScrambleTextPlugin.min.js"></script>
+<script src="lib/d3.min.js"></script><script src="lib/lottie_canvas.min.js"></script><script src="lib/pixi.min.js"></script><script src="lib/pixi-filters.js"></script>
+<script src="fx.js"></script>
+<script>
+const W=1080,H=1920,X=document.getElementById('c').getContext('2d');
+const A='#ff7a1a',B='#386eff';
+window.DUR=8;
+function bg(t){X.setTransform(1,0,0,1,0,0);X.fillStyle='#070b13';X.fillRect(0,0,W,H);
+  let g=X.createRadialGradient(150,300,0,150,300,900);g.addColorStop(0,'rgba(255,122,26,.35)');g.addColorStop(1,'rgba(255,122,26,0)');X.fillStyle=g;X.fillRect(0,0,W,H);
+  g=X.createRadialGradient(950,1600,0,950,1600,1000);g.addColorStop(0,'rgba(56,110,255,.3)');g.addColorStop(1,'rgba(56,110,255,0)');X.fillStyle=g;X.fillRect(0,0,W,H)}
+function hoop(x,y,s){X.save();X.translate(x,y);X.scale(s,s);X.fillStyle='rgba(255,255,255,.9)';X.fillRect(-90,-150,180,120);X.strokeStyle='#ff4d2e';X.lineWidth=8;X.strokeRect(-40,-110,80,60);
+  X.strokeStyle='#ff4d2e';X.lineWidth=10;X.beginPath();X.ellipse(0,0,70,16,0,0,7);X.stroke();X.strokeStyle='rgba(255,255,255,.7)';X.lineWidth=3;for(let i=-3;i<=3;i++){X.beginPath();X.moveTo(i*20,6);X.lineTo(i*12,90);X.stroke()}X.restore()}
+function ball(x,y,r,rot){X.save();X.translate(x,y);X.rotate(rot);const g=X.createRadialGradient(-r*.35,-r*.35,r*.1,0,0,r);g.addColorStop(0,'#ffb15c');g.addColorStop(.6,'#ff7a1a');g.addColorStop(1,'#b84a06');X.fillStyle=g;X.beginPath();X.arc(0,0,r,0,7);X.fill();
+  X.strokeStyle='#2a1205';X.lineWidth=r*.09;X.beginPath();X.moveTo(-r,0);X.lineTo(r,0);X.moveTo(0,-r);X.lineTo(0,r);X.stroke();X.beginPath();X.arc(-r*1.15,0,r*.8,-1,1);X.stroke();X.beginPath();X.arc(r*1.15,0,r*.8,Math.PI-1,Math.PI+1);X.stroke();X.restore()}
+window.draw=t=>{
+  bg(t);const sh=FX.shake(t,6.05,.45,18);X.translate(sh.x,sh.y);
+  // 1) título letra a letra
+  const out1=1-FX.p(t,1.9,.3,'power2.in');
+  if(t<2.3){X.globalAlpha=out1;FX.text.reveal(X,'PALIZA',540,860,FX.p(t,.15,.9),{size:230,align:'center',color:'#fff',ease:'oc.punch'});
+    FX.text.reveal(X,'+32 · KNICKS',540,1000,FX.p(t,.55,.8),{size:90,align:'center',color:A,font:'BarlowC, sans-serif',weight:700,rise:30});
+    X.font='700 44px BarlowC';X.fillStyle='rgba(255,255,255,.75)';X.textAlign='center';X.fillText(FX.text.scramble('RESULTADO FINAL',FX.p(t,.9,.8,'none')),540,1090);X.globalAlpha=1}
+  // 2) puntos por cuarto + anillos de tiro
+  if(t>=2&&t<4.7){const k=FX.p(t,2,.35,'oc.swoosh'),o=1-FX.p(t,4.4,.3);X.globalAlpha=o;X.save();X.translate((1-k)*700,0);
+    X.font='900 70px BigS';X.fillStyle='#fff';X.textAlign='left';X.fillText('PUNTOS POR CUARTO',80,420);
+    const q=[[21,26],[13,32],[38,27],[13,32]];const vals=q.flat(),cols=vals.map((_,i)=>i%2?A:'#cbd5e1');
+    FX.chart.bars(X,{x:80,y:480,w:920,h:520,values:vals,colors:cols,p:FX.p(t,2.25,1.4,'none'),max:40,gap:.3,stagger:.06});
+    [['TC',.45,A],['T3',.39,B],['TL',.80,'#3ddc97']].forEach(([l,v,c],i)=>{FX.chart.ring(X,{cx:240+i*300,cy:1320,r:110,value:v,color:c,p:FX.p(t,2.7+i*.15,1.1),width:26});X.font='700 40px BarlowC';X.fillStyle='rgba(255,255,255,.7)';X.textAlign='center';X.fillText(l,240+i*300,1500)});
+    X.restore();X.globalAlpha=1}
+  // 3) diferencia en el marcador + tiro a canasta
+  if(t>=4.5&&t<7.4){const o=FX.p(t,4.5,.3)*(1-FX.p(t,7.1,.3));X.globalAlpha=o;
+    X.font='900 70px BigS';X.fillStyle='#fff';X.textAlign='left';X.fillText('ASÍ FUE EL PARTIDO',80,420);
+    const lead=[0,4,-2,6,9,5,12,18,15,22,19,26,32,28,32];
+    FX.chart.line(X,{x:80,y:470,w:920,h:420,series:[lead],colors:[A],p:FX.p(t,4.6,1.4,'power1.inOut'),zero:0,area:true,min:-6,max:34,width:9});
+    hoop(760,1250,1.2);
+    const pth=FX.path.arc(220,1650,760,1250,520),pp=FX.p(t,5.2,.85,'power1.in'),pos=FX.path.at(pth,pp);
+    if(t<6.05)ball(pos.x,pos.y,46,t*9);else{const d=FX.p(t,6.05,.6,'oc.bounce');ball(760,1260+d*420,46,t*9)}
+    if(t>6.05&&t<7){const k=FX.p(t,6.05,.7);X.save();X.globalAlpha=(1-k)*o;FX.text.reveal(X,'¡DENTRO!',540,1080,FX.p(t,6.05,.4),{size:140,align:'center',color:'#fff',stroke:8,strokeColor:A});X.restore()}
+    X.globalAlpha=1}
+  // 4) comparativa de equipos
+  if(t>=7.2){const k=FX.p(t,7.2,.3,'oc.swoosh');X.save();X.translate(0,(1-k)*300);X.globalAlpha=k;
+    X.font='900 70px BigS';X.fillStyle='#fff';X.textAlign='center';X.fillText('BUCKS  vs  KNICKS',540,620);
+    FX.chart.versus(X,{x:80,y:760,w:920,rows:[{label:'Rebotes',a:32,b:59},{label:'Asistencias',a:20,b:26},{label:'Pérdidas',a:14,b:11},{label:'Triples',a:16,b:17}],p:FX.p(t,7.3,.7,'none'),colorA:'#cbd5e1',colorB:A,rowH:120});
+    X.restore()}
+  X.setTransform(1,0,0,1,0,0);
+  // acabado: bloom, viñeta, grano + golpes de cámara en los momentos clave
+  FX.post.frame(X,t,{bloom:.55,vignette:.45,grain:.035,
+    zoom:t<1?{t0:.15,x:540,y:820,dur:.45,strength:.3}:(t>=6&&t<7?{t0:6.05,x:760,y:1250,dur:.4,strength:.25}:null),
+    shock:t<1.4?{t0:.2,x:540,y:820,dur:1.1}:(t>=6?{t0:6.05,x:760,y:1250,dur:1}:null),
+    rgb:t>=6.05&&t<6.3?6:(t<.45?5:0)});
+};
+window.ready=(async()=>{await document.fonts.load('900 40px BigS');await document.fonts.load('700 40px BarlowC');await document.fonts.ready;return true})();
+</script></body></html>

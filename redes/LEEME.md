@@ -130,3 +130,20 @@ Desde la raíz del repo, con `main` al día (`git pull`):
 - `resaltar` del cierre: partido de esta noche → palabra del guion que lo ilumina.
 - `voz`: `es-ES-AlvaroNeural:r` (por defecto). Otras probadas:
   `es-ES-ElviraNeural:r`, `en-US-AndrewMultilingualNeural:o` (nombres en inglés tal cual).
+
+## Animaciones, gráficos y efectos (`redes/fx.js`)
+
+`anim.html` carga las librerías de `redes/lib/` (sin conexión) y `redes/fx.js`:
+GSAP 3.13 (curvas `oc.punch`, `oc.swoosh`, `oc.bounce`, MotionPath, Physics2D, ScrambleText), D3 7.9
+(gráficos en el canvas), Lottie 5.12 (animaciones vectoriales) y PixiJS 7.4 + pixi-filters (post-procesado WebGL).
+Todo depende solo del tiempo `t`, así que cada fotograma sale siempre igual.
+
+- Acabado automático en cada fotograma (`fxPost` al final de `draw`): brillo (bloom) y viñeta;
+  zoom blur al entrar en cada escena y onda de choque + separación de color cuando aparece cada tarjeta.
+  Para desactivarlo: `"fx": false` en `noche.json`; grano de película opcional con `"grano": 0.02`
+  (sube mucho el peso del MP4).
+- Utilidades para nuevas escenas: `FX.p(t, t0, dur, 'back.out(2)')`, `FX.count(...)`, `FX.shake(...)`,
+  `FX.text.reveal(...)` (letras una a una), `FX.text.scramble(...)`, `FX.path.at(FX.path.arc(...), p)` (trayectoria
+  del balón), `FX.chart.bars / line / ring / versus` y `FX.lottie.load/draw`.
+- Demo con todo: `node redes/fx_demo.js` → `redes/salida/fx_demo.mp4`.
+- El renderizado con efectos es unas 4–5 veces más lento (WebGL por software): ~8 min para 60 s.
