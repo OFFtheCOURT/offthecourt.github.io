@@ -20,7 +20,13 @@ i = src.find('const LG = '); j = src.find(';\nconst UPDATED', i); LG = json.load
 i = src.find('const IMG = '); j = src.find(';\n', i); IMG = json.loads(src[i + 12:j])
 m = re.search(r'<div class="logo-slot" id="logoSlot">(<svg.*?</svg>)', src, flags=re.S); OFFLOGO = m.group(1) if m else ''
 L = LG['nba']; T = L['teams']; night = L['periods'][0]; games = night['games']
-logo = lambda ab: IMG['t']['nba'].get(ab, ''); photo = lambda pid: IMG['p'].get(pid, '')
+logo = lambda ab: IMG['t']['nba'].get(ab, '')
+def photo(pid):
+    v = IMG['p'].get(pid, '')
+    if v.startswith('photos/'):   # la web enlaza las fotos como archivos: se incrustan para el vídeo
+        f = os.path.join(os.path.dirname(os.path.abspath(__file__)), v.split('?')[0])
+        return 'data:image/webp;base64,' + __import__('base64').b64encode(open(f, 'rb').read()).decode() if os.path.exists(f) else ''
+    return v
 e = H.escape
 def lum(h): n = int(h, 16); return (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255
 def tc(t): return '#2a2f3a' if lum(t['color']) < 0.04 else '#' + t['color']

@@ -59,7 +59,9 @@ credits=json.load(open(PH+'/credits.json')) if os.path.exists(PH+'/credits.json'
 img={'p':{},'t':{'nba':{},'el':{},'acb':{}}}
 for pid in credits:
     f=f'{PH}/{pid}.webp'
-    if os.path.exists(f): img['p'][pid]=b64(f)
+    # la foto va como archivo aparte (photos/ID.webp) y no dentro del HTML: la página pesa mucho menos y el
+    # navegador solo descarga las que se ven. ?v= cambia cuando cambia la foto, para no usar una copia vieja.
+    if os.path.exists(f): img['p'][pid]=f'photos/{pid}.webp?v={int(os.path.getmtime(f))%100000:x}{os.path.getsize(f)%4096:x}'
 credits={k:v for k,v in credits.items() if k in img['p']}
 for ab in nba['teams']: img['t']['nba'][ab]=b64(f'{B}/img/t/{ab}.webp')
 for ab in el['teams']: img['t']['el'][ab]=b64(f'{B}/img/el/{ab}.webp')

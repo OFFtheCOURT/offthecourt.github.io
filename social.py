@@ -16,7 +16,12 @@ OFFLOGO = m.group(1) if m else ''
 
 L = LG['nba']; T = L['teams']; night = L['periods'][0]; games = night['games']
 logo = lambda ab: IMG['t']['nba'].get(ab, '')
-photo = lambda pid: IMG['p'].get(pid, '')
+def photo(pid):
+    v = IMG['p'].get(pid, '')
+    if v.startswith('photos/'):   # la web enlaza las fotos como archivos: se incrustan para el vídeo
+        f = os.path.join(os.path.dirname(os.path.abspath(__file__)), v.split('?')[0])
+        return 'data:image/webp;base64,' + __import__('base64').b64encode(open(f, 'rb').read()).decode() if os.path.exists(f) else ''
+    return v
 DIAS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
 MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 d = datetime.date.fromisoformat(night['key'])
