@@ -41,6 +41,11 @@ for lg,fix in ((el,EL_FIX),(acb,ACB_FIX)):
         if n: t['short']=n
 
 LEAGUES={'nba':nba,'el':el,'acb':acb}
+# páginas por partido con vista previa propia, sitemap y robots (og.py)
+if os.environ.get('OFFCOURT_OUT','').endswith('index.html'):
+    try:
+        import og; og.build(S,B,LEAGUES)
+    except Exception as _e: print('vistas previas: error', _e)
 # récords y curiosidades de la última jornada (curio.py)
 try:
     import curio

@@ -830,7 +830,7 @@ if(window.CanvasRenderingContext2D&&!CanvasRenderingContext2D.prototype.roundRec
 /* ---------- compartir: tarjeta con el resultado (post 4:5 o historia 9:16) ---------- */
 function shImg(src){return new Promise(r=>{if(!src)return r(null);const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
 const SHL={nba:'NBA',el:'EUROLIGA',acb:'LIGA ACB'};
-function shUrl(g){return `https://offthecourt.github.io/#partido/${CUR}/${encodeURIComponent(g.id)}`}
+function shUrl(g){return `https://offthecourt.github.io/p/${CUR}/${encodeURIComponent(g.id)}.html`}   // página con vista previa propia (og.py)
 function shText(g){const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr],w=A.win?A:H,mv=shMvp(g);
   return `🏀 ${ta.short} ${A.score}-${H.score} ${th.short}${A.ls.length>4?' (prórroga)':''} · ${SHL[CUR]}${mv?`\n⭐ ${mv.n}: ${mv.pts} pts, ${mv.reb} reb, ${mv.ast} ast`:''}\nEstadísticas completas en Offcourt 👉 ${shUrl(g)}`}
 function shMvp(g){return [...g.teams[0].top,...g.teams[1].top].sort((a,b)=>(b.gs??b.val??0)-(a.gs??a.val??0))[0]}
