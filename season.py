@@ -74,3 +74,11 @@ for lg, games in (('nba', games_nba()), ('el', games_eu('el')), ('acb', games_eu
                                r['stl'], r['blk'], r['to'], r['fg'], r['tp'], r['ft'], r['pm'], r.get('val', '')])
     json.dump({'p': P}, open(f'{S}/players/{lg}.json', 'w'), ensure_ascii=False, separators=(',', ':'))
     print('temporada', lg, len(games), 'partidos ·', len(P), 'jugadores')
+
+# índice ligero para el buscador de la web: [nombre, liga, pid, equipo, dorsal, partidos]
+IDX = []
+for lg in ('nba', 'el', 'acb'):
+    P = json.load(open(f'{S}/players/{lg}.json'))['p']
+    for pid, p in P.items(): IDX.append([p['n'], lg, pid, p['ab'], p.get('num', ''), len(p['g'])])
+json.dump(IDX, open(f'{S}/players/indice.json', 'w'), ensure_ascii=False, separators=(',', ':'))
+print('buscador', len(IDX), 'jugadores')

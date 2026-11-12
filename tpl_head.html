@@ -920,6 +920,27 @@ html:not([data-theme="light"]) :is(.up-t img,.tk img,.cg-t img,.ts-row img,.st .
 .sh-x{background:#000!important;border-color:#000!important;color:#fff!important}.sh-x b{font-size:16px}
 .sh-tip{font:600 12px var(--f-body);color:var(--dim);margin:12px auto 0;max-width:420px}
 @media (max-width:640px){.sh-prev{padding-top:calc(54px + env(safe-area-inset-top,0px))}.sh-acts .btn{flex:1 1 calc(50% - 8px);justify-content:center}.sh-main{flex-basis:100%!important}}
+
+/* ===== Buscador ===== */
+.sr-sheet{z-index:97;place-items:start center;padding:8vh 16px 16px;backdrop-filter:none;background:rgba(3,5,10,.6)}
+html[data-theme="light"] .sr-sheet{background:rgba(20,28,45,.45)}
+.sr-box{width:min(640px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden}
+.sr-in{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.sr-in svg{width:22px;height:22px;color:var(--muted);flex:none}
+.sr-in input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--fg);font:600 19px var(--f-body)}
+.sr-x{border:1px solid var(--line);background:var(--card2);color:var(--muted);border-radius:8px;font:700 11px var(--f-label);padding:4px 8px;cursor:pointer}
+.sr-res{max-height:min(62vh,560px);overflow:auto;padding:6px}
+.sr-h{font:800 11px var(--f-label);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);padding:10px 12px 4px}
+.sr-it{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:none;color:var(--fg);padding:9px 12px;border-radius:12px;cursor:pointer}
+.sr-it[aria-selected="true"],.sr-it:hover{background:var(--card2)}
+.sr-it .av{width:40px;height:40px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;background:var(--tc,#333);font:800 13px var(--f-display);color:#fff}
+.sr-it .av img{width:55px;height:40px;object-fit:cover;max-width:none}.sr-it .lgo{width:40px;height:40px;object-fit:contain;flex:none}
+.sr-it b{display:block;font:700 15px var(--f-body)}.sr-it small{font:700 11px var(--f-label);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.sr-it mark{background:none;color:var(--accent2)}
+.sr-tag{margin-left:auto;font:800 10px var(--f-label);letter-spacing:.12em;padding:3px 7px;border-radius:6px;background:var(--card2);color:var(--muted);flex:none}
+.sr-empty{padding:28px 12px;text-align:center;color:var(--muted)}
+@media (max-width:760px){#searchBtn{margin-left:auto}#searchBtn+.theme-btn{margin-left:0}}
+@media (max-width:640px){.sr-sheet{padding:0;place-items:stretch}.sr-box{border-radius:0;height:100dvh;border:0}.sr-res{max-height:none;height:calc(100dvh - 60px)}}
 </style>
 <script data-goatcounter="https://offcourt.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
@@ -957,6 +978,7 @@ html:not([data-theme="light"]) :is(.up-t img,.tk img,.cg-t img,.ts-row img,.st .
       <button type="button" class="lg-b" data-lg="el" aria-pressed="false"><span class="lg-ic">%%LOGO_EL%%</span><span class="lg-t"><b>EuroLiga</b><small>Europa</small></span></button>
       <button type="button" class="lg-b" data-lg="acb" aria-pressed="false"><span class="lg-ic">%%LOGO_ACB%%</span><span class="lg-t"><b>ACB</b><small>Liga Endesa</small></span></button>
     </nav>
+    <button class="theme-btn" id="searchBtn" type="button" aria-label="Buscar equipos y jugadores" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/></svg></button>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Cambiar a modo claro" title="Modo claro / oscuro"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg></button>
     <div class="menu">
       <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="menuPanel">
@@ -1043,6 +1065,7 @@ html:not([data-theme="light"]) :is(.up-t img,.tk img,.cg-t img,.ts-row img,.st .
 <div id="favPicker" class="fp" hidden></div>
 <div id="boxSheet" class="fp bx-sheet" hidden></div>
 <div id="pfSheet" class="fp pf-sheet" hidden></div>
+<div id="srSheet" class="fp sr-sheet" hidden><div class="sr-box" role="dialog" aria-modal="true" aria-label="Buscar"><div class="sr-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/></svg><input id="srQ" type="search" placeholder="Busca un equipo o un jugador…" autocomplete="off" enterkeyhint="search" aria-label="Buscar"><button type="button" class="sr-x" data-srclose aria-label="Cerrar">Esc</button></div><div id="srRes" class="sr-res"></div></div></div>
 <footer>
   <div class="wrap"><b style="color:var(--fg)">Offcourt</b> · Datos de partidos y estadísticas: <span id="srcTxt">ESPN</span> · Actualizado: <span id="updTxt"></span> · Jugadores destacados ordenados por <span id="valTxt">valoración</span>. Fotos de jugadores: Wikimedia Commons, con licencias libres; cuando no hay foto libre se muestran las iniciales.
     <details class="credits"><summary>Créditos de las fotos</summary><div class="cr-list" id="crList"></div></details></div>

@@ -913,6 +913,32 @@ document.addEventListener('click',async e=>{
   else if(how==='copiar'){e.preventDefault();const sp=a.querySelector('span');try{await navigator.clipboard.writeText(shText(SH.g));sp.textContent='¡Copiado!'}catch(err){prompt('Copia el enlace:',shUrl(SH.g))}setTimeout(()=>{if(sp)sp.textContent='Copiar enlace'},2000)}
   else if(how==='descargar'&&!SH.url)e.preventDefault();
 });
+/* ---------- buscador de equipos y jugadores (las tres ligas) ---------- */
+let SRI=null,srSel=0,srList=[];
+const srNorm=x=>String(x).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function srLoad(){if(!SRI)SRI=fetch('players/indice.json?v='+encodeURIComponent(UPDATED||'')).then(r=>r.json()).catch(()=>{SRI=null;return []});return SRI}
+function srOpen(){const sh=$('srSheet');sh.hidden=false;document.body.classList.add('noscroll');const q=$('srQ');q.value='';q.focus();srRender('');srLoad().then(()=>srRender(q.value));track('buscar/abrir','Buscador')}
+function srClose(){$('srSheet').hidden=true;if($('pfSheet').hidden&&$('boxSheet').hidden)document.body.classList.remove('noscroll')}
+const LGN={nba:'NBA',el:'EuroLiga',acb:'ACB'};
+function srMark(n,q){if(!q)return esc(n);const i=srNorm(n).indexOf(q);return i<0?esc(n):esc(n.slice(0,i))+'<mark>'+esc(n.slice(i,i+q.length))+'</mark>'+esc(n.slice(i+q.length))}
+async function srRender(raw){
+  const q=srNorm(raw.trim()),box=$('srRes');let teams=[],players=[];
+  for(const lg of Object.keys(LG))for(const [ab,t] of Object.entries(LG[lg].teams)){const hay=srNorm(t.name+' '+t.short+' '+ab);if(!q||hay.includes(q))teams.push({lg,ab,t,sc:!q?0:(srNorm(t.short).startsWith(q)||ab.toLowerCase()===q?0:1)})}
+  if(q){const I=SRI?await SRI:[];players=I.filter(p=>srNorm(p[0]).includes(q)).map(p=>({p,sc:(srNorm(p[0]).startsWith(q)||srNorm(p[0]).includes(' '+q)?0:1)-p[5]/1000})).sort((a,b)=>a.sc-b.sc).slice(0,24).map(x=>x.p)}
+  teams.sort((a,b)=>a.sc-b.sc||(a.lg===CUR?-1:0)-(b.lg===CUR?-1:0));if(!q)teams=teams.filter(x=>x.lg===CUR);else teams=teams.slice(0,12);
+  srList=[...teams.map(x=>({k:'equipo',lg:x.lg,id:x.ab})),...players.map(p=>({k:'jugador',lg:p[1],id:p[2]}))];srSel=0;
+  if(!srList.length){box.innerHTML=`<div class="sr-empty">${q?'Sin resultados para «'+esc(raw.trim())+'»':'Escribe para buscar'}</div>`;return}
+  let i=0;const it=html=>`<button type="button" class="sr-it" data-sri="${i}" aria-selected="${i++===0}">${html}</button>`;
+  box.innerHTML=(teams.length?`<div class="sr-h">${q?'Equipos':'Equipos de la '+LGN[CUR]}</div>`+teams.map(x=>it(`<img class="lgo" src="${(IMG.t[x.lg]||{})[x.ab]||''}" alt=""><span><b>${srMark(x.t.name,q)}</b><small>${esc(x.ab)}</small></span><span class="sr-tag">${LGN[x.lg]}</span>`)).join(''):'')
+   +(players.length?'<div class="sr-h">Jugadores</div>'+players.map(p=>{const t=(LG[p[1]].teams[p[3]])||{short:p[3],color:'333333'},src=IMG.p[p[2]];return it(`<span class="av" style="--tc:${tc(t)}">${src?`<img src="${src}" alt="">`:initials(p[0])}</span><span><b>${srMark(p[0],q)}</b><small>${esc(t.short)}${p[4]?' · #'+esc(p[4]):''} · ${p[5]} partidos</small></span><span class="sr-tag">${LGN[p[1]]}</span>`)}).join(''):'');
+}
+function srGo(n){const x=srList[n];if(!x)return;track('buscar/'+x.k,'Buscador: '+x.k);srClose();if(x.lg!==CUR)setLeague(x.lg);setTimeout(()=>go(x.k,x.id),x.lg!==CUR?120:0)}
+$('searchBtn').addEventListener('click',srOpen);
+$('srQ').addEventListener('input',e=>srRender(e.target.value));
+$('srQ').addEventListener('keydown',e=>{const n=srList.length;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();srSel=(srSel+(e.key==='ArrowDown'?1:-1)+n)%n;document.querySelectorAll('.sr-it').forEach((b,i)=>{b.setAttribute('aria-selected',i===srSel);if(i===srSel)b.scrollIntoView({block:'nearest'})})}else if(e.key==='Enter'){e.preventDefault();srGo(srSel)}});
+$('srSheet').addEventListener('click',e=>{const b=e.target.closest('[data-sri]');if(b){srGo(+b.dataset.sri);return}if(e.target.closest('[data-srclose]')||e.target.id==='srSheet')srClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('srSheet').hidden){e.stopImmediatePropagation();srClose();return}
+  if(e.key==='/'&&!/input|textarea/i.test(document.activeElement.tagName)&&$('srSheet').hidden){e.preventDefault();srOpen()}},true);
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
