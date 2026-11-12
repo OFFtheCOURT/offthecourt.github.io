@@ -142,7 +142,7 @@ function gameCard(g){
       <button class="btn grow" type="button" aria-expanded="false" aria-controls="${id}" data-toggle="${id}"><span class="lbl-l">Estadísticas y top 5</span><span class="lbl-s">Detalles</span> <span class="car">▾</span></button>
       ${g.bx?`<button class="btn bx-btn" type="button" data-box="${esc(g.id)}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></svg>Ficha completa</button>`:''}
       <a class="btn primary" href="${esc(g.yt)}" target="_blank" rel="noopener">▶ Resumen</a>
-      <button class="btn sh-btn" type="button" data-share="${esc(g.id)}" aria-label="Compartir resultado" title="Compartir"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7 8l5-5 5 5"/></svg></button>
+      <button class="btn sh-btn" type="button" data-share="${esc(g.id)}" aria-label="Compartir resultado" title="Compartir resultado"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7 8l5-5 5 5"/></svg><span class="sh-l">Compartir</span></button>
     </div>
     <div class="g-detail" id="${id}" hidden>
       <div class="dtitle">Tiro</div>${rings(g)}
@@ -221,7 +221,7 @@ function renderTop(){
     <div class="h-mid"><span class="h-lbl">${T.hero}</span>
       <div class="h-score"><span class="${A.win?'':'lo'}" data-count="${A.score}">${A.score}</span><em>–</em><span class="${H.win?'':'lo'}" data-count="${H.score}">${H.score}</span></div>
       <div class="h-q" style="grid-auto-flow:row;grid-template-columns:repeat(${n+1},auto)"><span class="qh"></span>${A.ls.map((_,i)=>`<span class="qh">${qlbl(i)}</span>`).join('')}<span>${A.abbr}</span>${A.ls.map(v=>`<span>${v}</span>`).join('')}<span>${H.abbr}</span>${H.ls.map(v=>`<span>${v}</span>`).join('')}</div>
-      <div class="h-btns"><a class="btn primary" href="${esc(g.yt)}" target="_blank" rel="noopener">▶ Ver resumen</a><a class="btn" href="#g${g.id}" data-open="g${g.id}">Estadísticas</a></div>
+      <div class="h-btns"><a class="btn primary" href="${esc(g.yt)}" target="_blank" rel="noopener">▶ Ver resumen</a><a class="btn" href="#g${g.id}" data-open="g${g.id}">Estadísticas</a><button class="btn sh-btn" type="button" data-share="${esc(g.id)}" aria-label="Compartir resultado">${ICO_SHARE}</button></div>
     </div>
     ${team(H,th)}
   </div></article>`;
@@ -616,7 +616,7 @@ function renderBox(){
   const when=g.utc?madrid(g.utc,{weekday:'long',day:'numeric',month:'long'}):(/^\d{4}-\d\d-\d\d$/.test(g._day||'')?new Date(g._day+'T12:00:00Z').toLocaleDateString('es-ES',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'})+' (EE. UU.)':'');
   $('boxSheet').innerHTML=`<div class="bx-box" role="dialog" aria-modal="true" aria-label="Ficha completa del partido">
    <div class="bx-head"><div class="bx-score">${[A,H].map((s,i)=>`<span class="bx-tm ${s.win?'w':''}"><img src="${logo(s.abbr)}" alt=""><b>${esc(TEAMS[s.abbr].short)}</b><em>${s.score}</em></span>${i===0?'<i>–</i>':''}`).join('')}</div>
-    <button type="button" class="fp-x" data-boxclose aria-label="Cerrar">✕</button></div>
+    <span class="bx-hr">${findGame(g.id)&&!g._up?`<button type="button" class="btn sh-btn" data-share="${esc(g.id)}" aria-label="Compartir resultado">${ICO_SHARE}<span class="sh-l">Compartir</span></button>`:''}<button type="button" class="fp-x" data-boxclose aria-label="Cerrar">✕</button></span></div>
    <div class="bx-sub">${g._up&&g.state!=='post'&&LIVEBOX[g.id]?'<b class="bx-live">● En directo</b> · se actualiza sola':'Ficha completa'}${when?' · '+esc(when):''}</div>
    <div class="bx-tabs" role="tablist">${[A,H].map((s,i)=>`<button type="button" role="tab" data-bxside="${i}" aria-selected="${i===side}" style="--tc:${tc(TEAMS[s.abbr])}"><img src="${logo(s.abbr)}" alt="">${esc(TEAMS[s.abbr].short)}</button>`).join('')}</div>
    ${boxTable(rows[side],side,sort)}
@@ -716,6 +716,10 @@ function pfClose(){const sh=$('pfSheet');if(sh.hidden)return;sh.hidden=true;sh.i
   if(/^#(equipo|jugador)\//.test(location.hash)){if(pfPushed){pfPushed=false;history.back()}else history.replaceState(null,'',location.pathname+location.search)}}
 const pfX='<button type="button" class="pf-x" data-pfclose aria-label="Cerrar">✕</button>';
 function go(kind,id){const h=`#${kind}/${CUR}/${encodeURIComponent(id)}`;if(location.hash!==h){pfPushed=true;location.hash=h}else route()}
+function openShared(){const m=location.hash.match(/^#partido\/(nba|el|acb)\/(.+)$/);if(!m)return false;
+  const [,lg,id]=m;if(lg!==CUR)setLeague(lg);const gid=decodeURIComponent(id),pi=L.periods.findIndex(p=>p.games.some(g=>String(g.id)===gid));
+  if(pi>0){const k=L.periods[pi].key;const di=past.findIndex(p=>p.key===k);if(di>=shown)shown=di+1;selected=k;renderDays();renderPanel()}
+  history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>goGame('g'+gid,true),pi>0?200:50);track('compartir/visita/'+lg,'Visita desde enlace compartido ('+lg+')');return true}
 function route(){const m=location.hash.match(/^#(equipo|jugador)\/(nba|el|acb)\/(.+)$/);if(!m){if(!$('pfSheet').hidden){$('pfSheet').hidden=true;$('pfSheet').innerHTML='';document.body.classList.remove('noscroll')}return}
   const [,kind,lg,id]=m;if(lg!==CUR)setLeague(lg);(kind==='equipo'?openTeam:openPlayer)(decodeURIComponent(id))}
 addEventListener('hashchange',route);
@@ -810,55 +814,98 @@ async function openPlayer(pid){track('jugador/'+CUR,'Ficha jugador ('+CUR+')');
       <td><b class="wlb ${g[G_.res]==='V'?'W':'L'}">${g[G_.res]}</b> ${g[G_.my]}-${g[G_.ot]}</td><td>${esc(g[G_.min])}</td><td class="k">${g[G_.pts]}</td><td>${g[G_.reb]}</td><td>${g[G_.ast]}</td><td>${esc(g[G_.fg])}</td><td>${esc(g[G_.tp])}</td><td>${esc(g[G_.ft])}</td><td>${g[G_.stl]}</td><td>${g[G_.blk]}</td><td>${esc(g[G_.pm])}</td>${CUR!=='nba'?`<td>${g[G_.val]}</td>`:''}</tr>`).join('')}</tbody></table></div></div>`);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-pffav]');if(!b)return;const ab=b.dataset.pffav;if(favAb()===ab)delete FAV[CUR];else FAV[CUR]=ab;saveFav();renderAll();openTeam(ab)});
-/* ---------- tarjeta para compartir (imagen 1080x1350 con el resultado y el MVP) ---------- */
+/* ---------- compartir: tarjeta con el resultado (post 4:5 o historia 9:16) ---------- */
 function shImg(src){return new Promise(r=>{if(!src)return r(null);const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
-async function shareCard(id){
-  const g=findGame(id);if(!g)return;track('compartir/'+CUR,'Compartir resultado ('+CUR+')');
-  const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr],ca=tc(ta),ch=tc(th),win=A.win?A:H,tw=TEAMS[win.abbr];
-  const mvp=[...A.top,...H.top].sort((a,b)=>(b.gs??b.val??0)-(a.gs??a.val??0))[0];
-  await document.fonts.load('900 80px "Big Shoulders Display"');await document.fonts.load('700 40px "Barlow Condensed"');
-  const [la,lh,ph,lg]=await Promise.all([shImg(logo(A.abbr)),shImg(logo(H.abbr)),shImg(mvp&&IMG.p[mvp.pid]),shImg('icons/icon-192.png')]);
-  const W=1080,Hh=1350,c=document.createElement('canvas');c.width=W;c.height=Hh;const x=c.getContext('2d');
-  const FD='"Big Shoulders Display",Impact,sans-serif',FL='"Barlow Condensed","Arial Narrow",sans-serif';
-  // fondo: los dos colores en diagonal + rayas + viñeta
+const SHL={nba:'NBA',el:'EUROLIGA',acb:'LIGA ACB'};
+function shUrl(g){return `https://offthecourt.github.io/#partido/${CUR}/${encodeURIComponent(g.id)}`}
+function shText(g){const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr],w=A.win?A:H,mv=shMvp(g);
+  return `🏀 ${ta.short} ${A.score}-${H.score} ${th.short}${A.ls.length>4?' (prórroga)':''} · ${SHL[CUR]}${mv?`\n⭐ ${mv.n}: ${mv.pts} pts, ${mv.reb} reb, ${mv.ast} ast`:''}\nEstadísticas completas en Offcourt 👉 ${shUrl(g)}`}
+function shMvp(g){return [...g.teams[0].top,...g.teams[1].top].sort((a,b)=>(b.gs??b.val??0)-(a.gs??a.val??0))[0]}
+async function shDraw(g,fmt){
+  const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr],ca=tc(ta),ch=tc(th),story=fmt==='story';
+  const mvp=shMvp(g),other=(mvp?g.teams.find(t=>!t.top.some(p=>p.pid===mvp.pid)):null),p2=other&&other.top[0];
+  await Promise.all([document.fonts.load('900 80px "Big Shoulders Display"'),document.fonts.load('700 40px "Barlow Condensed"'),document.fonts.load('600 30px "Barlow"')]);
+  const [la,lh,ph,ph2,lg]=await Promise.all([shImg(logo(A.abbr)),shImg(logo(H.abbr)),shImg(mvp&&IMG.p[mvp.pid]),shImg(p2&&IMG.p[p2.pid]),shImg('icons/icon-192.png')]);
+  const W=1080,Hh=story?1920:1350,c=document.createElement('canvas');c.width=W;c.height=Hh;const x=c.getContext('2d');
+  const FD='"Big Shoulders Display",Impact,sans-serif',FL='"Barlow Condensed","Arial Narrow",sans-serif',FB='Barlow,system-ui,sans-serif';
+  const P=story?{hd:130,tag:225,lg:330,lw:260,nm:660,rc:700,sc:905,ss:210,dash:860,q:975,mvp:1170,p2:1430,ft:1800}:{hd:118,tag:178,lg:262,lw:200,nm:530,rc:568,sc:735,ss:170,dash:700,q:785,mvp:960,p2:0,ft:1296};
+  // fondo: dos colores en diagonal, rayas, brillo y viñeta
   x.fillStyle='#070b13';x.fillRect(0,0,W,Hh);
   x.save();x.beginPath();x.moveTo(0,0);x.lineTo(W*.62,0);x.lineTo(W*.38,Hh);x.lineTo(0,Hh);x.closePath();x.fillStyle=ca;x.fill();x.restore();
   x.save();x.beginPath();x.moveTo(W*.62,0);x.lineTo(W,0);x.lineTo(W,Hh);x.lineTo(W*.38,Hh);x.closePath();x.fillStyle=ch;x.fill();x.restore();
   x.save();x.globalAlpha=.08;x.strokeStyle='#fff';x.lineWidth=4;for(let k=-Hh;k<W;k+=34){x.beginPath();x.moveTo(k,Hh);x.lineTo(k+Hh*.45,0);x.stroke()}x.restore();
-  let v=x.createRadialGradient(W/2,Hh*.45,200,W/2,Hh*.5,900);v.addColorStop(0,'rgba(5,8,14,.15)');v.addColorStop(1,'rgba(5,8,14,.82)');x.fillStyle=v;x.fillRect(0,0,W,Hh);
+  let v=x.createRadialGradient(W/2,Hh*.42,150,W/2,Hh*.5,Hh*.75);v.addColorStop(0,'rgba(5,8,14,.10)');v.addColorStop(1,'rgba(5,8,14,.86)');x.fillStyle=v;x.fillRect(0,0,W,Hh);
   // cabecera
-  x.fillStyle='#fff';x.textAlign='left';x.textBaseline='alphabetic';
-  if(lg)x.drawImage(lg,60,52,84,84);x.font=`900 64px ${FD}`;x.fillText('OFF',160,118);const wo=x.measureText('OFF').width;x.fillStyle='#ff7a1a';x.fillText('COURT',160+wo,118);
-  const lgName={nba:'NBA',el:'EUROLIGA',acb:'LIGA ACB'}[CUR];
+  x.textBaseline='alphabetic';if(lg)x.drawImage(lg,60,P.hd-66,84,84);
+  const hy=P.hd;x.textAlign='left';x.font=`900 64px ${FD}`;x.fillStyle='#fff';x.fillText('OFF',160,hy);const wo=x.measureText('OFF').width;x.fillStyle='#ff7a1a';x.fillText('COURT',160+wo,hy);
+  const per=L.periods.find(p=>p.games.some(q=>q.id===g.id));
   const when=g.utc?madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,''):(g._day?new Date(g._day+'T12:00Z').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}).replace(/\./g,''):'');
-  x.textAlign='right';x.font=`700 34px ${FL}`;x.fillStyle='rgba(255,255,255,.85)';x.fillText(`${lgName} · ${when}`.toUpperCase(),W-60,100);
-  // etiqueta FINAL / PRÓRROGA
-  const ot=A.ls.length>4,diff=Math.abs(A.score-H.score),tag=ot?'FINAL · PRÓRROGA':diff>=20?`FINAL · PALIZA +${diff}`:diff<=3?'FINAL · AL LÍMITE':'FINAL';
-  x.font=`800 34px ${FL}`;const tw2=x.measureText(tag).width+56;x.fillStyle='#ff7a1a';x.beginPath();x.roundRect(W/2-tw2/2,190,tw2,58,29);x.fill();x.fillStyle='#1a0b02';x.textAlign='center';x.fillText(tag,W/2,231);
-  // escudos y nombres
-  const side=(img,t,s,cx)=>{if(img){x.save();x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=30;x.drawImage(img,cx-120,300,240,240);x.restore()}
-    x.globalAlpha=s.win?1:.62;x.fillStyle='#fff';x.font=`900 ${t.short.length>12?52:64}px ${FD}`;x.textAlign='center';x.fillText(t.short.toUpperCase(),cx,610);
-    x.font=`700 30px ${FL}`;x.fillStyle='rgba(255,255,255,.75)';x.fillText(s.rec||'',cx,652);
-    x.font=`900 190px ${FD}`;x.fillStyle='#fff';x.shadowColor=s.win?'rgba(255,255,255,.45)':'transparent';x.shadowBlur=s.win?40:0;x.fillText(s.score,cx,850);x.shadowBlur=0;x.globalAlpha=1};
+  x.textAlign='right';x.font=`800 34px ${FL}`;x.fillStyle='#fff';x.fillText(SHL[CUR]+(CUR!=='nba'&&per&&per.round?' · J'+per.round:''),W-60,hy-30);
+  x.font=`700 30px ${FL}`;x.fillStyle='rgba(255,255,255,.75)';x.fillText(when.toUpperCase(),W-60,hy+6);
+  // etiqueta
+  const ot=A.ls.length>4,diff=Math.abs(A.score-H.score),tag=ot?(A.ls.length>5?`FINAL · ${A.ls.length-4} PRÓRROGAS`:'FINAL · PRÓRROGA'):diff>=20?`FINAL · PALIZA +${diff}`:diff<=3?'FINAL · AL LÍMITE':'FINAL';
+  x.font=`800 34px ${FL}`;x.textAlign='center';const tw=x.measureText(tag).width+60;x.fillStyle='#ff7a1a';x.beginPath();x.roundRect(W/2-tw/2,P.tag,tw,58,29);x.fill();x.fillStyle='#1a0b02';x.fillText(tag,W/2,P.tag+41);
+  // equipos y marcador
+  const side=(img,t,s,cx)=>{const lw=P.lw;if(img){x.save();x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=30;x.globalAlpha=s.win?1:.85;x.drawImage(img,cx-lw/2,P.lg,lw,lw);x.restore()}
+    x.globalAlpha=s.win?1:.62;x.fillStyle='#fff';x.textAlign='center';x.font=`900 ${t.short.length>13?48:t.short.length>9?56:64}px ${FD}`;x.fillText(t.short.toUpperCase(),cx,P.nm);
+    x.font=`700 30px ${FL}`;x.fillStyle='rgba(255,255,255,.75)';x.fillText(s.rec||'',cx,P.rc);
+    x.font=`900 ${P.ss}px ${FD}`;x.fillStyle='#fff';if(s.win){x.shadowColor='rgba(255,255,255,.45)';x.shadowBlur=40}x.fillText(s.score,cx,P.sc);x.shadowBlur=0;
+    if(s.win){x.fillStyle='#ff7a1a';x.beginPath();x.roundRect(cx-60,P.sc+20,120,10,5);x.fill()}x.globalAlpha=1};
   side(la,ta,A,W*.27);side(lh,th,H,W*.73);
-  x.font=`900 120px ${FD}`;x.fillStyle='rgba(255,255,255,.55)';x.textAlign='center';x.fillText('–',W/2,820);
-  // MVP
-  if(mvp){const y0=940,bw=W-120;x.fillStyle='rgba(5,8,14,.72)';x.beginPath();x.roundRect(60,y0,bw,250,30);x.fill();x.strokeStyle='rgba(255,194,61,.85)';x.lineWidth=3;x.stroke();
-    if(ph){x.save();x.beginPath();x.roundRect(84,y0+24,276,202,20);x.clip();x.drawImage(ph,84,y0+24,276,202);x.restore()}
-    const tx=ph?390:100;x.textAlign='left';x.fillStyle='#ffc23d';x.font=`800 30px ${FL}`;x.fillText('MVP DEL PARTIDO',tx,y0+66);
-    x.fillStyle='#fff';x.font=`900 ${mvp.n.length>18?54:64}px ${FD}`;x.fillText(mvp.n.toUpperCase(),tx,y0+130);
-    x.font=`900 60px ${FD}`;const sts=[[mvp.pts,'PTS'],[mvp.reb,'REB'],[mvp.ast,'AST'],...(CUR!=='nba'?[[mvp.val,'VAL']]:[])];let sx=tx;
-    sts.forEach(([n,l])=>{x.fillStyle='#fff';x.font=`900 60px ${FD}`;x.fillText(n,sx,y0+208);const w1=x.measureText(String(n)).width;x.fillStyle='rgba(255,255,255,.7)';x.font=`700 28px ${FL}`;x.fillText(l,sx+w1+8,y0+208);sx+=w1+8+x.measureText(l).width+34})}
+  x.font=`900 110px ${FD}`;x.fillStyle='rgba(255,255,255,.5)';x.textAlign='center';x.fillText('–',W/2,P.dash);
+  // parciales por cuarto
+  const n=A.ls.length;if(n){const cw=Math.min(110,700/n),tx0=W/2-cw*n/2+70,yq=P.q;
+    x.fillStyle='rgba(5,8,14,.6)';x.beginPath();x.roundRect(tx0-160,yq,cw*n+180,150,22);x.fill();
+    x.font=`700 26px ${FL}`;x.fillStyle='rgba(255,255,255,.6)';for(let k=0;k<n;k++)x.fillText(qlbl(k),tx0+cw*k+cw/2,yq+40);
+    [[A,ta,yq+88],[H,th,yq+130]].forEach(([s,t,yy])=>{x.textAlign='left';x.font=`800 30px ${FL}`;x.fillStyle='#fff';x.fillText(s.abbr,tx0-140,yy);x.textAlign='center';
+      s.ls.forEach((q,k)=>{const o=(s===A?H:A).ls[k];x.font=`${q>o?900:700} 34px ${FD}`;x.fillStyle=q>o?'#fff':'rgba(255,255,255,.55)';x.fillText(q,tx0+cw*k+cw/2,yy)})})}
+  // MVP (grande) y mejor del otro equipo (pequeño, solo en historia o si cabe)
+  const box=(p,img,y0,h,big)=>{const bw=W-120;x.fillStyle='rgba(5,8,14,.74)';x.beginPath();x.roundRect(60,y0,bw,h,28);x.fill();x.strokeStyle=big?'rgba(255,194,61,.9)':'rgba(255,255,255,.18)';x.lineWidth=3;x.stroke();
+    const iw=big?276:200,ih=Math.round(iw*219/300);if(img){x.save();x.beginPath();x.roundRect(84,y0+(h-ih)/2,iw,ih,18);x.clip();x.drawImage(img,84,y0+(h-ih)/2,iw,ih);x.restore()}
+    const tx=img?84+iw+30:100;x.textAlign='left';x.fillStyle=big?'#ffc23d':'rgba(255,255,255,.7)';x.font=`800 ${big?30:26}px ${FL}`;x.fillText(big?'★ MVP DEL PARTIDO':'MEJOR DE '+TEAMS[other.abbr].short.toUpperCase(),tx,y0+(big?62:48));
+    x.fillStyle='#fff';x.font=`900 ${big?(p.n.length>18?52:62):44}px ${FD}`;x.fillText(p.n.toUpperCase(),tx,y0+(big?124:96));
+    let sx=tx;[[p.pts,'PTS'],[p.reb,'REB'],[p.ast,'AST'],...(CUR!=='nba'&&p.val!=null?[[p.val,'VAL']]:[])].forEach(([nn,l])=>{x.fillStyle='#fff';x.font=`900 ${big?58:40}px ${FD}`;x.fillText(nn,sx,y0+(big?198:146));const w1=x.measureText(String(nn)).width;x.fillStyle='rgba(255,255,255,.65)';x.font=`700 ${big?26:22}px ${FL}`;x.fillText(l,sx+w1+7,y0+(big?198:146));sx+=w1+7+x.measureText(l).width+(big?32:24)})};
+  if(mvp)box(mvp,ph,P.mvp,236,true);
+  if(story&&p2)box(p2,ph2,P.p2,176,false);
   // pie
-  x.textAlign='center';x.fillStyle='rgba(255,255,255,.9)';x.font=`700 34px ${FL}`;x.fillText('offthecourt.github.io',W/2,Hh-60);
-  const blob=await new Promise(r=>c.toBlob(r,'image/png'));const name=`offcourt_${A.abbr}-${H.abbr}.png`.replace(/[^\w.-]/g,'');
-  const file=new File([blob],name,{type:'image/png'}),text=`${ta.short} ${A.score}-${H.score} ${th.short} · ${lgName}`,url=location.origin+location.pathname+'#g'+g.id;
-  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:text+' · '+url});return}catch(e){if(e&&e.name==='AbortError')return}}
-  const u=URL.createObjectURL(blob);const sh=$('pfSheet');
-  pfOpen(`${pfX}<div class="sh-prev"><h4 class="pf-h">Compartir resultado</h4><img src="${u}" alt="${esc(text)}"><div class="sh-acts"><a class="btn primary" href="${u}" download="${name}">Descargar imagen</a><button class="btn" type="button" data-copy="${esc(text+' · '+url)}">Copiar texto y enlace</button></div></div>`);
+  x.textAlign='center';x.fillStyle='#fff';x.font=`800 36px ${FL}`;x.fillText('offthecourt.github.io',W/2,P.ft);
+  if(story){x.font=`600 28px ${FB}`;x.fillStyle='rgba(255,255,255,.7)';x.fillText('Resultados y estadísticas de NBA, EuroLiga y ACB',W/2,P.ft+50)}
+  return c;
 }
-document.addEventListener('click',e=>{const b=e.target.closest('[data-share]');if(b){shareCard(b.dataset.share);return}
-  const c=e.target.closest('[data-copy]');if(c){navigator.clipboard&&navigator.clipboard.writeText(c.dataset.copy).then(()=>{c.textContent='¡Copiado!'}).catch(()=>{})}});
+let SH=null;
+async function shareCard(id){
+  const g=findGame(id);if(!g)return;track('compartir/abrir/'+CUR,'Compartir: abrir ('+CUR+')');
+  SH={g,fmt:'post',blob:null,url:null};
+  pfOpen(`${pfX}<div class="sh-prev"><h4 class="pf-h">Compartir resultado</h4>
+    <div class="sh-fmt" role="tablist"><button type="button" data-shfmt="post" aria-pressed="true">Post 4:5</button><button type="button" data-shfmt="story" aria-pressed="false">Historia 9:16</button></div>
+    <div class="sh-img"><div class="pf-load">Creando la imagen…</div></div>
+    <div class="sh-acts">
+      ${navigator.share?`<button class="btn primary sh-main" type="button" data-shgo="native">${ICO_SHARE}Compartir</button>`:''}
+      <a class="btn sh-wa" href="https://wa.me/?text=${encodeURIComponent(shText(g))}" target="_blank" rel="noopener" data-shgo="whatsapp"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.2a.4.4 0 0 0 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3z"/></svg>WhatsApp</a>
+      <a class="btn sh-x" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(shText(g))}" target="_blank" rel="noopener" data-shgo="x"><b>𝕏</b>Publicar</a>
+      <a class="btn sh-dl" href="#" download data-shgo="descargar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>Descargar</a>
+      <button class="btn" type="button" data-shgo="copiar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg><span>Copiar enlace</span></button>
+    </div><p class="sh-tip">Para Instagram: descarga la imagen (o pulsa Compartir en el móvil) y súbela como post o historia.</p></div>`);
+  await shRender();
+}
+const ICO_SHARE='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7 8l5-5 5 5"/></svg>';
+async function shRender(){
+  if(!SH)return;const {g,fmt}=SH,c=await shDraw(g,fmt);if(!SH||SH.g!==g||SH.fmt!==fmt)return;
+  SH.blob=await new Promise(r=>c.toBlob(r,'image/png'));if(SH.url)URL.revokeObjectURL(SH.url);SH.url=URL.createObjectURL(SH.blob);
+  const [A,H]=g.teams;SH.name=`offcourt_${A.abbr}-${H.abbr}_${fmt==='story'?'historia':'post'}.png`.replace(/[^\w.-]/g,'');
+  const box=document.querySelector('#pfSheet .sh-img');if(box)box.innerHTML=`<img src="${SH.url}" alt="${esc(TEAMS[A.abbr].short+' '+A.score+'-'+H.score+' '+TEAMS[H.abbr].short)}" class="${fmt}">`;
+  const dl=document.querySelector('#pfSheet .sh-dl');if(dl){dl.href=SH.url;dl.download=SH.name}
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-share]');if(b){if(!$('boxSheet').hidden)closeBox();shareCard(b.dataset.share);return}
+  const f=e.target.closest('[data-shfmt]');if(f&&SH){SH.fmt=f.dataset.shfmt;document.querySelectorAll('[data-shfmt]').forEach(x=>x.setAttribute('aria-pressed',x===f));
+    const box=document.querySelector('#pfSheet .sh-img');if(box)box.innerHTML='<div class="pf-load">Creando la imagen…</div>';shRender();return}
+  const a=e.target.closest('[data-shgo]');if(!a||!SH)return;const how=a.dataset.shgo;track('compartir/'+how+'/'+CUR,'Compartir: '+how+' ('+CUR+')');
+  if(how==='native'){e.preventDefault();const file=SH.blob&&new File([SH.blob],SH.name,{type:'image/png'});
+    try{if(file&&navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],text:shText(SH.g)});else await navigator.share({text:shText(SH.g),url:shUrl(SH.g)})}catch(err){}}
+  else if(how==='copiar'){e.preventDefault();const sp=a.querySelector('span');try{await navigator.clipboard.writeText(shText(SH.g));sp.textContent='¡Copiado!'}catch(err){prompt('Copia el enlace:',shUrl(SH.g))}setTimeout(()=>{if(sp)sp.textContent='Copiar enlace'},2000)}
+  else if(how==='descargar'&&!SH.url)e.preventDefault();
+});
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
@@ -923,5 +970,6 @@ if(LIVE&&'serviceWorker' in navigator){addEventListener('load',()=>navigator.ser
 try{const s=localStorage.getItem('offcourt-league');if(s&&LG[s])CUR=s}catch(e){}
 document.addEventListener('click',e=>{const a=e.target.closest('a[target=_blank]');if(!a)return;const t=/Seguir en directo/.test(a.textContent)?'directo':/Resumen/i.test(a.textContent)?'resumen':(a.classList.contains('clip')?'jugada':'');if(t)track('salida/'+t+'/'+CUR,'Enlace externo: '+t+' ('+CUR+')')},true);
 renderAll();
-if(/^#(equipo|jugador)\//.test(location.hash))route();
+if(/^#(equipo|jugador)\//.test(location.hash))route();else openShared();
+addEventListener('hashchange',openShared);
 </script>

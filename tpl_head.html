@@ -903,6 +903,23 @@ html:not([data-theme="light"]) :is(.up-t img,.tk img,.cg-t img,.ts-row img,.st .
 @media (max-width:640px){.g-foot{grid-template-columns:1fr 1fr 1fr 44px}.g-foot .sh-btn{padding:0}}
 .sh-prev{padding:22px 18px 6px;text-align:center}.sh-prev img{width:min(420px,100%);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.35)}
 .sh-acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+
+/* compartir (v2) */
+.sh-btn{gap:7px}.sh-l{display:inline}
+.bx-hr{display:flex;align-items:center;gap:8px}
+.h-btns .sh-btn{padding-inline:12px}
+@media (max-width:640px){.g-foot .sh-l,.bx-hr .sh-l{display:none}}
+.sh-prev{padding:22px 18px 10px;text-align:center}
+.sh-fmt{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--card2);border:1px solid var(--line);margin-bottom:14px}
+.sh-fmt button{appearance:none;border:0;background:none;color:var(--muted);font:800 12px var(--f-label);letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;border-radius:999px;cursor:pointer}
+.sh-fmt button[aria-pressed="true"]{background:var(--hot);color:#120a02}
+.sh-img{min-height:200px;display:grid;place-items:center}
+.sh-img img{width:min(420px,100%);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.35)}.sh-img img.story{width:min(320px,80%)}
+.sh-acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.sh-acts .btn{gap:7px}.sh-wa{background:#25d366!important;border-color:#25d366!important;color:#06280f!important}
+.sh-x{background:#000!important;border-color:#000!important;color:#fff!important}.sh-x b{font-size:16px}
+.sh-tip{font:600 12px var(--f-body);color:var(--dim);margin:12px auto 0;max-width:420px}
+@media (max-width:640px){.sh-prev{padding-top:calc(54px + env(safe-area-inset-top,0px))}.sh-acts .btn{flex:1 1 calc(50% - 8px);justify-content:center}.sh-main{flex-basis:100%!important}}
 </style>
 <script data-goatcounter="https://offcourt.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
