@@ -67,10 +67,12 @@ for lk in ('nba', 'acb', 'el'):
     except Exception as e: print('evolución', lk, 'sin datos', e); continue
     ids = [g['id'] for g in games]; miss = [i for i in ids if i not in old]
     def one(i):
+        if lk == 'el': __import__('time').sleep(1.5)
         try: return i, FN[lk](i)
         except Exception as e: return i, None
     ok = 0
-    with cf.ThreadPoolExecutor(6) as ex:
+    if lk == 'el': miss = miss[:45]          # la EuroLiga limita las peticiones: unas 45 por pasada, de una en una
+    with cf.ThreadPoolExecutor(1 if lk == 'el' else 6) as ex:
         for i, ser in ex.map(one, miss):
             if ser and len(ser) > 10: old[i] = ser; ok += 1
     keep = {i: old[i] for i in ids if i in old}     # solo los partidos que salen en la web
