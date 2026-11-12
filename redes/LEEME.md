@@ -10,7 +10,7 @@
 Es el mismo formato para las tres ligas; cada una tiene su color (NBA azul/rojo, EuroLiga naranja, ACB verde),
 que pone `montar` solo. **Voz: `es-ES-AlvaroNeural:r`** (la del vídeo de EuroLiga que eligió el usuario), a velocidad `+6%` y tono `-2Hz` (los valores por defecto; no subas la velocidad: suena robótica), con los nombres adaptados de
 `redes/pronunciacion.json` y las siglas `{NBA|enebeá}`, `{Euroliga|Eurolíga}`, `{ACB|acebé}`.
-**NBA — portada de SALA DE CINE**: una pantalla por partido con su resultado, público de figuritas y letrero.
+**Portada de SALA DE CINE en las tres ligas** (telón rojo en NBA, naranja en EuroLiga, negro en ACB): una pantalla grande con TODOS los resultados y, encima, los titulares; cada titular entra con una animación distinta. Si no hay foto del jugador sale el escudo.
 La intro dice **3 o 4 ganchos** en una sola frase (8 palabras o más) y el segmento `intro` lleva `"focos"`: uno por
 gancho, en orden, `{"clave": palabra del texto, "partido": "VIS-LOC", "etiqueta": "PALIZA +32"}` (etiqueta corta,
 unas 16 letras como mucho). En cada foco la cámara vuela a esa pantalla; al final entra en la del PRIMER foco, así

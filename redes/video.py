@@ -315,6 +315,7 @@ def prof(pl):
 
 
 def montar():
+    DATA_CINE = True  # portada de sala de cine en las tres ligas (telón: NBA rojo, EuroLiga naranja, ACB negro)
     n = noche(); L, IMG, logo = web_data(); N = L[LIGA]; T = N['teams']; LOG = IMG['t'][LIGA]
     vkey = n.get('voz', 'es-ES-AlvaroNeural:r').replace(':', '_'); mode = vkey.rsplit('_', 1)[1]
     vdir = os.path.join(OUT, 'voz'); TIMES = json.load(open(os.path.join(vdir, 'tiempos.json')))[vkey]
@@ -335,7 +336,7 @@ def montar():
             if t is None: t = next((x['o'] for x in w if key.split()[-1] in x['src']), None)
             return t if t is not None else PAD_IN
         if seg['id'] == 'intro':
-            scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(3.6, d + PAD_IN + (.75 if LIGA == 'nba' else .35)), 2), 'off': PAD_IN, 'words': w}); continue
+            scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(3.6, d + PAD_IN + (.75 if DATA_CINE else .35)), 2), 'off': PAD_IN, 'words': w}); continue
         if seg['id'] == 'outro':
             ton = []; hl = []
             for g in ((N['upcoming'][0]['games'] if N.get('upcoming') else []) if LIGA == 'nba' else proximos(N, n['fecha'])[1]):
@@ -381,7 +382,7 @@ def montar():
             'logos': {k: LOG[k] for k in used | {g['teams'][i]['abbr'] for g in night['games'] for i in (0, 1)} if k in LOG}, 'photos': photos,
             'logo': 'data:image/svg+xml;base64,' + base64.b64encode(logo.encode()).decode()}
     DATA['results'] = []
-    DATA['theme'] = {'nba': {'a': '#4d94ff', 'b': '#ff5a66', 'bg': '#13213f'}, 'el': {'a': '#ff7a1a', 'b': '#386eff'}, 'acb': {'a': '#1fbf75', 'b': '#2f6bff'}}[LIGA]
+    DATA['theme'] = {'nba': {'a': '#4d94ff', 'b': '#ff5a66', 'bg': '#13213f', 'tela': '#a3122a'}, 'el': {'a': '#ff7a1a', 'b': '#386eff', 'tela': '#ff7a1a'}, 'acb': {'a': '#1fbf75', 'b': '#2f6bff', 'tela': '#141414'}}[LIGA]
     for _g in night['games']:
         _H, _A = _g['teams']  # [visitante, local]
         if _A.get('score') is None or _H.get('score') is None: continue
@@ -398,7 +399,7 @@ def montar():
         r['hot'] = i in _best and r['tag'] is not None; r.pop('_s')
     DATA['results'].sort(key=lambda r: (not r['hot'],))
     # portada de cine (NBA): focos = ganchos de la intro, la cámara vuela a cada pantalla
-    if LIGA == 'nba' and DATA['results']:
+    if DATA_CINE and DATA['results']:
         DATA['cine'] = True
         intro = next((x for x in scenes if x['type'] == 'intro'), None); seg = next((x for x in n['segmentos'] if x['id'] == 'intro'), {})
         focos = []
