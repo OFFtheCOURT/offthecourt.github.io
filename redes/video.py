@@ -455,6 +455,14 @@ def render():
     shutil.copy(os.path.join(OUT, 'data.js'), os.path.join(R, 'salida', 'data.js'))
     D = json.loads(open(os.path.join(OUT, 'data.js'), encoding='utf-8').read()[len('window.DATA='):-1]); n = noche()
     esc = os.path.join(OUT, 'escenas'); shutil.rmtree(esc, ignore_errors=True); os.makedirs(esc)
+    # OFFCOURT_HASTA=10 → solo los primeros 10 s (para probar la portada sin renderizar todo)
+    HASTA = float(os.environ.get('OFFCOURT_HASTA') or 0)
+    if HASTA:
+        acc_ = 0; keep = 0
+        for sc in D['scenes']:
+            if acc_ < HASTA: keep += 1
+            acc_ += sc['dur']
+        D['scenes'] = D['scenes'][:keep]
     # Como mucho 3 Chrome a la vez: con 10+ partidos, lanzar todas las escenas juntas agota la memoria y Chrome se cae.
     from concurrent.futures import ThreadPoolExecutor
     def una(i):
@@ -482,6 +490,7 @@ def render():
         if sc['type'] == 'game':
             ev.append(('boom', starts[i] + .05)); ev += [('pop', starts[i] + c['t']) for c in sc.get('cards', [])]
         if sc['type'] == 'outro': ev += [('pop', starts[i] + h) for h in sc.get('hl', []) if h is not None]
+    if HASTA: ev = [e for e in ev if e[1] < HASTA]
     vol = {'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .5}
     open(os.path.join(esc, 'v.txt'), 'w').write(''.join(f"file 's{i}.mp4'\n" for i in range(len(D['scenes']))))
     open(os.path.join(esc, 'a.txt'), 'w').write(''.join(f"file 'a{i}.wav'\n" for i in range(len(D['scenes']))))
@@ -493,9 +502,10 @@ def render():
     flt.append('[0]' + ''.join(f'[e{k}]' for k in range(len(ev))) + f'amix=inputs={len(ev) + 1}:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=9[o]')
     sh('ffmpeg', '-v', 'error', '-y', *inp, '-filter_complex', ';'.join(flt), '-map', '[o]', '-ar', '48000', '-ac', '2', os.path.join(esc, 'mix.wav'))
     shutil.move(os.path.join(esc, 'mix.wav'), os.path.join(esc, 'a.wav'))
-    final = os.path.join(OUT, f"offcourt_{'noche_nba' if LIGA == 'nba' else LIGA}_{n['fecha']}.mp4")
+    final = os.path.join(OUT, f"offcourt_{'noche_nba' if LIGA == 'nba' else LIGA}_{n['fecha']}{'_prueba' if HASTA else ''}.mp4")
     sh('ffmpeg', '-v', 'error', '-y', '-i', os.path.join(esc, 'v.mp4'), '-i', os.path.join(esc, 'a.wav'), '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
-       '-shortest', '-movflags', '+faststart', final)
+       '-shortest', *(['-t', str(HASTA)] if HASTA else []), '-movflags', '+faststart', final)
+    if HASTA: print('prueba:', final); return
     # hoja de control: un fotograma de cada escena
     tl = 0; frames = []
     for i, sc in enumerate(D['scenes']):
