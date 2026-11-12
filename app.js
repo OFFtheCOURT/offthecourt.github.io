@@ -57,6 +57,15 @@ const ICO={
 const streakN=s=>parseInt(String(s||'').replace(/\D/g,''))||0;
 const streakIco=s=>{const n=streakN(s),k=String(s||'')[0];return n>=3?(k==='W'?ICO.fire:k==='L'?ICO.ice:''):''};
 const medal=i=>i<3?`<span class="medal m${i+1}">${i+1}</span>`:`${i+1}`;
+/* ---------- récords y curiosidades de la jornada (calculadas en curio.py) ---------- */
+function renderCurio(){
+  const F=L.facts||[],el=$('curio');if(!F.length){el.innerHTML='';return}
+  const icon=k=>ICO[k]||ICO.star;
+  el.innerHTML=`<h3>${ICO.crown}${CUR==='nba'?'Lo que dejó la noche':'Lo que dejó la jornada'}</h3><div class="cu-list">${F.map(f=>{
+    const ab=f.ab||(f.pid&&(()=>{for(const p of L.periods[0].games)for(const t of p.teams)if(t.top.some(x=>x.pid===f.pid))return t.abbr})()),t=TEAMS[ab]||{color:'333333'};
+    const src=f.pid&&IMG.p[f.pid],vis=f.pid?(src?`<span class="av" style="--tc:${tc(t)}"><img src="${src}" alt=""></span>`:`<span class="ci">${icon(f.k)}</span>`):(ab?`<img class="lg" src="${logo(ab)}" alt="">`:`<span class="ci">${icon(f.k)}</span>`);
+    return `<button type="button" class="cu" style="--tc:${tc(t)}" ${f.pid?`data-player="${esc(f.pid)}"`:ab?`data-team="${esc(ab)}"`:''}>${vis}<span>${esc(f.t)}</span><span class="ci" style="margin-left:auto;background:none;width:24px">${icon(f.k)}</span></button>`}).join('')}</div>`;
+}
 /* ---------- partido ---------- */
 function teamRow(g,side){
   const s=g.teams[side],t=TEAMS[s.abbr],nm=splitName(t);
@@ -210,6 +219,7 @@ function renderTop(){
   const totalPts=night.games.reduce((s,g)=>s+g.teams[0].score+g.teams[1].score,0);
   $('nightSub').textContent=`${night.games.length} partidos · ${totalPts} puntos en total · media de ${(totalPts/night.games.length/2).toFixed(1)} por equipo`;
   $('facts').innerHTML=facts(night);
+  renderCurio();
   // hero
   const sc=g=>{const d=Math.abs(g.teams[0].score-g.teams[1].score);return -d+(g.teams[0].ls.length>4?8:0)+(g.teams[0].score+g.teams[1].score)/60};
   const g=[...night.games].sort((a,b)=>sc(b)-sc(a))[0];const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr];

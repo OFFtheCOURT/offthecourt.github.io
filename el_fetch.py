@@ -105,6 +105,14 @@ for t in bst:
     for x in reversed(form):
         if x==lastres: k+=1
         else: break
+    # racha real con todos los partidos jugados (last5Form solo llega a 5)
+    seq=['W' if (g['local']['club']['code']==c)==(g['local']['score']>g['road']['score']) else 'L'
+         for g in sorted(allg,key=lambda g:g['utcDate']) if g['played'] and c in (g['local']['club']['code'],g['road']['club']['code'])]
+    if seq:
+        lastres=seq[-1];k=0
+        for x in reversed(seq):
+            if x==lastres: k+=1
+            else: break
     gp=t['gamesPlayed'] or 1
     rows.append({'abbr':c,'w':t['gamesWon'],'l':t['gamesLost'],'pct':'%.3f'%(t['gamesWon']/gp),'gb':'','seed':t['position'],'strk':f'{lastres}{k}' if lastres else '-',
         'form':form,'home':t['homeRecord'],'road':t['awayRecord'],'ppg':'%.1f'%(t['pointsFor']/gp),'opp':'%.1f'%(t['pointsAgainst']/gp),'diff':'%+.1f'%((t['pointsFor']-t['pointsAgainst'])/gp)})

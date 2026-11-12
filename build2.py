@@ -41,6 +41,11 @@ for lg,fix in ((el,EL_FIX),(acb,ACB_FIX)):
         if n: t['short']=n
 
 LEAGUES={'nba':nba,'el':el,'acb':acb}
+# récords y curiosidades de la última jornada (curio.py)
+try:
+    import curio
+    for _k,_L in LEAGUES.items(): _L['facts']=curio.facts(_k,_L,S)
+except Exception as _e: print('curiosidades: error', _e)
 # fichas completas (todos los jugadores) en archivos aparte: la web solo los descarga al pulsar "Ficha completa"
 os.makedirs(S+'/box',exist_ok=True)
 for k,lg in LEAGUES.items():
