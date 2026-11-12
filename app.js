@@ -713,15 +713,15 @@ const f1=x=>(Math.round(x*10)/10).toFixed(1);
 let pfPushed=false;
 function pfOpen(html){const sh=$('pfSheet');sh.hidden=false;document.body.classList.add('noscroll');sh.innerHTML=`<div class="pf-box" role="dialog" aria-modal="true">${html}</div>`;sh.querySelector('.pf-box').scrollTop=0}
 function pfClose(){const sh=$('pfSheet');if(sh.hidden)return;sh.hidden=true;sh.innerHTML='';if($('boxSheet').hidden)document.body.classList.remove('noscroll');
-  if(/^#(equipo|jugador)\//.test(location.hash)){if(pfPushed){pfPushed=false;history.back()}else history.replaceState(null,'',location.pathname+location.search)}}
+  if(/^#(equipo|jugador|comparar)\//.test(location.hash)){if(pfPushed){pfPushed=false;history.back()}else history.replaceState(null,'',location.pathname+location.search)}}
 const pfX='<button type="button" class="pf-x" data-pfclose aria-label="Cerrar">✕</button>';
 function go(kind,id){const h=`#${kind}/${CUR}/${encodeURIComponent(id)}`;if(location.hash!==h){pfPushed=true;location.hash=h}else route()}
 function openShared(){const m=location.hash.match(/^#partido\/(nba|el|acb)\/(.+)$/);if(!m)return false;
   const [,lg,id]=m;if(lg!==CUR)setLeague(lg);const gid=decodeURIComponent(id),pi=L.periods.findIndex(p=>p.games.some(g=>String(g.id)===gid));
   if(pi>0){const k=L.periods[pi].key;const di=past.findIndex(p=>p.key===k);if(di>=shown)shown=di+1;selected=k;renderDays();renderPanel()}
   history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>goGame('g'+gid,true),pi>0?200:50);track('compartir/visita/'+lg,'Visita desde enlace compartido ('+lg+')');return true}
-function route(){const m=location.hash.match(/^#(equipo|jugador)\/(nba|el|acb)\/(.+)$/);if(!m){if(!$('pfSheet').hidden){$('pfSheet').hidden=true;$('pfSheet').innerHTML='';document.body.classList.remove('noscroll')}return}
-  const [,kind,lg,id]=m;if(lg!==CUR)setLeague(lg);(kind==='equipo'?openTeam:openPlayer)(decodeURIComponent(id))}
+function route(){const m=location.hash.match(/^#(equipo|jugador|comparar)\/(nba|el|acb)\/(.+)$/);if(!m){if(!$('pfSheet').hidden){$('pfSheet').hidden=true;$('pfSheet').innerHTML='';document.body.classList.remove('noscroll')}return}
+  const [,kind,lg,id]=m;if(lg!==CUR)setLeague(lg);({equipo:openTeam,jugador:openPlayer,comparar:openCompare})[kind](decodeURIComponent(id))}
 addEventListener('hashchange',route);
 document.addEventListener('click',e=>{
   if(e.target.closest('[data-pfclose]')||e.target.id==='pfSheet'){pfClose();return}
@@ -803,7 +803,8 @@ async function openPlayer(pid){track('jugador/'+CUR,'Ficha jugador ('+CUR+')');
   pfOpen(`${pfX}<header class="pf-head pl" style="--tc:${tc(t)};--ti:${col}">
      <div class="pf-photo ${src?'':'fb'}">${src?`<img src="${src}" alt="${esc(p.n)}" title="${credit(pid)}">`:`<span>${initials(p.n)}</span>`}</div>
      <div class="pf-ttl"><small>${[p.num?'#'+p.num:'',p.pos].filter(Boolean).map(esc).join(' · ')}</small><h3>${esc(p.n)}</h3>
-      <div class="pf-sub"><span class="pf-team" data-team="${esc(p.ab)}"><img src="${logo(p.ab)}" alt="">${esc(t.short)}</span><span>${a.gp} partidos</span></div></div></header>
+      <div class="pf-sub"><span class="pf-team" data-team="${esc(p.ab)}"><img src="${logo(p.ab)}" alt="">${esc(t.short)}</span><span>${a.gp} partidos</span></div></div>
+     <button type="button" class="pf-fav pf-cmp" data-cmp="${esc(pid)}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M8 4v16M16 4v16M3 9h5M16 15h5"/></svg><span>Comparar</span></button></header>
    <div class="pf-tiles big">${tile('Puntos',f1(a.pts),'pts')}${tile('Rebotes',f1(a.reb),'reb')}${tile('Asistencias',f1(a.ast),'ast')}${CUR!=='nba'?tile('Valoración',f1(a.val),'val'):tile('Minutos',f1(a.min),'min')}</div>
    <div class="pf-tiles">${tile('Robos',f1(a.stl),'stl')}${tile('Tapones',f1(a.blk),'blk')}${tile('Tiros de campo',pct(...a.fg))}${tile('Triples',pct(...a.tp))}${tile('Tiros libres',pct(...a.ft))}${CUR!=='nba'?tile('Minutos',f1(a.min)):''}</div>
    <h4 class="pf-h">Puntos partido a partido</h4><div class="pf-card"><div class="pf-bars" style="--avg:${avg/maxP*100}%">${bars}<span class="avg" title="Media">${f1(avg)}</span></div></div>
@@ -914,15 +915,20 @@ document.addEventListener('click',async e=>{
   else if(how==='descargar'&&!SH.url)e.preventDefault();
 });
 /* ---------- buscador de equipos y jugadores (las tres ligas) ---------- */
-let SRI=null,srSel=0,srList=[];
+let SRI=null,srSel=0,srList=[],srCmp=null;
 const srNorm=x=>String(x).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 function srLoad(){if(!SRI)SRI=fetch('players/indice.json?v='+encodeURIComponent(UPDATED||'')).then(r=>r.json()).catch(()=>{SRI=null;return []});return SRI}
-function srOpen(){const sh=$('srSheet');sh.hidden=false;document.body.classList.add('noscroll');const q=$('srQ');q.value='';q.focus();srRender('');srLoad().then(()=>srRender(q.value));track('buscar/abrir','Buscador')}
+function srOpen(cmp){srCmp=cmp||null;$('srQ').placeholder=srCmp?'¿Con quién lo comparas? Escribe un jugador…':'Busca un equipo o un jugador…';const sh=$('srSheet');sh.hidden=false;document.body.classList.add('noscroll');const q=$('srQ');q.value='';q.focus();srRender('');srLoad().then(()=>srRender(q.value));track('buscar/abrir','Buscador')}
 function srClose(){$('srSheet').hidden=true;if($('pfSheet').hidden&&$('boxSheet').hidden)document.body.classList.remove('noscroll')}
 const LGN={nba:'NBA',el:'EuroLiga',acb:'ACB'};
 function srMark(n,q){if(!q)return esc(n);const i=srNorm(n).indexOf(q);return i<0?esc(n):esc(n.slice(0,i))+'<mark>'+esc(n.slice(i,i+q.length))+'</mark>'+esc(n.slice(i+q.length))}
 async function srRender(raw){
   const q=srNorm(raw.trim()),box=$('srRes');let teams=[],players=[];
+  if(srCmp){const I=SRI?await SRI:[];let pl=I.filter(p=>p[1]===srCmp.lg&&p[2]!==srCmp.pid&&(!q||srNorm(p[0]).includes(q)));
+    pl=pl.map(p=>({p,sc:(q&&(srNorm(p[0]).startsWith(q)||srNorm(p[0]).includes(' '+q))?0:1)-p[5]/1000})).sort((a,b)=>a.sc-b.sc).slice(0,q?24:12).map(x=>x.p);
+    srList=pl.map(p=>({k:'comparar',lg:p[1],id:srCmp.pid+'~'+p[2]}));srSel=0;
+    if(!pl.length){box.innerHTML=`<div class="sr-empty">${q?'Sin resultados':'Cargando…'}</div>`;return}
+    let i=0;box.innerHTML=`<div class="sr-h">Comparar con… (${LGN[srCmp.lg]})</div>`+pl.map(p=>{const t=(LG[p[1]].teams[p[3]])||{short:p[3],color:'333333'},src=IMG.p[p[2]];return `<button type="button" class="sr-it" data-sri="${i}" aria-selected="${i++===0}"><span class="av" style="--tc:${tc(t)}">${src?`<img src="${src}" alt="">`:initials(p[0])}</span><span><b>${srMark(p[0],q)}</b><small>${esc(t.short)} · ${p[5]} partidos</small></span></button>`}).join('');return}
   for(const lg of Object.keys(LG))for(const [ab,t] of Object.entries(LG[lg].teams)){const hay=srNorm(t.name+' '+t.short+' '+ab);if(!q||hay.includes(q))teams.push({lg,ab,t,sc:!q?0:(srNorm(t.short).startsWith(q)||ab.toLowerCase()===q?0:1)})}
   if(q){const I=SRI?await SRI:[];players=I.filter(p=>srNorm(p[0]).includes(q)).map(p=>({p,sc:(srNorm(p[0]).startsWith(q)||srNorm(p[0]).includes(' '+q)?0:1)-p[5]/1000})).sort((a,b)=>a.sc-b.sc).slice(0,24).map(x=>x.p)}
   teams.sort((a,b)=>a.sc-b.sc||(a.lg===CUR?-1:0)-(b.lg===CUR?-1:0));if(!q)teams=teams.filter(x=>x.lg===CUR);else teams=teams.slice(0,12);
@@ -933,12 +939,40 @@ async function srRender(raw){
    +(players.length?'<div class="sr-h">Jugadores</div>'+players.map(p=>{const t=(LG[p[1]].teams[p[3]])||{short:p[3],color:'333333'},src=IMG.p[p[2]];return it(`<span class="av" style="--tc:${tc(t)}">${src?`<img src="${src}" alt="">`:initials(p[0])}</span><span><b>${srMark(p[0],q)}</b><small>${esc(t.short)}${p[4]?' · #'+esc(p[4]):''} · ${p[5]} partidos</small></span><span class="sr-tag">${LGN[p[1]]}</span>`)}).join(''):'');
 }
 function srGo(n){const x=srList[n];if(!x)return;track('buscar/'+x.k,'Buscador: '+x.k);srClose();if(x.lg!==CUR)setLeague(x.lg);setTimeout(()=>go(x.k,x.id),x.lg!==CUR?120:0)}
-$('searchBtn').addEventListener('click',srOpen);
+$('searchBtn').addEventListener('click',()=>srOpen());
 $('srQ').addEventListener('input',e=>srRender(e.target.value));
 $('srQ').addEventListener('keydown',e=>{const n=srList.length;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();srSel=(srSel+(e.key==='ArrowDown'?1:-1)+n)%n;document.querySelectorAll('.sr-it').forEach((b,i)=>{b.setAttribute('aria-selected',i===srSel);if(i===srSel)b.scrollIntoView({block:'nearest'})})}else if(e.key==='Enter'){e.preventDefault();srGo(srSel)}});
 $('srSheet').addEventListener('click',e=>{const b=e.target.closest('[data-sri]');if(b){srGo(+b.dataset.sri);return}if(e.target.closest('[data-srclose]')||e.target.id==='srSheet')srClose()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('srSheet').hidden){e.stopImmediatePropagation();srClose();return}
   if(e.key==='/'&&!/input|textarea/i.test(document.activeElement.tagName)&&$('srSheet').hidden){e.preventDefault();srOpen()}},true);
+/* ---------- comparador de jugadores ---------- */
+async function openCompare(ids){
+  const [p1,p2]=ids.split('~');pfOpen(`${pfX}<div class="pf-load">Cargando comparación…</div>`);
+  let P;try{P=await loadPlayers(CUR)}catch(e){pfOpen(`${pfX}<p class="pf-empty">No se ha podido cargar.</p>`);return}
+  if(!location.hash.startsWith('#comparar/'))return;
+  const A=P[p1],B=P[p2];if(!A||!B){pfOpen(`${pfX}<p class="pf-empty">No hay datos de alguno de los dos jugadores.</p>`);return}
+  track('comparar/'+CUR,'Comparador ('+CUR+')');
+  const ta=TEAMS[A.ab]||{short:A.ab,color:'333333',alt:'999999'},tb=TEAMS[B.ab]||{short:B.ab,color:'333333',alt:'999999'},aa=avgs(A),ab=avgs(B);
+  let ca=ink(ta),cb=ink(tb);{const d=(x,y)=>{const a=hx(x),b=hx(y);return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])};
+    if(d(ca,cb)<90){const alts=['#'+tb.color,'#'+tb.alt,'#c4ced4'].filter(c=>lum(c.slice(1))>.08&&d(ca,c)>=90);cb=alts[0]||'#c4ced4'}}
+  const best=p=>p.g.reduce((m,g)=>(!m||g[G_.pts]>m[G_.pts])?g:m,null);
+  const rows=[['Puntos','pts'],['Rebotes','reb'],['Asistencias','ast'],...(CUR!=='nba'?[['Valoración','val']]:[]),['Robos','stl'],['Tapones','blk'],
+    ['Tiros de campo','fgp',x=>x.fg[1]?x.fg[0]/x.fg[1]:0,1],['Triples','tpp',x=>x.tp[1]?x.tp[0]/x.tp[1]:0,1],['Tiros libres','ftp',x=>x.ft[1]?x.ft[0]/x.ft[1]:0,1],
+    ['Pérdidas','to',null,0,1],['Minutos','min'],['Partidos','gp',null,0,0,1],['Mejor partido (pts)','bst',x=>0,0]];
+  let wa=0,wb=0;
+  const body=rows.map(([lbl,k,f,isPct,lowBetter,isInt])=>{
+    let va=f?f(aa):aa[k],vb=f?f(ab):ab[k];if(k==='bst'){va=(best(A)||[])[G_.pts]||0;vb=(best(B)||[])[G_.pts]||0;isInt=1}
+    const fmt=v=>isPct?(v*100).toFixed(1)+'%':isInt?String(Math.round(v)):f1(v);
+    const win=va===vb?0:((va>vb)!==!!lowBetter?1:2);if(win===1)wa++;else if(win===2)wb++;
+    const m=Math.max(va,vb)||1;
+    return `<div class="cmp-r"><span class="v ${win===1?'w':''}" style="${win===1?'color:'+ca:''}">${fmt(va)}</span><span class="bar l"><i style="width:${va/m*100}%;background:${ca}"></i></span><span class="lbl">${lbl}</span><span class="bar"><i style="width:${vb/m*100}%;background:${cb}"></i></span><span class="v ${win===2?'w':''}" style="${win===2?'color:'+cb:''}">${fmt(vb)}</span></div>`}).join('');
+  const head=(p,t,id,c)=>{const src=IMG.p[id];return `<div class="cmp-p" data-player="${esc(id)}" style="--tc:${tc(t)};--ti:${c}"><div class="cmp-ph ${src?'':'fb'}">${src?`<img src="${src}" alt="">`:`<span>${initials(p.n)}</span>`}</div><b>${esc(p.n)}</b><small><img src="${logo(p.ab)}" alt="">${esc(t.short)}${p.num?' · #'+esc(p.num):''}</small></div>`};
+  pfOpen(`${pfX}<header class="cmp-head" style="--ca:${tc(ta)};--cb:${tc(tb)}">${head(A,ta,p1,ca)}<div class="cmp-vs"><span>${wa}</span><em>VS</em><span>${wb}</span><small>categorías ganadas</small></div>${head(B,tb,p2,cb)}</header>
+    <div class="pf-card cmp-card">${body}</div>
+    <p class="pf-note">Medias por partido de la temporada (${LGN[CUR]}). Toca un jugador para ver su ficha.</p>
+    <div class="sh-acts" style="margin:4px 18px 0"><button class="btn" type="button" data-cmp="${esc(p1)}">Cambiar rival</button><button class="btn" type="button" data-copytxt="${esc(A.n+' vs '+B.n+' · '+location.origin+location.pathname+'#comparar/'+CUR+'/'+encodeURIComponent(ids))}">Copiar enlace</button></div>`);
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-cmp]');if(!b)return;srOpen({lg:CUR,pid:b.dataset.cmp})});
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
@@ -1003,6 +1037,6 @@ if(LIVE&&'serviceWorker' in navigator){addEventListener('load',()=>navigator.ser
 try{const s=localStorage.getItem('offcourt-league');if(s&&LG[s])CUR=s}catch(e){}
 document.addEventListener('click',e=>{const a=e.target.closest('a[target=_blank]');if(!a)return;const t=/Seguir en directo/.test(a.textContent)?'directo':/Resumen/i.test(a.textContent)?'resumen':(a.classList.contains('clip')?'jugada':'');if(t)track('salida/'+t+'/'+CUR,'Enlace externo: '+t+' ('+CUR+')')},true);
 renderAll();
-if(/^#(equipo|jugador)\//.test(location.hash))route();else openShared();
+if(/^#(equipo|jugador|comparar)\//.test(location.hash))route();else openShared();
 addEventListener('hashchange',openShared);
 </script>
