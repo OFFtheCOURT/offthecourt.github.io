@@ -22,11 +22,11 @@ const TXT={
        stSub:'Del 1 al 8 juegan los playoffs por el título; los 2 últimos descienden.',src:'ACB',val:'valoración',m1:'Última jornada',m3:'Por jornadas'}
 };
 const $=id=>document.getElementById(id);
-const fmtLong = d => new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+const fmtLong = d => new Date(d+'T12:00:00').toLocaleDateString(LOCALE(),{weekday:'long',day:'numeric',month:'long'});
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const madrid = (u,o)=>new Date(u).toLocaleString('es-ES',{timeZone:'Europe/Madrid',...o});
-function range(a,b){const A=new Date(a+'T12:00'),B=new Date(b+'T12:00');const m=x=>x.toLocaleDateString('es-ES',{month:'short'}).replace('.','');
+const madrid = (u,o)=>new Date(u).toLocaleString(LOCALE(),{timeZone:'Europe/Madrid',...o});
+function range(a,b){const A=new Date(a+'T12:00'),B=new Date(b+'T12:00');const m=x=>x.toLocaleDateString(LOCALE(),{month:'short'}).replace('.','');
   return a===b?`${A.getDate()} ${m(A)}`:(A.getMonth()===B.getMonth()?`${A.getDate()}-${B.getDate()} ${m(B)}`:`${A.getDate()} ${m(A)} - ${B.getDate()} ${m(B)}`)}
 const isDay=()=>L.periodType==='day';
 function lum(hex){const n=parseInt(hex,16);const r=(n>>16)&255,g=(n>>8)&255,b=n&255;return (0.2126*r+0.7152*g+0.0722*b)/255}
@@ -261,7 +261,7 @@ function countUp(){
 let past=[],shown=5,selected=null;
 function dayBtn(d){
   let top,big,small;
-  if(isDay()){const dt=new Date(d.key+'T12:00:00');top=dt.toLocaleDateString('es-ES',{weekday:'long'});big=dt.getDate();small=dt.toLocaleDateString('es-ES',{month:'short'}).replace('.','');}
+  if(isDay()){const dt=new Date(d.key+'T12:00:00');top=dt.toLocaleDateString(LOCALE(),{weekday:'long'});big=dt.getDate();small=dt.toLocaleDateString(LOCALE(),{month:'short'}).replace('.','');}
   else{top=range(d.from,d.to);big=d.round;small='Jor.';}
   return `<button class="day" type="button" data-day="${d.key}" aria-pressed="${selected===d.key}">
     <span class="dw">${top}</span>
@@ -439,9 +439,9 @@ function renderHoy(){
       ${btn?`<div class="stt">${btn}</div>`:''}
       <div class="up-bot">${(g.tv||[]).map(x=>`<span class="tv">TV · ${esc(x)}</span>`).join('')}${g.odds?`<span class="tv od">Favorito ${esc(g.odds)}</span>`:''}</div></article>`}).join('');
   document.querySelectorAll('#hoyGrid [data-sk]').forEach(el=>{const k=el.dataset.sk,v=el.textContent;if(PREVSC[k]!==undefined&&PREVSC[k]!==v){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}PREVSC[k]=v});
-  $('hoyEyebrow').innerHTML=`<span>${cap(new Date(W.day).toLocaleDateString('es-ES',{timeZone:'Europe/Madrid',weekday:'long',day:'numeric',month:'long'}))}</span>`;
+  $('hoyEyebrow').innerHTML=`<span>${cap(new Date(W.day).toLocaleDateString(LOCALE(),{timeZone:'Europe/Madrid',weekday:'long',day:'numeric',month:'long'}))}</span>`;
   $('hoyH2').innerHTML=CUR==='nba'?'Esta noche se <span class="hl">juega</span>':'Hoy hay <span class="hl">jornada</span>';
-  const upd=UPDATED?new Date(UPDATED).toLocaleString('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit'}):'';
+  const upd=UPDATED?new Date(UPDATED).toLocaleString(LOCALE(),{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit'}):'';
   $('hoySub').textContent=`${gs.length} partido${gs.length>1?'s':''} · primer salto a las ${madrid(gs[0].utc,{hour:'2-digit',minute:'2-digit'})} (hora de España)${upd?' · datos actualizados a las '+upd:''}`;
   $('hoyChip').textContent=live?`● ${live} en directo`:(done===gs.length?'● Terminados':'● Próximamente');
 }
@@ -453,7 +453,7 @@ let AV={};try{AV=JSON.parse(localStorage.getItem('offcourt-avisos')||'{}')||{}}c
 const AVSENT=(()=>{try{return JSON.parse(localStorage.getItem('offcourt-avisos-env')||'{}')}catch(e){return {}}})();
 const avisosOn=()=>Object.keys(AV).length>0&&'Notification' in window&&Notification.permission==='granted';
 function saveAv(){try{localStorage.setItem('offcourt-avisos',JSON.stringify(AV));localStorage.setItem('offcourt-avisos-env',JSON.stringify(AVSENT))}catch(e){}}
-async function notify(title,body,tag,url){
+async function notify(title,body,tag,url){title=tr(title);body=tr(body);
   try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
     const opt={body,tag,icon:'icons/icon-192.png',badge:'icons/icon-192.png',data:{url},renotify:true};
     if(reg&&reg.showNotification)await reg.showNotification(title,opt);else{const n=new Notification(title,opt);n.onclick=()=>{window.focus();location.href=url}}}catch(e){}
@@ -564,9 +564,9 @@ function renderCal(){
     const days=new Set(C.map(g=>g.d));
     if(calSel===null||!days.has(calSel)){const t=etToday();calSel=[...days].sort().find(d=>d>=t)||[...days].sort().pop()}
     const m0=monday(calSel),week=[0,1,2,3,4,5,6].map(i=>addDays(m0,i));
-    $('calCtl').innerHTML=`<button class="cal-arr" type="button" data-calw="-7" aria-label="Semana anterior">‹</button><div class="cal-chips" id="calChips">${week.map(d=>{const n=C.filter(g=>g.d===d).length,dt=new Date(d+'T12:00:00Z');return `<button type="button" class="cal-c ${d<etToday()?'past':''} ${n?'':'empty'}" ${n?`data-cald="${d}"`:'disabled'} aria-pressed="${d===calSel}"><small>${dt.toLocaleDateString('es-ES',{weekday:'short',timeZone:'UTC'}).replace('.','')}</small><b>${dt.getUTCDate()}</b><i>${n?n+' p.':'—'}</i></button>`}).join('')}</div><button class="cal-arr" type="button" data-calw="7" aria-label="Semana siguiente">›</button>${favBtn}`;
+    $('calCtl').innerHTML=`<button class="cal-arr" type="button" data-calw="-7" aria-label="Semana anterior">‹</button><div class="cal-chips" id="calChips">${week.map(d=>{const n=C.filter(g=>g.d===d).length,dt=new Date(d+'T12:00:00Z');return `<button type="button" class="cal-c ${d<etToday()?'past':''} ${n?'':'empty'}" ${n?`data-cald="${d}"`:'disabled'} aria-pressed="${d===calSel}"><small>${dt.toLocaleDateString(LOCALE(),{weekday:'short',timeZone:'UTC'}).replace('.','')}</small><b>${dt.getUTCDate()}</b><i>${n?n+' p.':'—'}</i></button>`}).join('')}</div><button class="cal-arr" type="button" data-calw="7" aria-label="Semana siguiente">›</button>${favBtn}`;
     const gs=C.filter(g=>g.d===calSel);
-    $('calSub').textContent=`${cap(new Date(calSel+'T12:00:00Z').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'}))} (fecha de EE. UU.) · ${gs.length} partidos · horario de España`;
+    $('calSub').textContent=`${cap(new Date(calSel+'T12:00:00Z').toLocaleDateString(LOCALE(),{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'}))} (fecha de EE. UU.) · ${gs.length} partidos · horario de España`;
     $('calList').innerHTML=gs.map(g=>calRow(g,false)).join('');
   }
   const on=document.querySelector('#calChips [aria-pressed="true"]');if(on){const box=on.parentElement;box.scrollLeft=on.offsetLeft-(box.clientWidth-on.offsetWidth)/2}
@@ -630,6 +630,8 @@ const mBtn=$('menuBtn'),mPanel=$('menuPanel');
 function setMenu(o){if(o&&matchMedia('(max-width:560px)').matches){const t=Math.max(0,document.querySelector('header.top').getBoundingClientRect().bottom)+8;mPanel.style.top=t+'px';mPanel.style.maxHeight=(innerHeight-t-12)+'px'}else{mPanel.style.top=mPanel.style.maxHeight=''}
   mPanel.hidden=!o;mBtn.setAttribute('aria-expanded',o)}
 mBtn.addEventListener('click',e=>{e.stopPropagation();setMenu(mPanel.hidden)});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-lang]');if(b)setLang(b.dataset.lang)});
+document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on',b.dataset.lang===LANG));
 mPanel.addEventListener('click',e=>{const a=e.target.closest('a');if(a){track('menu/'+a.getAttribute('href').slice(1),'Menú: '+a.getAttribute('href'));setMenu(false)}});
 document.addEventListener('click',e=>{if(!mPanel.hidden&&!e.target.closest('.menu'))setMenu(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')setMenu(false)});
@@ -657,7 +659,7 @@ function boxTable(rows,side,sortK){
 }
 function renderBox(){
   const {g,rows,side,sort}=boxCur,[A,H]=g.teams,t=g.teams[side],T=TEAMS[t.abbr];
-  const when=g.utc?madrid(g.utc,{weekday:'long',day:'numeric',month:'long'}):(/^\d{4}-\d\d-\d\d$/.test(g._day||'')?new Date(g._day+'T12:00:00Z').toLocaleDateString('es-ES',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'})+' (EE. UU.)':'');
+  const when=g.utc?madrid(g.utc,{weekday:'long',day:'numeric',month:'long'}):(/^\d{4}-\d\d-\d\d$/.test(g._day||'')?new Date(g._day+'T12:00:00Z').toLocaleDateString(LOCALE(),{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'})+' (EE. UU.)':'');
   $('boxSheet').innerHTML=`<div class="bx-box" role="dialog" aria-modal="true" aria-label="Ficha completa del partido">
    <div class="bx-head"><div class="bx-score">${[A,H].map((s,i)=>`<span class="bx-tm ${s.win?'w':''}"><img src="${logo(s.abbr)}" alt=""><b>${esc(TEAMS[s.abbr].short)}</b><em>${s.score}</em></span>${i===0?'<i>–</i>':''}`).join('')}</div>
     <span class="bx-hr">${findGame(g.id)&&!g._up?`<button type="button" class="btn sh-btn" data-share="${esc(g.id)}" aria-label="Compartir resultado">${ICO_SHARE}<span class="sh-l">Compartir</span></button>`:''}<button type="button" class="fp-x" data-boxclose aria-label="Cerrar">✕</button></span></div>
@@ -795,7 +797,7 @@ function rankChart(h,col){
   const pi=h.z.pi?`<rect x="${pl}" y="${Y(h.z.po+1)-6}" width="${W-pl-pr}" height="${Y(h.z.pi)-Y(h.z.po+1)+12}" fill="rgba(77,124,255,.08)"/>`:'';
   const rel=h.z.rel?`<rect x="${pl}" y="${Y(n-h.z.rel+1)-6}" width="${W-pl-pr}" height="${Y(n)-Y(n-h.z.rel+1)+12}" fill="rgba(229,72,77,.10)"/>`:'';
   const path=h.pts.map((p,i)=>`${i?'L':'M'}${X(i).toFixed(1)},${Y(p.rk).toFixed(1)}`).join('');
-  const lbl=p=>CUR==='nba'?new Date(p.s+'T12:00Z').toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'UTC'}).replace('.',''):'J'+p.s;
+  const lbl=p=>CUR==='nba'?new Date(p.s+'T12:00Z').toLocaleDateString(LOCALE(),{day:'numeric',month:'short',timeZone:'UTC'}).replace('.',''):'J'+p.s;
   const every=Math.ceil(k/(mob?5:8));
   return `<svg viewBox="0 0 ${W} ${H}" class="pf-chart" role="img" aria-label="Evolución de la posición">${po}${pi}${rel}
    ${[1,Math.ceil(n/2),n].map(r=>`<text x="${pl-8}" y="${Y(r)+4}" text-anchor="end" class="ax">${r}º</text><line x1="${pl}" x2="${W-pr}" y1="${Y(r)}" y2="${Y(r)}" class="gl"/>`).join('')}
@@ -853,9 +855,9 @@ async function openPlayer(pid){track('jugador/'+CUR,'Ficha jugador ('+CUR+')');
    <div class="pf-tiles">${tile('Robos',f1(a.stl),'stl')}${tile('Tapones',f1(a.blk),'blk')}${tile('Tiros de campo',pct(...a.fg))}${tile('Triples',pct(...a.tp))}${tile('Tiros libres',pct(...a.ft))}${CUR!=='nba'?tile('Minutos',f1(a.min)):''}</div>
    <h4 class="pf-h">Puntos partido a partido</h4><div class="pf-card"><div class="pf-bars" style="--avg:${avg/maxP*100}%">${bars}<span class="avg" title="Media">${f1(avg)}</span></div></div>
    ${best?`<h4 class="pf-h">Mejor partido</h4><div class="pf-card pf-best" ${findGame(best[G_.id])?`data-box="${esc(best[G_.id])}"`:''}><b>${best[G_.pts]}<small>pts</small></b><span>${best[G_.reb]} reb · ${best[G_.ast]} ast · ${best[G_.min]} min</span>
-     <span class="o">${best[G_.home]?'vs':'@'} <img src="${logo(best[G_.opp])}" alt="">${esc((TEAMS[best[G_.opp]]||{short:best[G_.opp]}).short)} · <b class="wlb ${best[G_.res]==='V'?'W':'L'}">${best[G_.res]}</b> ${best[G_.my]}-${best[G_.ot]} · ${new Date(best[G_.date]+'T12:00Z').toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'UTC'})}</span></div>`:''}
+     <span class="o">${best[G_.home]?'vs':'@'} <img src="${logo(best[G_.opp])}" alt="">${esc((TEAMS[best[G_.opp]]||{short:best[G_.opp]}).short)} · <b class="wlb ${best[G_.res]==='V'?'W':'L'}">${best[G_.res]}</b> ${best[G_.my]}-${best[G_.ot]} · ${new Date(best[G_.date]+'T12:00Z').toLocaleDateString(LOCALE(),{day:'numeric',month:'short',timeZone:'UTC'})}</span></div>`:''}
    <h4 class="pf-h">Todos sus partidos</h4><div class="pf-card"><div class="pf-tbl"><table class="log"><thead><tr><th>Partido</th><th>Res.</th><th>Min</th><th>Pts</th><th>Reb</th><th>Ast</th><th>TC</th><th>T3</th><th>TL</th><th>Rob</th><th>Tap</th><th>+/-</th>${CUR!=='nba'?'<th>Val</th>':''}</tr></thead><tbody>
-    ${gs.map(g=>`<tr ${findGame(g[G_.id])?`data-box="${esc(g[G_.id])}"`:''}><th><span class="pf-o"><small>${new Date(g[G_.date]+'T12:00Z').toLocaleDateString('es-ES',{day:'numeric',month:'short',timeZone:'UTC'}).replace('.','')}</small>${g[G_.home]?'vs':'@'} <img src="${logo(g[G_.opp])}" alt="">${esc(g[G_.opp])}</span></th>
+    ${gs.map(g=>`<tr ${findGame(g[G_.id])?`data-box="${esc(g[G_.id])}"`:''}><th><span class="pf-o"><small>${new Date(g[G_.date]+'T12:00Z').toLocaleDateString(LOCALE(),{day:'numeric',month:'short',timeZone:'UTC'}).replace('.','')}</small>${g[G_.home]?'vs':'@'} <img src="${logo(g[G_.opp])}" alt="">${esc(g[G_.opp])}</span></th>
       <td><b class="wlb ${g[G_.res]==='V'?'W':'L'}">${g[G_.res]}</b> ${g[G_.my]}-${g[G_.ot]}</td><td>${esc(g[G_.min])}</td><td class="k">${g[G_.pts]}</td><td>${g[G_.reb]}</td><td>${g[G_.ast]}</td><td>${esc(g[G_.fg])}</td><td>${esc(g[G_.tp])}</td><td>${esc(g[G_.ft])}</td><td>${g[G_.stl]}</td><td>${g[G_.blk]}</td><td>${esc(g[G_.pm])}</td>${CUR!=='nba'?`<td>${g[G_.val]}</td>`:''}</tr>`).join('')}</tbody></table></div></div>`);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-pffav]');if(!b)return;const ab=b.dataset.pffav;if(favAb()===ab)delete FAV[CUR];else FAV[CUR]=ab;saveFav();renderAll();openTeam(ab)});
@@ -866,7 +868,7 @@ function shImg(src){return new Promise(r=>{if(!src)return r(null);const i=new Im
 const SHL={nba:'NBA',el:'EUROLIGA',acb:'LIGA ACB'};
 function shUrl(g){return `https://offthecourt.github.io/p/${CUR}/${encodeURIComponent(g.id)}.html`}   // página con vista previa propia (og.py)
 function shText(g){const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr],w=A.win?A:H,mv=shMvp(g);
-  return `🏀 ${ta.short} ${A.score}-${H.score} ${th.short}${A.ls.length>4?' (prórroga)':''} · ${SHL[CUR]}${mv?`\n⭐ ${mv.n}: ${mv.pts} pts, ${mv.reb} reb, ${mv.ast} ast`:''}\nEstadísticas completas en Offcourt 👉 ${shUrl(g)}`}
+  return `🏀 ${ta.short} ${A.score}-${H.score} ${th.short}${A.ls.length>4?' ('+({es:'prórroga',en:'OT',ca:'pròrroga'})[LANG]+')':''} · ${SHL[CUR]}${mv?`\n⭐ ${mv.n}: ${mv.pts} pts, ${mv.reb} reb, ${mv.ast} ast`:''}\n${({es:'Estadísticas completas en Offcourt',en:'Full stats on Offcourt',ca:'Estadístiques completes a Offcourt'})[LANG]} 👉 ${shUrl(g)}`}
 function shMvp(g){return [...g.teams[0].top,...g.teams[1].top].sort((a,b)=>(b.gs??b.val??0)-(a.gs??a.val??0))[0]}
 async function shDraw(g,fmt){
   const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr],ca=tc(ta),ch=tc(th),story=fmt==='story';
@@ -886,12 +888,12 @@ async function shDraw(g,fmt){
   x.textBaseline='alphabetic';if(lg)x.drawImage(lg,60,P.hd-66,84,84);
   const hy=P.hd;x.textAlign='left';x.font=`900 64px ${FD}`;x.fillStyle='#fff';x.fillText('OFF',160,hy);const wo=x.measureText('OFF').width;x.fillStyle='#ff7a1a';x.fillText('COURT',160+wo,hy);
   const per=L.periods.find(p=>p.games.some(q=>q.id===g.id));
-  const when=g.utc?madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,''):(g._day?new Date(g._day+'T12:00Z').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}).replace(/\./g,''):'');
+  const when=g.utc?madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,''):(g._day?new Date(g._day+'T12:00Z').toLocaleDateString(LOCALE(),{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}).replace(/\./g,''):'');
   x.textAlign='right';x.font=`800 34px ${FL}`;x.fillStyle='#fff';x.fillText(SHL[CUR]+(CUR!=='nba'&&per&&per.round?' · J'+per.round:''),W-60,hy-30);
   x.font=`700 30px ${FL}`;x.fillStyle='rgba(255,255,255,.75)';x.fillText(when.toUpperCase(),W-60,hy+6);
   // etiqueta
-  const ot=A.ls.length>4,diff=Math.abs(A.score-H.score),tag=ot?(A.ls.length>5?`FINAL · ${A.ls.length-4} PRÓRROGAS`:'FINAL · PRÓRROGA'):diff>=20?`FINAL · PALIZA +${diff}`:diff<=3?'FINAL · AL LÍMITE':'FINAL';
-  x.font=`800 34px ${FL}`;x.textAlign='center';const tw=x.measureText(tag).width+60;x.fillStyle='#ff7a1a';x.beginPath();x.roundRect(W/2-tw/2,P.tag,tw,58,29);x.fill();x.fillStyle='#1a0b02';x.fillText(tag,W/2,P.tag+41);
+  const ot=A.ls.length>4,diff=Math.abs(A.score-H.score);let tag=ot?(A.ls.length>5?`FINAL · ${A.ls.length-4} PRÓRROGAS`:'FINAL · PRÓRROGA'):diff>=20?`FINAL · PALIZA +${diff}`:diff<=3?'FINAL · AL LÍMITE':'FINAL';
+  x.font=`800 34px ${FL}`;x.textAlign='center';tag=tr(tag);const tw=x.measureText(tag).width+60;x.fillStyle='#ff7a1a';x.beginPath();x.roundRect(W/2-tw/2,P.tag,tw,58,29);x.fill();x.fillStyle='#1a0b02';x.fillText(tag,W/2,P.tag+41);
   // equipos y marcador
   const side=(img,t,s,cx)=>{const lw=P.lw;if(img){x.save();x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=30;x.globalAlpha=s.win?1:.85;x.drawImage(img,cx-lw/2,P.lg,lw,lw);x.restore()}
     x.globalAlpha=s.win?1:.62;x.fillStyle='#fff';x.textAlign='center';x.font=`900 ${t.short.length>13?48:t.short.length>9?56:64}px ${FD}`;x.fillText(t.short.toUpperCase(),cx,P.nm);
@@ -909,7 +911,7 @@ async function shDraw(g,fmt){
   // MVP (grande) y mejor del otro equipo (pequeño, solo en historia o si cabe)
   const box=(p,img,y0,h,big)=>{const bw=W-120;x.fillStyle='rgba(5,8,14,.74)';x.beginPath();x.roundRect(60,y0,bw,h,28);x.fill();x.strokeStyle=big?'rgba(255,194,61,.9)':'rgba(255,255,255,.18)';x.lineWidth=3;x.stroke();
     const iw=big?276:200,ih=Math.round(iw*219/300);if(img){x.save();x.beginPath();x.roundRect(84,y0+(h-ih)/2,iw,ih,18);x.clip();x.drawImage(img,84,y0+(h-ih)/2,iw,ih);x.restore()}
-    const tx=img?84+iw+30:100;x.textAlign='left';x.fillStyle=big?'#ffc23d':'rgba(255,255,255,.7)';x.font=`800 ${big?30:26}px ${FL}`;x.fillText(big?'★ MVP DEL PARTIDO':'MEJOR DE '+TEAMS[other.abbr].short.toUpperCase(),tx,y0+(big?62:48));
+    const tx=img?84+iw+30:100;x.textAlign='left';x.fillStyle=big?'#ffc23d':'rgba(255,255,255,.7)';x.font=`800 ${big?30:26}px ${FL}`;x.fillText(tr(big?'★ MVP DEL PARTIDO':'MEJOR DE '+TEAMS[other.abbr].short.toUpperCase()),tx,y0+(big?62:48));
     x.fillStyle='#fff';x.font=`900 ${big?(p.n.length>18?52:62):44}px ${FD}`;x.fillText(p.n.toUpperCase(),tx,y0+(big?124:96));
     let sx=tx;[[p.pts,'PTS'],[p.reb,'REB'],[p.ast,'AST'],...(CUR!=='nba'&&p.val!=null?[[p.val,'VAL']]:[])].forEach(([nn,l])=>{x.fillStyle='#fff';x.font=`900 ${big?58:40}px ${FD}`;x.fillText(nn,sx,y0+(big?198:146));const w1=x.measureText(String(nn)).width;x.fillStyle='rgba(255,255,255,.65)';x.font=`700 ${big?26:22}px ${FL}`;x.fillText(l,sx+w1+7,y0+(big?198:146));sx+=w1+7+x.measureText(l).width+(big?32:24)})};
   if(mvp)box(mvp,ph,P.mvp,236,true);
@@ -930,7 +932,7 @@ async function shDrawDay(games,title,fmt){
   x.save();x.globalAlpha=.05;x.strokeStyle='#fff';x.lineWidth=4;for(let k=-Hh;k<W;k+=34){x.beginPath();x.moveTo(k,Hh);x.lineTo(k+Hh*.45,0);x.stroke()}x.restore();
   const lg=await shImg('icons/icon-192.png');const top=story?150:64;if(lg)x.drawImage(lg,60,top,84,84);
   x.textAlign='left';x.textBaseline='alphabetic';x.font=`900 64px ${FD}`;x.fillStyle='#fff';x.fillText('OFF',160,top+66);const wo=x.measureText('OFF').width;x.fillStyle=acc;x.fillText('COURT',160+wo,top+66);
-  x.font=`800 32px ${FL}`;x.fillStyle=acc;x.fillText('RESULTADOS',60,top+150);
+  x.font=`800 32px ${FL}`;x.fillStyle=acc;x.fillText(tr('RESULTADOS'),60,top+150);
   const tsz=story?96:80;x.font=`900 ${tsz}px ${FD}`;x.fillStyle='#fff';x.fillText(title.toUpperCase(),60,top+150+tsz*.95);
   const n=games.length,y0=top+150+tsz*1.3,foot=story?260:110,avail=Hh-y0-foot,rh=Math.min(story?210:150,avail/Math.max(n,1)),gap=Math.min(16,rh*.1);
   const yStart=story?y0+Math.max(0,(avail-rh*n)/2):y0;
@@ -943,7 +945,7 @@ async function shDrawDay(games,title,fmt){
       x.font=`900 ${sz}px ${FD}`;x.textAlign='center';x.fillText(s.score,sx+(k?gapS:-gapS),y+h/2+sz*.36);x.globalAlpha=1;
       if(win){x.fillStyle=acc;x.beginPath();x.roundRect(sx+(k?gapS:-gapS)-26,y+h/2+sz*.36+8,52,6,3);x.fill()}});
     x.fillStyle='rgba(255,255,255,.45)';x.font=`900 ${sz*.7}px ${FD}`;x.textAlign='center';x.fillText('–',sx,y+h/2+sz*.28);
-    if(ot){x.fillStyle=acc;x.font=`800 ${Math.max(18,Math.min(24,h*.16))}px ${FL}`;x.fillText(A.ls.length>5?(A.ls.length-4)+' PRÓRROGAS':'PRÓRROGA',sx,y+Math.max(24,h*.2))}});
+    if(ot){x.fillStyle=acc;x.font=`800 ${Math.max(18,Math.min(24,h*.16))}px ${FL}`;x.fillText(tr(A.ls.length>5?(A.ls.length-4)+' PRÓRROGAS':'PRÓRROGA'),sx,y+Math.max(24,h*.2))}});
   x.textAlign='center';x.fillStyle='#fff';x.font=`800 36px ${FL}`;x.fillText('offthecourt.github.io',W/2,Hh-(story?150:50));
   return c;
 }
@@ -1086,7 +1088,7 @@ addEventListener('resize',setHH);
   const list=Object.entries(CR).filter(([pid])=>IMG.p[pid]);
   $('crList').innerHTML=list.length?list.sort((a,b)=>(NAMES[a[0]]||'').localeCompare(NAMES[b[0]]||'')).map(([pid,c])=>`<div><b>${esc(NAMES[pid]||'')}</b>: ${esc(c.a)} · <a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.l)}</a></div>`).join(''):'<div>Sin fotos todavía.</div>';})();
 
-$('updTxt').textContent=new Date(UPDATED).toLocaleString('es-ES',{timeZone:'Europe/Madrid',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+$('updTxt').textContent=new Date(UPDATED).toLocaleString(LOCALE(),{timeZone:'Europe/Madrid',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
 /* ---------- directo (solo en la web propia: el navegador consulta ESPN y EuroLiga) ---------- */
 const LIVE = /*LIVE*/false;
 const LIVEBOX={};   // fichas en directo: id del partido -> {equipo: filas}
@@ -1142,7 +1144,7 @@ if(LIVE){setInterval(()=>{if(!avisosOn())return;for(const lg of Object.keys(AV))
 if(LIVE&&'serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 try{const s=localStorage.getItem('offcourt-league');if(s&&LG[s])CUR=s}catch(e){}
 document.addEventListener('click',e=>{const a=e.target.closest('a[target=_blank]');if(!a)return;const t=/Seguir en directo/.test(a.textContent)?'directo':/Resumen/i.test(a.textContent)?'resumen':(a.classList.contains('clip')?'jugada':'');if(t)track('salida/'+t+'/'+CUR,'Enlace externo: '+t+' ('+CUR+')')},true);
-renderAll();
+renderAll();i18nStart();
 if(/^#(equipo|jugador|comparar)\//.test(location.hash))route();else openShared();
 addEventListener('hashchange',openShared);
 </script>

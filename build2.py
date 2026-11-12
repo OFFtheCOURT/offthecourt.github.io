@@ -77,7 +77,7 @@ for ab in nba['teams']: img['t']['nba'][ab]=b64(f'{B}/img/t/{ab}.webp')
 for ab in el['teams']: img['t']['el'][ab]=b64(f'{B}/img/el/{ab}.webp')
 for ab in acb['teams']: img['t']['acb'][ab]=b64(f'{B}/img/acb/{ab}.webp')
 
-js=open(S+'/app.js').read()
+js=open(S+'/app.js').read().replace('<script>\n','<script>\n'+open(S+'/i18n.js').read()+'\n',1)   # idiomas (i18n.js) al principio
 js=js.replace('/*LEAGUES*/',json.dumps(LEAGUES,ensure_ascii=False,separators=(',',':')).replace('</','<\\/'))
 js=js.replace('/*LIVE*/false','true' if os.environ.get('OFFCOURT_LIVE') else 'false')
 js=js.replace('/*UPDATED*/',json.dumps(datetime.datetime.now(datetime.timezone.utc).isoformat()))

@@ -1006,6 +1006,10 @@ html[data-theme="light"] .cmp-r .v.w{filter:brightness(.85) saturate(1.2)}
 .fav-bell{margin-top:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);border-radius:999px;padding:5px 12px;font:800 11px var(--f-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
 .fav-bell.on{background:#ffc23d;border-color:#ffc23d;color:#2a1a00}
 
+
+.mp-lang{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}.mp-lang span{font-size:16px}
+.mp-lang button{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:5px 12px;font:800 11px var(--f-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.mp-lang button.on{background:var(--hot);border-color:transparent;color:#120a02}
 </style>
 <script data-goatcounter="https://offcourt.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
@@ -1050,6 +1054,7 @@ html[data-theme="light"] .cmp-r .v.w{filter:brightness(.85) saturate(1.2)}
         <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span><span class="mb-t">Menú</span>
       </button>
       <div class="menu-panel" id="menuPanel" hidden>
+        <div class="mp-lang"><span>🌐</span><button type="button" data-lang="es">Español</button><button type="button" data-lang="ca">Català</button><button type="button" data-lang="en">English</button></div>
         <div class="mp-head">¿Qué quieres consultar?</div>
         <div class="mp-grid" id="menuGrid"></div>
       </div>
