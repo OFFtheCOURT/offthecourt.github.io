@@ -814,6 +814,8 @@ async function openPlayer(pid){track('jugador/'+CUR,'Ficha jugador ('+CUR+')');
       <td><b class="wlb ${g[G_.res]==='V'?'W':'L'}">${g[G_.res]}</b> ${g[G_.my]}-${g[G_.ot]}</td><td>${esc(g[G_.min])}</td><td class="k">${g[G_.pts]}</td><td>${g[G_.reb]}</td><td>${g[G_.ast]}</td><td>${esc(g[G_.fg])}</td><td>${esc(g[G_.tp])}</td><td>${esc(g[G_.ft])}</td><td>${g[G_.stl]}</td><td>${g[G_.blk]}</td><td>${esc(g[G_.pm])}</td>${CUR!=='nba'?`<td>${g[G_.val]}</td>`:''}</tr>`).join('')}</tbody></table></div></div>`);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-pffav]');if(!b)return;const ab=b.dataset.pffav;if(favAb()===ab)delete FAV[CUR];else FAV[CUR]=ab;saveFav();renderAll();openTeam(ab)});
+/* navegadores sin roundRect en canvas (Firefox < 112, Safari < 16) */
+if(window.CanvasRenderingContext2D&&!CanvasRenderingContext2D.prototype.roundRect)CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){r=Math.min(Array.isArray(r)?r[0]:(r||0),w/2,h/2);this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();return this};
 /* ---------- compartir: tarjeta con el resultado (post 4:5 o historia 9:16) ---------- */
 function shImg(src){return new Promise(r=>{if(!src)return r(null);const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
 const SHL={nba:'NBA',el:'EUROLIGA',acb:'LIGA ACB'};
@@ -824,7 +826,7 @@ function shMvp(g){return [...g.teams[0].top,...g.teams[1].top].sort((a,b)=>(b.gs
 async function shDraw(g,fmt){
   const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr],ca=tc(ta),ch=tc(th),story=fmt==='story';
   const mvp=shMvp(g),other=(mvp?g.teams.find(t=>!t.top.some(p=>p.pid===mvp.pid)):null),p2=other&&other.top[0];
-  await Promise.all([document.fonts.load('900 80px "Big Shoulders Display"'),document.fonts.load('700 40px "Barlow Condensed"'),document.fonts.load('600 30px "Barlow"')]);
+  try{await Promise.race([Promise.all([document.fonts.load('900 80px "Big Shoulders Display"'),document.fonts.load('700 40px "Barlow Condensed"'),document.fonts.load('600 30px "Barlow"')]),new Promise(r=>setTimeout(r,2500))])}catch(e){}
   const [la,lh,ph,ph2,lg]=await Promise.all([shImg(logo(A.abbr)),shImg(logo(H.abbr)),shImg(mvp&&IMG.p[mvp.pid]),shImg(p2&&IMG.p[p2.pid]),shImg('icons/icon-192.png')]);
   const W=1080,Hh=story?1920:1350,c=document.createElement('canvas');c.width=W;c.height=Hh;const x=c.getContext('2d');
   const FD='"Big Shoulders Display",Impact,sans-serif',FL='"Barlow Condensed","Arial Narrow",sans-serif',FB='Barlow,system-ui,sans-serif';
@@ -874,7 +876,11 @@ async function shDraw(g,fmt){
 }
 let SH=null;
 async function shareCard(id){
-  const g=findGame(id);if(!g)return;track('compartir/abrir/'+CUR,'Compartir: abrir ('+CUR+')');
+  const g=findGame(id);if(!g){pfOpen(`${pfX}<p class="pf-empty">No se encuentra este partido. Recarga la página e inténtalo de nuevo.</p>`);return}
+  try{await shareOpen(g)}catch(err){console.error(err);pfOpen(`${pfX}<div class="sh-prev"><h4 class="pf-h">Compartir resultado</h4><p class="pf-empty">No se ha podido crear la imagen en este navegador.<br><small>${esc(String(err&&err.message||err))}</small></p>
+    <div class="sh-acts"><a class="btn sh-wa" href="https://wa.me/?text=${encodeURIComponent(shText(g))}" target="_blank" rel="noopener">WhatsApp</a><button class="btn" type="button" data-copytxt="${esc(shText(g))}">Copiar enlace</button></div></div>`)}
+}
+async function shareOpen(g){track('compartir/abrir/'+CUR,'Compartir: abrir ('+CUR+')');
   SH={g,fmt:'post',blob:null,url:null};
   pfOpen(`${pfX}<div class="sh-prev"><h4 class="pf-h">Compartir resultado</h4>
     <div class="sh-fmt" role="tablist"><button type="button" data-shfmt="post" aria-pressed="true">Post 4:5</button><button type="button" data-shfmt="story" aria-pressed="false">Historia 9:16</button></div>
@@ -886,18 +892,19 @@ async function shareCard(id){
       <a class="btn sh-dl" href="#" download data-shgo="descargar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>Descargar</a>
       <button class="btn" type="button" data-shgo="copiar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg><span>Copiar enlace</span></button>
     </div><p class="sh-tip">Para Instagram: descarga la imagen (o pulsa Compartir en el móvil) y súbela como post o historia.</p></div>`);
-  await shRender();
+  try{await shRender()}catch(err){console.error(err);const box=document.querySelector('#pfSheet .sh-img');if(box)box.innerHTML=`<p class="pf-empty">No se ha podido crear la imagen en este navegador, pero puedes compartir el enlace con los botones.<br><small>${esc(String(err&&err.message||err))}</small></p>`}
 }
 const ICO_SHARE='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7 8l5-5 5 5"/></svg>';
 async function shRender(){
   if(!SH)return;const {g,fmt}=SH,c=await shDraw(g,fmt);if(!SH||SH.g!==g||SH.fmt!==fmt)return;
-  SH.blob=await new Promise(r=>c.toBlob(r,'image/png'));if(SH.url)URL.revokeObjectURL(SH.url);SH.url=URL.createObjectURL(SH.blob);
+  SH.blob=await new Promise(r=>c.toBlob(r,'image/png'));if(!SH.blob)throw new Error('el navegador no ha generado la imagen');if(SH.url)URL.revokeObjectURL(SH.url);SH.url=URL.createObjectURL(SH.blob);
   const [A,H]=g.teams;SH.name=`offcourt_${A.abbr}-${H.abbr}_${fmt==='story'?'historia':'post'}.png`.replace(/[^\w.-]/g,'');
   const box=document.querySelector('#pfSheet .sh-img');if(box)box.innerHTML=`<img src="${SH.url}" alt="${esc(TEAMS[A.abbr].short+' '+A.score+'-'+H.score+' '+TEAMS[H.abbr].short)}" class="${fmt}">`;
   const dl=document.querySelector('#pfSheet .sh-dl');if(dl){dl.href=SH.url;dl.download=SH.name}
 }
 document.addEventListener('click',async e=>{
-  const b=e.target.closest('[data-share]');if(b){if(!$('boxSheet').hidden)closeBox();shareCard(b.dataset.share);return}
+  const b=e.target.closest('[data-share]');if(b){e.preventDefault();if(!$('boxSheet').hidden)closeBox();shareCard(b.dataset.share);return}
+  const ct=e.target.closest('[data-copytxt]');if(ct){try{await navigator.clipboard.writeText(ct.dataset.copytxt);ct.textContent='¡Copiado!'}catch(err){prompt('Copia el texto:',ct.dataset.copytxt)}return}
   const f=e.target.closest('[data-shfmt]');if(f&&SH){SH.fmt=f.dataset.shfmt;document.querySelectorAll('[data-shfmt]').forEach(x=>x.setAttribute('aria-pressed',x===f));
     const box=document.querySelector('#pfSheet .sh-img');if(box)box.innerHTML='<div class="pf-load">Creando la imagen…</div>';shRender();return}
   const a=e.target.closest('[data-shgo]');if(!a||!SH)return;const how=a.dataset.shgo;track('compartir/'+how+'/'+CUR,'Compartir: '+how+' ('+CUR+')');
