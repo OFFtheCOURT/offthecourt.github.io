@@ -553,6 +553,21 @@ function cineTela(t){ // telón del escenario con pliegues (color por liga: NBA 
     X.beginPath();X.moveTo(0,-200);X.lineTo(150,-200);X.quadraticCurveTo(60+Math.sin(t*1.1)*6,700,95,1320);X.lineTo(0,1320);X.closePath();X.fill();
     X.fillStyle=dark?'#c9a24a':'#ffd27a';rr(20,760,90,18,9);X.fill();X.restore()});
 }
+function cineHeader(t){ // letrero con bombillas: en el primer segundo parpadea todo a la vez
+  const blink=t<1.1,allOn=Math.floor(t*14)%2==0,glow=blink&&allOn;
+  X.fillStyle='#3a1424';rr(150,70,780,130,20);X.fill();X.strokeStyle='#ffd27a';X.lineWidth=5;rr(150,70,780,130,20);X.stroke();
+  for(let i=0;i<24;i++){const px=i<12?168+i*67:168+(i-12)*67,py=i<12?82:188,on=blink?allOn:((Math.floor(t*12)+i)%3)!=0;X.fillStyle=on?'#ffe7a8':'#5a3a20';if(on&&blink){X.shadowColor='#ffd27a';X.shadowBlur=22}X.beginPath();X.arc(px,py,blink?7:5,0,7);X.fill();X.shadowBlur=0}
+  X.textAlign='center';X.font=`900 24px ${FL}`;X.letterSpacing='9px';X.fillStyle=ACC2;X.fillText('OFFCOURT CINEMA · '+(D.dateLabel||'').toUpperCase(),540,120);X.letterSpacing='0px';
+  X.font=`900 62px ${FD}`;X.fillStyle=blink&&!allOn?'#8a8fa0':'#fff';X.shadowColor=ACC;X.shadowBlur=glow?46:20;X.fillText(D.eyebrow||'LA NOCHE NBA',540,180);X.shadowBlur=0;X.textAlign='left';
+  if(glow){X.save();X.globalCompositeOperation='lighter';const g=X.createRadialGradient(540,135,40,540,135,620);g.addColorStop(0,'rgba(255,220,140,.35)');g.addColorStop(1,'rgba(255,220,140,0)');X.fillStyle=g;X.fillRect(0,-200,W,900);X.restore()}}
+function cineTelonFrente(t){ // telón cerrado que se abre en el segundo 0
+  const op=eio((t-.2)/.85);if(op>=1)return;const c=TH.tela||'#a3122a',dark=lum(c)<.12,lo=dark?'#050505':mix(c,'#000000',.55),hi=dark?'#3a3a3a':mix(c,'#ffffff',.18),mid=dark?c:mix(c,'#000000',.2);
+  [-1,1].forEach(d=>{X.save();const half=W/2+220,off=op*(half+60),x0=d<0?-220-off:540+off;
+    X.beginPath();X.rect(x0,-200,half,1520);X.clip();
+    for(let i=0;i<12;i++){const x=x0+i*(half/11)+Math.sin(t*3+i)*4*(op>0?1:0),w=half/11+2;const g=X.createLinearGradient(x,0,x+w,0);g.addColorStop(0,lo);g.addColorStop(.4,mid);g.addColorStop(.6,hi);g.addColorStop(1,lo);X.fillStyle=g;X.fillRect(x,-200,w,1520)}
+    const sh=X.createLinearGradient(0,0,0,1320);sh.addColorStop(0,'rgba(0,0,0,.35)');sh.addColorStop(1,'rgba(0,0,0,.5)');X.fillStyle=sh;X.fillRect(x0,-200,half,1520);
+    X.fillStyle=dark?'#c9a24a':'#ffd27a';X.fillRect(x0,1270,half,14);X.restore()});
+  if(op<.15){X.save();X.strokeStyle='rgba(0,0,0,.5)';X.lineWidth=6;X.beginPath();X.moveTo(540,-200);X.lineTo(540,1320);X.stroke();X.restore()}}
 function cineGrid(n){const fx=50,fy=500,fw=980,fh=720,cols=n<=3?1:2,rows=Math.ceil(n/cols),gx=18,gy=16;
   const tw=(fw-36-gx*(cols-1))/cols,th=Math.min(190,(fh-36-gy*(rows-1))/rows),y0=fy+18+(fh-36-(rows*th+gy*(rows-1)))/2;
   return {frame:{x:fx,y:fy,w:fw,h:fh},tiles:[...Array(n)].map((_,i)=>{const c=i%cols,r=Math.floor(i/cols),last=(i==n-1&&n%cols==1&&cols==2);return {x:last?fx+18+(tw+gx)/2:fx+18+c*(tw+gx),y:y0+r*(th+gy),w:tw,h:th}})}}
@@ -602,7 +617,7 @@ function cineEntry(f,k,g,a,t,LYr,cam){
   const W_=cineWin(g),L_=cineLose(g),col=vis(W_),tg=f.tag||'',fade=a<.05?a/.05:1-clamp((a-.66)/.14),st=k%4;
   X.save();X.globalAlpha=fade;
   if(st==0){ // IMPACTO: la foto entra con estela de movimiento y las letras caen una a una
-    X.fillStyle=hex('#04060c',.86);X.fillRect(0,0,W,H);rays(col,t,1);
+    X.fillStyle=hex('#04060c',k==0?.25:.86);X.fillRect(0,0,W,H);rays(col,t,k==0?.6:1);
     const H_=cineHero(g),q=eo(a/.22);
     if(H_&&IM['p_'+H_.pid]){const im=IM['p_'+H_.pid],R=250,cx_=lerp(1500,540,q),cy_=640;
       for(let e=4;e>=0;e--){const ex=cx_+e*90*(1-q);X.save();X.globalAlpha=e?.16*(1-q):1;X.beginPath();X.arc(ex,cy_,R,0,7);X.clip();X.fillStyle=mix(W_.c,'#000000',.25);X.fillRect(ex-R,cy_-R,2*R,2*R);const r=2*R/im.height;X.drawImage(im,ex-im.width*r/2,cy_-R,im.width*r,2*R);X.restore()}
@@ -653,11 +668,7 @@ function introCine(sc,t){
   // sala
   X.fillStyle='#121b36';X.fillRect(-W,-H,3*W,3*H);
   cineTela(t);
-  // cabecera: luces de cine
-  X.fillStyle='#3a1424';rr(150,70,780,130,20);X.fill();X.strokeStyle='#ffd27a';X.lineWidth=5;rr(150,70,780,130,20);X.stroke();
-  for(let i=0;i<24;i++){const px=i<12?168+i*67:168+(i-12)*67,py=i<12?82:188,on=((Math.floor(t*12)+i)%3)!=0;X.fillStyle=on?'#ffe7a8':'#5a3a20';X.beginPath();X.arc(px,py,5,0,7);X.fill()}
-  X.textAlign='center';X.font=`900 24px ${FL}`;X.letterSpacing='9px';X.fillStyle=ACC2;X.fillText('OFFCOURT CINEMA · '+(D.dateLabel||'').toUpperCase(),540,120);X.letterSpacing='0px';
-  X.font=`900 62px ${FD}`;X.fillStyle='#fff';X.shadowColor=ACC;X.shadowBlur=20;X.fillText(D.eyebrow||'LA NOCHE NBA',540,180);X.shadowBlur=0;X.textAlign='left';
+  cineHeader(t);
   // huecos de los titulares (encima de la pantalla)
   for(let k=0;k<Math.min(4,F.length);k++){const s=cineSlot(k);X.setLineDash([10,8]);X.strokeStyle='rgba(255,255,255,.14)';X.lineWidth=2;rr(s.x,s.y,s.w,s.h,20);X.stroke();X.setLineDash([])}
   // pantalla grande con todos los partidos
@@ -669,10 +680,11 @@ function introCine(sc,t){
     cineTile(g,r,t,i,foc?2:(cur&&t<tend?1:0));X.restore()});
   // titulares ya colocados
   F.slice(0,4).forEach((f,k)=>{if(t<f.t+1.0)return;const s=cineSlot(k),act=f===cur?Math.max(0,1-(t-f.t-.55)/.6):0;cineBadge(f,k,RS[f.i],s.x+s.w/2,s.y+s.h/2,1+.04*act,act||(f===cur?.35:0),t)});
+  cineTelonFrente(t);if(t<1.1)cineHeader(t);
   const cheer=cur?clamp(1-sinceF/1.1):0;cineAudience(t,Math.max(cheer,t<1?1:0));
   X.restore();
   // titular que entra: una entrada distinta para cada uno y vuela a su hueco encima de la pantalla
-  if(cur&&curK<4&&sinceF<1.0&&t<tend){const a=curK==0?Math.max(.28,sinceF+.28):Math.max(0,sinceF);if(a<.8)cineEntry(cur,curK,RS[cur.i],a,t,LY[cur.i],{cx,cy,z});
+  if(cur&&curK<4&&sinceF<1.0&&t<tend){const a=curK==0?Math.max(.12,sinceF+.12):Math.max(0,sinceF);if(a<.8)cineEntry(cur,curK,RS[cur.i],a,t,LY[cur.i],{cx,cy,z});
     if(a>.68){const s=cineSlot(curK),fly=eio((a-.68)/.32),sx=(s.x+s.w/2-cx)*z+540,sy=(s.y+s.h/2-cy)*z+960;
       X.save();X.translate(lerp(540,sx,fly),lerp(1000,sy,fly));X.rotate((1-fly)*.06);cineBadge(cur,curK,RS[cur.i],0,0,lerp(1.8,z,fly),1,t);X.restore()}}
   if(cur&&curK>0&&sinceF>=0&&sinceF<.1){X.save();X.globalAlpha=.3*(1-sinceF/.1);X.fillStyle='#fff';X.fillRect(0,0,W,H);X.restore()}
