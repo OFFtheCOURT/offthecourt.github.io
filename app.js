@@ -919,6 +919,34 @@ async function shDraw(g,fmt){
   if(story){x.font=`600 28px ${FB}`;x.fillStyle='rgba(255,255,255,.7)';x.fillText('Resultados y estadísticas de NBA, EuroLiga y ACB',W/2,P.ft+50)}
   return c;
 }
+/* tarjeta resumen de la jornada (todos los resultados), para redes: la usa redes/tarjetas.py */
+async function shDrawDay(games,title,fmt){
+  const story=fmt==='story',W=1080,Hh=story?1920:1350,c=document.createElement('canvas');c.width=W;c.height=Hh;const x=c.getContext('2d');
+  const FD='"Big Shoulders Display",Impact,sans-serif',FL='"Barlow Condensed","Arial Narrow",sans-serif';
+  try{await Promise.race([Promise.all([document.fonts.load('900 80px "Big Shoulders Display"'),document.fonts.load('700 40px "Barlow Condensed"')]),new Promise(r=>setTimeout(r,2500))])}catch(e){}
+  const acc=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#ff7a1a';
+  x.fillStyle='#070b13';x.fillRect(0,0,W,Hh);
+  let g0=x.createRadialGradient(120,160,0,120,160,900);g0.addColorStop(0,acc+'66');g0.addColorStop(1,acc+'00');x.fillStyle=g0;x.fillRect(0,0,W,Hh);
+  x.save();x.globalAlpha=.05;x.strokeStyle='#fff';x.lineWidth=4;for(let k=-Hh;k<W;k+=34){x.beginPath();x.moveTo(k,Hh);x.lineTo(k+Hh*.45,0);x.stroke()}x.restore();
+  const lg=await shImg('icons/icon-192.png');const top=story?150:64;if(lg)x.drawImage(lg,60,top,84,84);
+  x.textAlign='left';x.textBaseline='alphabetic';x.font=`900 64px ${FD}`;x.fillStyle='#fff';x.fillText('OFF',160,top+66);const wo=x.measureText('OFF').width;x.fillStyle=acc;x.fillText('COURT',160+wo,top+66);
+  x.font=`800 32px ${FL}`;x.fillStyle=acc;x.fillText('RESULTADOS',60,top+150);
+  const tsz=story?96:80;x.font=`900 ${tsz}px ${FD}`;x.fillStyle='#fff';x.fillText(title.toUpperCase(),60,top+150+tsz*.95);
+  const n=games.length,y0=top+150+tsz*1.3,foot=story?260:110,avail=Hh-y0-foot,rh=Math.min(story?210:150,avail/Math.max(n,1)),gap=Math.min(16,rh*.1);
+  const yStart=story?y0+Math.max(0,(avail-rh*n)/2):y0;
+  const logos=await Promise.all(games.flatMap(g=>g.teams.map(t=>shImg(logo(t.abbr)))));
+  const fitName=(t,s,maxW,size)=>{let nm=(t.short||s.abbr).toUpperCase(),z=size;x.font=`900 ${z}px ${FD}`;while(x.measureText(nm).width>maxW&&z>size*.72){z-=2;x.font=`900 ${z}px ${FD}`}if(x.measureText(nm).width>maxW){nm=s.abbr;z=size;x.font=`900 ${z}px ${FD}`}return nm};
+  games.forEach((g,i)=>{const y=yStart+i*rh,[A,H]=g.teams,h=rh-gap;x.fillStyle='rgba(255,255,255,.07)';x.beginPath();x.roundRect(60,y,W-120,h,18);x.fill();
+    const ls=Math.min(story?110:84,h*.68),sz=Math.min(story?84:64,h*.5),nsz=Math.min(story?50:42,h*.33),ot=A.ls.length>4,sx=W/2,gapS=story?110:96,nameW=sx-gapS-sz*.9-(110+ls)-14;
+    [[A,0],[H,1]].forEach(([s,k])=>{const im=logos[i*2+k],win=s.win,t=TEAMS[s.abbr]||{short:s.abbr},lx=k?W-80-ls:80;if(im)x.drawImage(im,lx,y+(h-ls)/2,ls,ls);
+      x.globalAlpha=win?1:.58;x.fillStyle='#fff';const nm=fitName(t,s,nameW,nsz);x.textAlign=k?'right':'left';x.fillText(nm,k?W-100-ls:100+ls,y+h/2+nsz*.36);
+      x.font=`900 ${sz}px ${FD}`;x.textAlign='center';x.fillText(s.score,sx+(k?gapS:-gapS),y+h/2+sz*.36);x.globalAlpha=1;
+      if(win){x.fillStyle=acc;x.beginPath();x.roundRect(sx+(k?gapS:-gapS)-26,y+h/2+sz*.36+8,52,6,3);x.fill()}});
+    x.fillStyle='rgba(255,255,255,.45)';x.font=`900 ${sz*.7}px ${FD}`;x.textAlign='center';x.fillText('–',sx,y+h/2+sz*.28);
+    if(ot){x.fillStyle=acc;x.font=`800 ${Math.max(18,Math.min(24,h*.16))}px ${FL}`;x.fillText(A.ls.length>5?(A.ls.length-4)+' PRÓRROGAS':'PRÓRROGA',sx,y+Math.max(24,h*.2))}});
+  x.textAlign='center';x.fillStyle='#fff';x.font=`800 36px ${FL}`;x.fillText('offthecourt.github.io',W/2,Hh-(story?150:50));
+  return c;
+}
 let SH=null;
 async function shareCard(id){
   const g=findGame(id);if(!g){pfOpen(`${pfX}<p class="pf-empty">No se encuentra este partido. Recarga la página e inténtalo de nuevo.</p>`);return}

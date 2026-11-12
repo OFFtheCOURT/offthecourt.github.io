@@ -155,3 +155,11 @@ Todo depende solo del tiempo `t`, así que cada fotograma sale siempre igual.
   del balón), `FX.chart.bars / line / ring / versus` y `FX.lottie.load/draw`.
 - Demo con todo: `node redes/fx_demo.js` → `redes/salida/fx_demo.mp4`.
 - El renderizado con efectos es unas 4–5 veces más lento (WebGL por software): ~8 min para 60 s.
+
+## Tarjetas del día (`redes/tarjetas.py`)
+
+`python3 redes/tarjetas.py --liga nba|el|acb [--fecha AAAA-MM-DD] [--max 4]` abre la web en local y dibuja,
+con las mismas funciones del botón Compartir, en `redes/salida/<liga>/tarjetas/`:
+`00_resultados_post.png` y `00_resultados_historia.png` (todos los resultados del día) y, de los partidos más
+interesantes, `NN_VIS-LOC_post.png` / `_historia.png` (marcador, parciales y MVP). Las tareas de los vídeos
+las ejecutan después del render y las envían junto al MP4.
