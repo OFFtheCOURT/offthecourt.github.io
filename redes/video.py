@@ -194,7 +194,7 @@ def voz():
 def _voz_una_vez(n=None):
     n = n or noche(); voice = n.get('voz', 'es-ES-AlvaroNeural:r')
     guion = [{'id': s['id'], 't': s['t']} for s in n['segmentos']]
-    payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+2%'), 'tono': n.get('tono', '-3Hz')}}
+    payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+12%'), 'tono': n.get('tono', '+2Hz')}}
     pf = os.path.join(OUT, 'dispatch.json'); json.dump(payload, open(pf, 'w'))
     before = subprocess.run(['gh', 'run', 'list', '-R', GH_REPO, '-w', 'voz.yml', '-L', '1', '--json', 'databaseId', '-q', '.[0].databaseId'], capture_output=True, text=True).stdout.strip()
     sh('gh', 'api', '-X', 'POST', f'repos/{GH_REPO}/actions/workflows/voz.yml/dispatches', '--input', pf)
@@ -266,8 +266,8 @@ def caption_words(tpl, mode, bounds, dur):
 
 
 KEEP = 0.34
-# voz más cálida y menos robótica: cuerpo en graves, menos agudos duros, compresión suave y un toque de sala
-SUAVE = 'highpass=f=70,equalizer=f=170:t=q:w=1:g=3,equalizer=f=3200:t=q:w=1.4:g=-2.5,equalizer=f=6500:t=q:w=2:g=-4,highshelf=f=8000:g=-4,acompressor=threshold=-20dB:ratio=2.5:attack=15:release=220,aecho=0.85:0.5:28|46:0.10|0.06'
+# voz como la del vídeo de referencia (@iabsia_agency): más rápida, más clara y con presencia, sin eco ni oscurecer
+SUAVE = 'highpass=f=80,equalizer=f=200:t=q:w=1:g=1.5,equalizer=f=3000:t=q:w=1.2:g=2,equalizer=f=7500:t=q:w=2:g=-2,acompressor=threshold=-18dB:ratio=2.2:attack=10:release=180'
 def tighten(src, out):
     """acorta los silencios largos entre frases; devuelve (duración, función para reajustar tiempos)"""
     log = subprocess.run(['ffmpeg', '-i', src, '-af', 'silencedetect=n=-40dB:d=0.3', '-f', 'null', '-'], capture_output=True, text=True).stderr
