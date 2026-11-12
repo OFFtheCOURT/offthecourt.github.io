@@ -9,4 +9,5 @@ python3 fetch2.py     # NBA: próximos partidos, clasificación, líderes, equip
 python3 el_fetch.py   # EuroLiga
 python3 acb_fetch.py  # ACB
 python3 season.py     # temporada completa por jugador (fichas de jugador y equipo)
+python3 flow.py || true   # evolución del marcador jugada a jugada
 OFFCOURT_LIVE=1 OFFCOURT_OUT=index.html python3 build2.py   # genera index.html

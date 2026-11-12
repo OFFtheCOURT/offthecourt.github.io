@@ -156,6 +156,7 @@ function gameCard(g){
     <div class="g-detail" id="${id}" hidden>
       <div class="dtitle">Tiro</div>${rings(g)}
       <div class="dtitle">Puntos por cuarto</div>${qchart(g)}
+      <div class="flow" data-flow="${esc(g.id)}"></div>
       <div class="dtitle">Estadísticas de equipo</div><div class="cmp">${cmp(g)}</div>
       <div class="dtitle">Jugadores más destacados</div>
       <div class="tops">${topCol(g.teams[0])}${topCol(g.teams[1])}</div>
@@ -983,6 +984,38 @@ async function openCompare(ids){
     <div class="sh-acts" style="margin:4px 18px 0"><button class="btn" type="button" data-cmp="${esc(p1)}">Cambiar rival</button><button class="btn" type="button" data-copytxt="${esc(A.n+' vs '+B.n+' · '+location.origin+location.pathname+'#comparar/'+CUR+'/'+encodeURIComponent(ids))}">Copiar enlace</button></div>`);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-cmp]');if(!b)return;srOpen({lg:CUR,pid:b.dataset.cmp})});
+/* ---------- evolución del marcador (flow/<liga>.json, generado por flow.py) ---------- */
+const FLOW={};
+function loadFlow(lg){if(!FLOW[lg])FLOW[lg]=fetch('flow/'+lg+'.json?v='+encodeURIComponent(UPDATED||'')).then(r=>r.ok?r.json():{}).catch(()=>({}));return FLOW[lg]}
+async function drawFlow(el){
+  if(el.dataset.done)return;el.dataset.done=1;const g=findGame(el.dataset.flow);if(!g)return;
+  const F=await loadFlow(CUR),raw=F[String(g.id)];if(!raw||raw.length<10){el.remove();return}
+  const [A,H]=g.teams,tA=TEAMS[A.abbr],tH=TEAMS[H.abbr],[cA,cH]=pair(tA,tH);
+  // raw: [segundo, visitante, local]; A es el equipo de arriba (local en Europa, visitante en la NBA)
+  const aIsHome=!!A.home,mg=raw.map(([t,v,l])=>[t,aIsHome?l-v:v-l]);
+  const qlen=CUR==='nba'?720:600,nq=Math.max(4,A.ls.length),T=4*qlen+Math.max(0,nq-4)*300,end=Math.max(T,mg[mg.length-1][0]);
+  const maxM=Math.max(5,...mg.map(x=>Math.abs(x[1]))),W=640,Hh=200,pt=14,pb=24,mid=pt+(Hh-pt-pb)/2,X=t=>t/end*W,Y=m=>mid-m/maxM*(Hh-pt-pb)/2;
+  // camino en escalones
+  let d=`M0,${Y(0)}`;mg.forEach(([t,m],i)=>{d+=`H${X(t).toFixed(1)}V${Y(m).toFixed(1)}`});d+=`H${W}`;const area=d+`V${Y(0)}H0Z`;
+  // estadísticas
+  let lead=0,changes=0,ties=0,maxA=0,maxH=0,runs=[];mg.forEach(([t,m],i)=>{const s=Math.sign(m);if(i&&m===0)ties++;if(s&&lead&&s!==lead)changes++;if(s)lead=s;if(m>maxA)maxA=m;if(-m>maxH)maxH=-m});
+  // mayor parcial (puntos seguidos sin respuesta)
+  let best={n:0,team:null},cur={n:0,team:null};for(let i=1;i<raw.length;i++){const dv=raw[i][1]-raw[i-1][1],dl=raw[i][2]-raw[i-1][2];const who=dv>0&&dl===0?'v':dl>0&&dv===0?'l':null;if(!who)continue;const pts=who==='v'?dv:dl;if(cur.team===who)cur.n+=pts;else cur={n:pts,team:who};if(cur.n>best.n)best={...cur}}
+  const runTeam=best.team?((best.team==='l')===aIsHome?tA:tH):null;
+  const qx=Array.from({length:nq-1},(_,i)=>X(i<4?(i+1)*qlen:4*qlen+(i-3)*300));
+  const id='fl'+String(g.id).replace(/\W/g,'');
+  el.innerHTML=`<div class="dtitle">Evolución del marcador</div><div class="fl-card"><svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" class="fl-svg" role="img" aria-label="Diferencia en el marcador minuto a minuto">
+    <defs><clipPath id="${id}a"><rect x="0" y="0" width="${W}" height="${Y(0)}"/></clipPath><clipPath id="${id}b"><rect x="0" y="${Y(0)}" width="${W}" height="${Hh}"/></clipPath></defs>
+    ${qx.map(x=>`<line x1="${x}" x2="${x}" y1="${pt}" y2="${Hh-pb}" class="fl-q"/>`).join('')}
+    <line x1="0" x2="${W}" y1="${Y(0)}" y2="${Y(0)}" class="fl-0"/>
+    <path d="${area}" fill="${cA}" opacity=".32" clip-path="url(#${id}a)"/><path d="${area}" fill="${cH}" opacity=".32" clip-path="url(#${id}b)"/>
+    <path d="${d}" fill="none" stroke="${cA}" stroke-width="2.6" clip-path="url(#${id}a)" vector-effect="non-scaling-stroke"/><path d="${d}" fill="none" stroke="${cH}" stroke-width="2.6" clip-path="url(#${id}b)" vector-effect="non-scaling-stroke"/>
+    ${Array.from({length:nq},(_,i)=>{const x0=i?qx[i-1]:0,x1=i<nq-1?qx[i]:W;return `<text x="${(x0+x1)/2}" y="${Hh-6}" class="fl-t" text-anchor="middle">${qlbl(i)}</text>`}).join('')}
+    </svg><span class="fl-lab a" style="color:${cA}"><img src="${logo(A.abbr)}" alt="">${esc(tA.short)} por delante</span><span class="fl-lab h" style="color:${cH}"><img src="${logo(H.abbr)}" alt="">${esc(tH.short)} por delante</span></div>
+    <div class="fl-st"><div><b style="color:${cA}">+${maxA}</b><small>Máx. ventaja ${esc(tA.short)}</small></div><div><b style="color:${cH}">+${maxH}</b><small>Máx. ventaja ${esc(tH.short)}</small></div>
+    <div><b>${changes}</b><small>Cambios de líder</small></div><div><b>${ties}</b><small>Empates</small></div>${best.n>=8&&runTeam?`<div><b>${best.n}-0</b><small>Mejor parcial · ${esc(runTeam.short)}</small></div>`:''}</div>`;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-toggle]');if(!b)return;setTimeout(()=>{const p=$(b.dataset.toggle);if(p&&!p.hidden)p.querySelectorAll('[data-flow]').forEach(drawFlow)},0)});
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
