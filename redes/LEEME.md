@@ -1,4 +1,4 @@
-# FORMATO DE LOS VÍDEOS — NBA, EUROLIGA Y ACB (manda sobre el resto de este documento y sobre el máximo de 7 partidos)
+# FORMATO DE LOS VÍDEOS — NBA, EUROLIGA Y ACB (manda sobre el resto de este documento; se narran TODOS los partidos disputados)
 
 Es el mismo formato para las tres ligas; cada una tiene su color (NBA azul/rojo, EuroLiga naranja, ACB verde),
 que pone `montar` solo. **Voz: `es-ES-AlvaroNeural:r`** (la del vídeo de EuroLiga que eligió el usuario), a velocidad `+6%` y tono `-2Hz` (los valores por defecto; no subas la velocidad: suena robótica), con los nombres adaptados de
@@ -9,10 +9,10 @@ gancho, en orden, `{"clave": palabra del texto, "partido": "VIS-LOC", "etiqueta"
 unas 16 letras como mucho). En cada foco la cámara vuela a esa pantalla; al final entra en la del PRIMER foco, así
 que el primer resumen debe ser ese partido. Ejemplo de intro: "Paliza de los {Knicks|Niks}, treinta y seis de
 {Paul George|Pol Yorch}, el récord de {Franz Wagner|Frants Váguener}, y {Portland|Pórtland} tumba al {Thunder|Zánder}."
-Después, luego un mini resumen por partido (máximo 5, los más interesantes, ~6 s cada uno, una tarjeta) y el cierre
+Después, un mini resumen de **TODOS los partidos disputados** (una tarjeta cada uno; si hay muchos, una sola frase corta por partido) y el cierre
 nombra 1-2 partidos de esta noche (`resaltar`) y termina con "Esto es {OFFCOURT|Ófkort}.".
 
-Duración **máxima 60 s** (`montar` avisa si se pasa). Vertical 9:16 con zona segura: todo el contenido va reducido
+Duración: lo justo para contar **todos los partidos**; como referencia, 60 s hasta 6 partidos y hasta ~90 s en noches de 10 o más (`montar` avisa si pasa de 95 s). Vertical 9:16 con zona segura: todo el contenido va reducido
 al 86 % y subido, para que ni los bordes ni los subtítulos queden tapados por la interfaz de TikTok/Reels/Shorts.
 
 1. **Intro (~3-4 s): pantalla de resultados + UN gancho.** Tarjetas con TODOS los partidos de la jornada (1 o 2
@@ -22,8 +22,9 @@ al 86 % y subido, para que ni los bordes ni los subtítulos queden tapados por l
    resumen de cada partido, empezando por el del gancho.
 2. **Un resumen por partido destacado**, dinámico y sin relleno, con marcador en directo, pantallazos con la cifra
    del jugador (tarjetas) y detalle breve (último cuarto decisivo, mejores jugadores, balance). Reparto del tiempo
-   para no pasar de 60 s: 2 partidos → ~9 s cada uno; 3 → ~8 s; 4-5 → ~6 s (una frase y una tarjeta);
-   más de 5 partidos → narra solo los 5 más interesantes (el resto se ven en la pantalla de resultados).
+   según cuántos haya: 2 partidos → ~9 s cada uno; 3 → ~8 s; 4-6 → ~6 s (una frase y una tarjeta);
+   7 o más → ~4-5 s cada uno (UNA frase de 8-14 palabras con el resultado y el protagonista). Se narran TODOS,
+   ordenados de más a menos interesante (el primero, el del primer gancho).
 3. **Final de partido decidido en el último tiro** (solo si el dato es seguro o lo indica el usuario): añade
    `"hero": true` al segmento de ese partido y la palabra clave "Hifi"/"canasta" en el texto; se anima la canasta ganadora.
 4. **Cierre (~7 s):** próximos partidos de esa liga, destacando uno o dos (`resaltar`), y la frase final

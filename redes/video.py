@@ -425,7 +425,7 @@ def montar():
             if m.group(1) not in pron: pron[m.group(1)] = m.group(2); nuevo += 1
     json.dump(dict(sorted(pron.items())), open(pf, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print('escenas', [(s['id'], s['dur']) for s in scenes], 'total', round(sum(s['dur'] for s in scenes), 1), 's · fotos', len(photos), '· pronunciaciones nuevas', nuevo)
-    if sum(s['dur'] for s in scenes) > 60: print('AVISO: el vídeo dura más de 60 s; recorta el guion (menos partidos narrados o frases más cortas)')
+    if sum(s['dur'] for s in scenes) > 95: print('AVISO: el vídeo dura más de 95 s; acorta las frases (se narran todos los partidos, pero con una frase corta cada uno)')
 
 
 # ---------------------------------------------------------------- render
