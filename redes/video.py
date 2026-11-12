@@ -465,6 +465,12 @@ def _sfx(d):
     pk2 = np.zeros(int(SR * 1.0))
     put(pk2, bell(784.0, .9, .5), 0); put(pk2, bell(1174.7, .9, .5), .09)
     save('pick2.wav', pk2 / np.abs(pk2).max() * .8)
+    # si el usuario deja su propio tono en redes/sonidos/pick.(wav|mp3|m4a), se usa ese
+    for ext in ('wav', 'mp3', 'm4a'):
+        own = os.path.join(R, 'sonidos', 'pick.' + ext)
+        if os.path.exists(own):
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', own, '-ac', '1', '-ar', str(SR), os.path.join(d, 'pick.wav')], check=True)
+            subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', own, '-t', '1.2', '-af', 'afade=t=out:st=.9:d=.3', '-ac', '1', '-ar', str(SR), os.path.join(d, 'pick2.wav')], check=True); break
     t = np.arange(int(SR * .4)) / SR; r = np.random.default_rng(1).standard_normal(len(t)); r = np.convolve(r, np.ones(8) / 8, 'same') - np.convolve(r, np.ones(60) / 60, 'same'); save('whoosh.wav', r * np.sin(np.pi * t / .4) ** 2 * .5)
 
 

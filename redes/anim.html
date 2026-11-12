@@ -559,16 +559,32 @@ function cineTile(g,r,t,i,st){ // st: 0 normal · 1 apagado · 2 foco
   if(st==2){X.save();X.strokeStyle=ACC;X.lineWidth=6;X.shadowColor=ACC;X.shadowBlur=26;rr(r.x-3,r.y-3,r.w+6,r.h+6,14);X.stroke();X.restore()}
 }
 function cineSlot(k){return {x:k%2?548:72,y:228+Math.floor(k/2)*124,w:460,h:108}}
-function cineBadge(f,k,g,x,y,s,glow){ // titular: número, logo del protagonista y etiqueta
-  const w=460,h=108,T=g?(g.l.score>g.v.score?g.l:g.v):{c:ACC,ab:''};
+function cineHero(g){if(!g)return null;if(g._hero!==undefined)return g._hero;const s=SC.find(s=>s.type=='game'&&s.teams.some(T=>T.ab==g.l.ab)&&s.teams.some(T=>T.ab==g.v.ab)),c=s&&s.cards&&s.cards[0];
+  g._hero=c?{pid:c.pid,T:s.teams[c.team],name:(c.first+' '+c.last).toUpperCase()}:null;return g._hero}
+function cineBadge(f,k,g,x,y,s,glow,t){ // titular sin número: foto del protagonista (o escudo), etiqueta grande y brillo que cruza
+  const w=460,h=108,H_=cineHero(g),T=H_?H_.T:(g?(g.l.score>g.v.score?g.l:g.v):{c:ACC,ab:''});
   X.save();X.translate(x,y);X.scale(s,s);X.translate(-w/2,-h/2);
-  if(glow){X.shadowColor=hex(T.c,1);X.shadowBlur=40*glow}
-  const gr=X.createLinearGradient(0,0,w,0);gr.addColorStop(0,mix(T.c,'#000000',.1));gr.addColorStop(1,mix(T.c,'#05070d',.6));X.fillStyle=gr;rr(0,0,w,h,20);X.fill();X.shadowBlur=0;
-  X.strokeStyle=hex('#ffffff',.25+.5*(glow||0));X.lineWidth=3;rr(0,0,w,h,20);X.stroke();
-  X.fillStyle=ACC;X.beginPath();X.arc(46,h/2,28,0,7);X.fill();X.fillStyle=INK;X.font=`900 36px ${FD}`;X.textAlign='center';X.fillText(k+1,46,h/2+13);
-  if(T.ab&&IM['t_'+T.ab])X.drawImage(IM['t_'+T.ab],w-82,h/2-34,68,68);
-  X.textAlign='left';const tg=f.tag||'';fitText(tg,FD,52,w-180,900);X.lineWidth=7;X.strokeStyle='rgba(5,7,13,.6)';X.strokeText(tg,88,h/2+18);X.fillStyle='#fff';X.fillText(tg,88,h/2+18);
+  if(glow){X.shadowColor=hex(T.c,1);X.shadowBlur=46*glow}
+  const gr=X.createLinearGradient(0,0,w,h);gr.addColorStop(0,mix(T.c,'#ffffff',.08));gr.addColorStop(1,mix(T.c,'#05070d',.62));X.fillStyle=gr;rr(0,0,w,h,22);X.fill();X.shadowBlur=0;
+  X.save();rr(0,0,w,h,22);X.clip();
+  if(H_&&IM['p_'+H_.pid]){const im=IM['p_'+H_.pid],r=(h+10)/im.height;X.drawImage(im,-6,0,im.width*r,h+10)}else if(T.ab&&IM['t_'+T.ab])X.drawImage(IM['t_'+T.ab],10,h/2-42,84,84);
+  const sx=((t||0)*1.4+k*.37)%2.2;const sg=X.createLinearGradient(sx*w-120,0,sx*w,h);sg.addColorStop(0,'rgba(255,255,255,0)');sg.addColorStop(.5,'rgba(255,255,255,.22)');sg.addColorStop(1,'rgba(255,255,255,0)');X.fillStyle=sg;X.fillRect(0,0,w,h);
+  X.restore();
+  X.strokeStyle=hex('#ffffff',.3+.6*(glow||0));X.lineWidth=3;rr(0,0,w,h,22);X.stroke();
+  X.textAlign='left';const tg=f.tag||'';fitText(tg,FD,56,w-128,900);X.lineJoin='round';X.lineWidth=8;X.strokeStyle='rgba(5,7,13,.65)';X.strokeText(tg,112,h/2+20);X.fillStyle='#fff';X.fillText(tg,112,h/2+20);
   X.restore()}
+function cineSlamIn(f,k,g,a,t){ // entrada a pantalla completa: rayos del color del equipo, foto gigante y la etiqueta
+  const H_=cineHero(g),T=H_?H_.T:(g.l.score>g.v.score?g.l:g.v),col=vis(T),fade=a<.06?a/.06:1-clamp((a-.42)/.14),kk=back((a+.04)/.2);
+  X.save();X.globalAlpha=fade*.8;X.fillStyle='#04060c';X.fillRect(0,0,W,H);X.restore();
+  X.save();X.globalAlpha=fade;X.translate(540,820);X.globalCompositeOperation='lighter';
+  for(let i=0;i<20;i++){const ang=i/20*6.283+t*.8;X.fillStyle=hex(col,.22);X.beginPath();X.moveTo(0,0);X.arc(0,0,1400,ang,ang+.12);X.closePath();X.fill()}
+  X.globalCompositeOperation='source-over';X.scale(kk,kk);
+  if(H_&&IM['p_'+H_.pid]){const im=IM['p_'+H_.pid],R=230,r=2*R/im.height;X.save();X.beginPath();X.arc(0,-150,R,0,7);X.clip();X.fillStyle=mix(T.c,'#000000',.3);X.fillRect(-R,-150-R,2*R,2*R);X.drawImage(im,-im.width*r/2,-150-R,im.width*r,2*R);X.restore();X.strokeStyle=col;X.lineWidth=12;X.shadowColor=col;X.shadowBlur=40;X.beginPath();X.arc(0,-150,R,0,7);X.stroke();X.shadowBlur=0}
+  else if(IM['t_'+T.ab])X.drawImage(IM['t_'+T.ab],-200,-350,400,400);
+  X.textAlign='center';const tg=f.tag||'';const fs=fitText(tg,FD,150,980,900);X.lineJoin='round';X.lineWidth=22;X.strokeStyle='#04060c';X.rotate(-.04);X.strokeText(tg,0,230);
+  const gq=X.createLinearGradient(-450,0,450,0);gq.addColorStop(0,G2);gq.addColorStop(.5,'#ffffff');gq.addColorStop(1,G2);X.fillStyle=gq;X.fillText(tg,0,230);
+  if(H_){X.font=`800 50px ${FL}`;X.letterSpacing='8px';X.fillStyle=col;X.fillText(H_.name,0,-430);X.letterSpacing='0px'}
+  X.textAlign='left';X.restore()}
 function introCine(sc,t){
   const RS=D.results||[],n=RS.length,GR=cineGrid(n),LY=GR.tiles,F=(sc.focos||[]),tend=sc.dur-.75;
   const cur=[...F].reverse().find(f=>t>=f.t-.001)||(F.length&&t<F[0].t?F[0]:null),curK=cur?F.indexOf(cur):-1;
@@ -598,14 +614,13 @@ function introCine(sc,t){
     const pu=foc?1+.06*Math.max(0,1-(t-cur.t)/.35):1;X.save();X.translate(r.x+r.w/2,r.y+r.h/2);X.scale(k*pu,k*pu);X.translate(-(r.x+r.w/2),-(r.y+r.h/2));
     cineTile(g,r,t,i,foc?2:(cur&&t<tend?1:0));X.restore()});
   // titulares ya colocados
-  F.slice(0,4).forEach((f,k)=>{if(t<f.t+.55)return;const s=cineSlot(k),act=f===cur?Math.max(0,1-(t-f.t-.55)/.6):0;cineBadge(f,k,RS[f.i],s.x+s.w/2,s.y+s.h/2,1+.04*act,act||(f===cur?.35:0))});
+  F.slice(0,4).forEach((f,k)=>{if(t<f.t+.78)return;const s=cineSlot(k),act=f===cur?Math.max(0,1-(t-f.t-.55)/.6):0;cineBadge(f,k,RS[f.i],s.x+s.w/2,s.y+s.h/2,1+.04*act,act||(f===cur?.35:0),t)});
   const cheer=cur?clamp(1-sinceF/1.1):0;cineAudience(t,Math.max(cheer,t<1?1:0));
   X.restore();
-  // titular que entra: golpe grande en el centro y vuela a su hueco encima de la pantalla
-  if(cur&&curK<4&&sinceF<.55&&t<tend){const a=Math.max(0,sinceF),s=cineSlot(curK),k1=back((a+.06)/.2),fly=eio((a-.3)/.25);
-    const sx=(s.x+s.w/2-cx)*z+540,sy=(s.y+s.h/2-cy)*z+960,x=lerp(540,sx,fly),y=lerp(820,sy,fly),sc_=lerp(lerp(2.6,1.8,clamp(k1))*(k1>1?k1:1),z,fly);
-    if(fly<.5){X.save();X.globalAlpha=.55*(1-fly*2);X.fillStyle='#05070d';X.fillRect(0,0,W,H);X.restore()}
-    X.save();X.translate(x,y);X.rotate((1-fly)*-.05);cineBadge(cur,curK,RS[cur.i],0,0,sc_,1);X.restore()}
+  // titular que entra: golpe a pantalla completa y vuela a su hueco encima de la pantalla
+  if(cur&&curK<4&&sinceF<.78&&t<tend){const a=curK==0?Math.max(.1,sinceF+.1):Math.max(0,sinceF);if(a<.56)cineSlamIn(cur,curK,RS[cur.i],a,t);
+    if(a>.46){const s=cineSlot(curK),fly=eio((a-.46)/.32),sx=(s.x+s.w/2-cx)*z+540,sy=(s.y+s.h/2-cy)*z+960;
+      X.save();X.translate(lerp(540,sx,fly),lerp(1080,sy,fly));X.rotate((1-fly)*.06);cineBadge(cur,curK,RS[cur.i],0,0,lerp(2,z,fly),1,t);X.restore()}}
   if(cur&&sinceF>=0&&sinceF<.1){X.save();X.globalAlpha=.4*(1-sinceF/.1);X.fillStyle='#fff';X.fillRect(0,0,W,H);X.restore()}
   // confeti en cada titular
   F.forEach(f=>{const q=t-f.t;if(q<0||q>1.2)return;const R4=rng(Math.floor(f.t*100)+3);X.save();for(let i=0;i<60;i++){const a=R4()*Math.PI*2,sp=500+R4()*900;const x=540+Math.cos(a)*sp*q,y=820+Math.sin(a)*sp*q-500*q+1100*q*q;X.globalAlpha=clamp(1-q/1.2);X.fillStyle=[ACC,TH.b,'#ffffff',G2,'#ffd23f'][i%5];X.save();X.translate(x,y);X.rotate(q*9+i);X.fillRect(-9,-5,18,10);X.restore()}X.restore()});
