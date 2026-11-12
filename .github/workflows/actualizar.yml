@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '37 9,13 * * *'        # cada día (10:37 y 14:37 en España en invierno)
     - cron: '*/10 11-20 * * 6,0'   # sábados y domingos: ACB cada 10 min durante los partidos
-    - cron: '*/15 17-21 * * 2-5'   # martes a viernes por la tarde: EuroLiga y ACB cada 15 min
+    - cron: '*/15 17-22 * * 2-5'   # martes a viernes por la tarde: EuroLiga y ACB cada 15 min
     - cron: '7,22,37,52 0-7 * * *' # cada madrugada (01:07-08:52 en España): NBA cada 15 min, todo listo al levantarse
   workflow_dispatch:               # botón "Run workflow" para lanzarlo a mano
 
