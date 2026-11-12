@@ -455,8 +455,14 @@ def render():
     shutil.copy(os.path.join(OUT, 'data.js'), os.path.join(R, 'salida', 'data.js'))
     D = json.loads(open(os.path.join(OUT, 'data.js'), encoding='utf-8').read()[len('window.DATA='):-1]); n = noche()
     esc = os.path.join(OUT, 'escenas'); shutil.rmtree(esc, ignore_errors=True); os.makedirs(esc)
-    procs = [subprocess.Popen(['node', os.path.join(R, 'render.js'), 'scene', str(i), os.path.join(esc, f's{i}.mp4')]) for i in range(len(D['scenes']))]
-    if any(p.wait() for p in procs): sys.exit('ha fallado el render de alguna escena')
+    # Como mucho 3 Chrome a la vez: con 10+ partidos, lanzar todas las escenas juntas agota la memoria y Chrome se cae.
+    from concurrent.futures import ThreadPoolExecutor
+    def una(i):
+        for _ in range(2):
+            if subprocess.call(['node', os.path.join(R, 'render.js'), 'scene', str(i), os.path.join(esc, f's{i}.mp4')]) == 0: return 0
+        return 1
+    with ThreadPoolExecutor(3) as ex: fallos = sum(ex.map(una, range(len(D['scenes']))))
+    if fallos: sys.exit('ha fallado el render de alguna escena')
     for i, sc in enumerate(D['scenes']):
         vd = dur_of(os.path.join(esc, f's{i}.mp4'))
         sh('ffmpeg', '-v', 'error', '-y', '-i', os.path.join(OUT, 'audio', sc['id'] + '.wav'), '-af', f"adelay={int(sc['off'] * 1000)},apad=whole_dur={vd:.3f},loudnorm=I=-15:TP=-1.5:LRA=7",
