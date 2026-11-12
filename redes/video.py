@@ -448,6 +448,23 @@ def _sfx(d):
     t = np.arange(int(SR * .22)) / SR; save('pop.wav', .6 * np.sin(2 * np.pi * (900 * t - 250 * t * t)) * np.exp(-t * 18))
     t = np.arange(int(SR * 3.2)) / SR; r = np.random.default_rng(5).standard_normal(len(t)); r = np.convolve(r, np.ones(30) / 30, 'same') - np.convolve(r, np.ones(400) / 400, 'same')
     env = np.minimum(1, t / .15) * np.exp(-np.maximum(0, t - 1.2) * 1.2) * (1 + .35 * np.sin(2 * np.pi * 3.1 * t) * np.sin(2 * np.pi * .7 * t)); save('crowd.wav', r * env * 2.2)
+    # "pick": tono de anuncio estilo draft (composición propia): arpegio de campanas brillante + acorde de metales
+    def bell(f, dur, amp=1.):
+        tt = np.arange(int(SR * dur)) / SR
+        return amp * sum(a * np.sin(2 * np.pi * f * m * tt) * np.exp(-tt * k) for m, a, k in ((1, 1, 3.5), (2.76, .35, 7), (5.4, .18, 12), (8.9, .08, 20))) * np.minimum(1, tt / .003)
+    def brass(fs, dur):
+        tt = np.arange(int(SR * dur)) / SR; v = 1 + .004 * np.sin(2 * np.pi * 5.5 * tt)
+        x = sum(sum(np.sin(2 * np.pi * f * h * tt * v) / h ** 1.3 for h in range(1, 9)) for f in fs)
+        return x / len(fs) * np.minimum(1, tt / .04) * np.exp(-np.maximum(0, tt - .35) * 2.6) * .32
+    def put(buf, x, at): i = int(at * SR); buf[i:i + len(x)] += x[:len(buf) - i]
+    pk = np.zeros(int(SR * 1.6))
+    for k, f in enumerate((587.3, 784.0, 987.8, 1174.7)): put(pk, bell(f, 1.2, .42), k * .085)
+    put(pk, brass((293.7, 370.0, 440.0, 587.3), 1.2), .33)
+    tt = np.arange(int(SR * .5)) / SR; put(pk, .5 * np.sin(2 * np.pi * 73 * tt) * np.exp(-tt * 7), .33)
+    save('pick.wav', pk / np.abs(pk).max() * .85)
+    pk2 = np.zeros(int(SR * 1.0))
+    put(pk2, bell(784.0, .9, .5), 0); put(pk2, bell(1174.7, .9, .5), .09)
+    save('pick2.wav', pk2 / np.abs(pk2).max() * .8)
     t = np.arange(int(SR * .4)) / SR; r = np.random.default_rng(1).standard_normal(len(t)); r = np.convolve(r, np.ones(8) / 8, 'same') - np.convolve(r, np.ones(60) / 60, 'same'); save('whoosh.wav', r * np.sin(np.pi * t / .4) ** 2 * .5)
 
 
@@ -482,16 +499,17 @@ def render():
     ev = [('boom', 0.0)]
     intro_ = next((x for x in D['scenes'] if x['type'] == 'intro'), {})
     if intro_.get('focos'):
-        ev += [('crowd', 0.0), ('pop', .05)] + [x for f_ in intro_['focos'] for x in (('whoosh', max(0, f_['t'] - .12)), ('boom', f_['t']), ('pop', f_['t'] + .1))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
+        # sin petardos: tono de draft al empezar y campanilla en cada titular
+        ev = [('pick', 0.0)] + [x for f_ in intro_['focos'][1:] for x in (('whoosh', max(0, f_['t'] - .12)), ('pick2', f_['t']))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
     nm = len(D['mini'])
-    ev += [('pop', .15 + i * min(.1, .8 / max(1, nm))) for i in range(nm)]
+    if not intro_.get('focos'): ev += [('pop', .15 + i * min(.1, .8 / max(1, nm))) for i in range(nm)]
     for i, sc in enumerate(D['scenes']):
         if i: ev.append(('whoosh', starts[i] - .15))
         if sc['type'] == 'game':
             ev.append(('boom', starts[i] + .05)); ev += [('pop', starts[i] + c['t']) for c in sc.get('cards', [])]
         if sc['type'] == 'outro': ev += [('pop', starts[i] + h) for h in sc.get('hl', []) if h is not None]
     if HASTA: ev = [e for e in ev if e[1] < HASTA]
-    vol = {'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .5}
+    vol = {'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .5, 'pick': .6, 'pick2': .45}
     open(os.path.join(esc, 'v.txt'), 'w').write(''.join(f"file 's{i}.mp4'\n" for i in range(len(D['scenes']))))
     open(os.path.join(esc, 'a.txt'), 'w').write(''.join(f"file 'a{i}.wav'\n" for i in range(len(D['scenes']))))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'v.txt'), '-c', 'copy', os.path.join(esc, 'v.mp4'))
