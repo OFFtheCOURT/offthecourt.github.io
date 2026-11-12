@@ -142,6 +142,7 @@ function gameCard(g){
       <button class="btn grow" type="button" aria-expanded="false" aria-controls="${id}" data-toggle="${id}"><span class="lbl-l">Estadísticas y top 5</span><span class="lbl-s">Detalles</span> <span class="car">▾</span></button>
       ${g.bx?`<button class="btn bx-btn" type="button" data-box="${esc(g.id)}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></svg>Ficha completa</button>`:''}
       <a class="btn primary" href="${esc(g.yt)}" target="_blank" rel="noopener">▶ Resumen</a>
+      <button class="btn sh-btn" type="button" data-share="${esc(g.id)}" aria-label="Compartir resultado" title="Compartir"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M7 8l5-5 5 5"/></svg></button>
     </div>
     <div class="g-detail" id="${id}" hidden>
       <div class="dtitle">Tiro</div>${rings(g)}
@@ -809,6 +810,55 @@ async function openPlayer(pid){track('jugador/'+CUR,'Ficha jugador ('+CUR+')');
       <td><b class="wlb ${g[G_.res]==='V'?'W':'L'}">${g[G_.res]}</b> ${g[G_.my]}-${g[G_.ot]}</td><td>${esc(g[G_.min])}</td><td class="k">${g[G_.pts]}</td><td>${g[G_.reb]}</td><td>${g[G_.ast]}</td><td>${esc(g[G_.fg])}</td><td>${esc(g[G_.tp])}</td><td>${esc(g[G_.ft])}</td><td>${g[G_.stl]}</td><td>${g[G_.blk]}</td><td>${esc(g[G_.pm])}</td>${CUR!=='nba'?`<td>${g[G_.val]}</td>`:''}</tr>`).join('')}</tbody></table></div></div>`);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-pffav]');if(!b)return;const ab=b.dataset.pffav;if(favAb()===ab)delete FAV[CUR];else FAV[CUR]=ab;saveFav();renderAll();openTeam(ab)});
+/* ---------- tarjeta para compartir (imagen 1080x1350 con el resultado y el MVP) ---------- */
+function shImg(src){return new Promise(r=>{if(!src)return r(null);const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
+async function shareCard(id){
+  const g=findGame(id);if(!g)return;track('compartir/'+CUR,'Compartir resultado ('+CUR+')');
+  const [A,H]=g.teams,ta=TEAMS[A.abbr],th=TEAMS[H.abbr],ca=tc(ta),ch=tc(th),win=A.win?A:H,tw=TEAMS[win.abbr];
+  const mvp=[...A.top,...H.top].sort((a,b)=>(b.gs??b.val??0)-(a.gs??a.val??0))[0];
+  await document.fonts.load('900 80px "Big Shoulders Display"');await document.fonts.load('700 40px "Barlow Condensed"');
+  const [la,lh,ph,lg]=await Promise.all([shImg(logo(A.abbr)),shImg(logo(H.abbr)),shImg(mvp&&IMG.p[mvp.pid]),shImg('icons/icon-192.png')]);
+  const W=1080,Hh=1350,c=document.createElement('canvas');c.width=W;c.height=Hh;const x=c.getContext('2d');
+  const FD='"Big Shoulders Display",Impact,sans-serif',FL='"Barlow Condensed","Arial Narrow",sans-serif';
+  // fondo: los dos colores en diagonal + rayas + viñeta
+  x.fillStyle='#070b13';x.fillRect(0,0,W,Hh);
+  x.save();x.beginPath();x.moveTo(0,0);x.lineTo(W*.62,0);x.lineTo(W*.38,Hh);x.lineTo(0,Hh);x.closePath();x.fillStyle=ca;x.fill();x.restore();
+  x.save();x.beginPath();x.moveTo(W*.62,0);x.lineTo(W,0);x.lineTo(W,Hh);x.lineTo(W*.38,Hh);x.closePath();x.fillStyle=ch;x.fill();x.restore();
+  x.save();x.globalAlpha=.08;x.strokeStyle='#fff';x.lineWidth=4;for(let k=-Hh;k<W;k+=34){x.beginPath();x.moveTo(k,Hh);x.lineTo(k+Hh*.45,0);x.stroke()}x.restore();
+  let v=x.createRadialGradient(W/2,Hh*.45,200,W/2,Hh*.5,900);v.addColorStop(0,'rgba(5,8,14,.15)');v.addColorStop(1,'rgba(5,8,14,.82)');x.fillStyle=v;x.fillRect(0,0,W,Hh);
+  // cabecera
+  x.fillStyle='#fff';x.textAlign='left';x.textBaseline='alphabetic';
+  if(lg)x.drawImage(lg,60,52,84,84);x.font=`900 64px ${FD}`;x.fillText('OFF',160,118);const wo=x.measureText('OFF').width;x.fillStyle='#ff7a1a';x.fillText('COURT',160+wo,118);
+  const lgName={nba:'NBA',el:'EUROLIGA',acb:'LIGA ACB'}[CUR];
+  const when=g.utc?madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,''):(g._day?new Date(g._day+'T12:00Z').toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'}).replace(/\./g,''):'');
+  x.textAlign='right';x.font=`700 34px ${FL}`;x.fillStyle='rgba(255,255,255,.85)';x.fillText(`${lgName} · ${when}`.toUpperCase(),W-60,100);
+  // etiqueta FINAL / PRÓRROGA
+  const ot=A.ls.length>4,diff=Math.abs(A.score-H.score),tag=ot?'FINAL · PRÓRROGA':diff>=20?`FINAL · PALIZA +${diff}`:diff<=3?'FINAL · AL LÍMITE':'FINAL';
+  x.font=`800 34px ${FL}`;const tw2=x.measureText(tag).width+56;x.fillStyle='#ff7a1a';x.beginPath();x.roundRect(W/2-tw2/2,190,tw2,58,29);x.fill();x.fillStyle='#1a0b02';x.textAlign='center';x.fillText(tag,W/2,231);
+  // escudos y nombres
+  const side=(img,t,s,cx)=>{if(img){x.save();x.shadowColor='rgba(0,0,0,.5)';x.shadowBlur=30;x.drawImage(img,cx-120,300,240,240);x.restore()}
+    x.globalAlpha=s.win?1:.62;x.fillStyle='#fff';x.font=`900 ${t.short.length>12?52:64}px ${FD}`;x.textAlign='center';x.fillText(t.short.toUpperCase(),cx,610);
+    x.font=`700 30px ${FL}`;x.fillStyle='rgba(255,255,255,.75)';x.fillText(s.rec||'',cx,652);
+    x.font=`900 190px ${FD}`;x.fillStyle='#fff';x.shadowColor=s.win?'rgba(255,255,255,.45)':'transparent';x.shadowBlur=s.win?40:0;x.fillText(s.score,cx,850);x.shadowBlur=0;x.globalAlpha=1};
+  side(la,ta,A,W*.27);side(lh,th,H,W*.73);
+  x.font=`900 120px ${FD}`;x.fillStyle='rgba(255,255,255,.55)';x.textAlign='center';x.fillText('–',W/2,820);
+  // MVP
+  if(mvp){const y0=940,bw=W-120;x.fillStyle='rgba(5,8,14,.72)';x.beginPath();x.roundRect(60,y0,bw,250,30);x.fill();x.strokeStyle='rgba(255,194,61,.85)';x.lineWidth=3;x.stroke();
+    if(ph){x.save();x.beginPath();x.roundRect(84,y0+24,276,202,20);x.clip();x.drawImage(ph,84,y0+24,276,202);x.restore()}
+    const tx=ph?390:100;x.textAlign='left';x.fillStyle='#ffc23d';x.font=`800 30px ${FL}`;x.fillText('MVP DEL PARTIDO',tx,y0+66);
+    x.fillStyle='#fff';x.font=`900 ${mvp.n.length>18?54:64}px ${FD}`;x.fillText(mvp.n.toUpperCase(),tx,y0+130);
+    x.font=`900 60px ${FD}`;const sts=[[mvp.pts,'PTS'],[mvp.reb,'REB'],[mvp.ast,'AST'],...(CUR!=='nba'?[[mvp.val,'VAL']]:[])];let sx=tx;
+    sts.forEach(([n,l])=>{x.fillStyle='#fff';x.font=`900 60px ${FD}`;x.fillText(n,sx,y0+208);const w1=x.measureText(String(n)).width;x.fillStyle='rgba(255,255,255,.7)';x.font=`700 28px ${FL}`;x.fillText(l,sx+w1+8,y0+208);sx+=w1+8+x.measureText(l).width+34})}
+  // pie
+  x.textAlign='center';x.fillStyle='rgba(255,255,255,.9)';x.font=`700 34px ${FL}`;x.fillText('offthecourt.github.io',W/2,Hh-60);
+  const blob=await new Promise(r=>c.toBlob(r,'image/png'));const name=`offcourt_${A.abbr}-${H.abbr}.png`.replace(/[^\w.-]/g,'');
+  const file=new File([blob],name,{type:'image/png'}),text=`${ta.short} ${A.score}-${H.score} ${th.short} · ${lgName}`,url=location.origin+location.pathname+'#g'+g.id;
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],text:text+' · '+url});return}catch(e){if(e&&e.name==='AbortError')return}}
+  const u=URL.createObjectURL(blob);const sh=$('pfSheet');
+  pfOpen(`${pfX}<div class="sh-prev"><h4 class="pf-h">Compartir resultado</h4><img src="${u}" alt="${esc(text)}"><div class="sh-acts"><a class="btn primary" href="${u}" download="${name}">Descargar imagen</a><button class="btn" type="button" data-copy="${esc(text+' · '+url)}">Copiar texto y enlace</button></div></div>`);
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-share]');if(b){shareCard(b.dataset.share);return}
+  const c=e.target.closest('[data-copy]');if(c){navigator.clipboard&&navigator.clipboard.writeText(c.dataset.copy).then(()=>{c.textContent='¡Copiado!'}).catch(()=>{})}});
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);

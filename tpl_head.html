@@ -897,6 +897,12 @@ html[data-theme="light"] .bdg .ico.fire{filter:none}
 
 /* modo oscuro: escudos oscuros visibles sobre fondo oscuro */
 html:not([data-theme="light"]) :is(.up-t img,.tk img,.cg-t img,.ts-row img,.st .tm img,.pf-g .o img,.fav-next img,.fav-res img,.day .mini img){filter:drop-shadow(0 0 1px rgba(255,255,255,.55)) drop-shadow(0 0 4px rgba(255,255,255,.12))}
+
+/* compartir */
+.sh-btn{flex:none;padding-inline:12px}
+@media (max-width:640px){.g-foot{grid-template-columns:1fr 1fr 1fr 44px}.g-foot .sh-btn{padding:0}}
+.sh-prev{padding:22px 18px 6px;text-align:center}.sh-prev img{width:min(420px,100%);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.sh-acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
 </style>
 <script data-goatcounter="https://offcourt.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
