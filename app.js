@@ -59,15 +59,22 @@ const streakIco=s=>{const n=streakN(s),k=String(s||'')[0];return n>=3?(k==='W'?I
 const medal=i=>i<3?`<span class="medal m${i+1}">${i+1}</span>`:`${i+1}`;
 /* ---------- récords y curiosidades de la jornada (calculadas en curio.py) ---------- */
 function renderCurio(){
-  const F=(L.facts||[]).slice(0,4),el=$('curio');if(!F.length){el.innerHTML='';return}
-  const teamOf=f=>f.ab||(f.pid&&(()=>{for(const p of L.periods[0].games)for(const t of p.teams)if(t.top.some(x=>x.pid===f.pid))return t.abbr})());
-  el.innerHTML=`<h3>${ICO.crown}${CUR==='nba'?'Lo que dejó la noche':'Lo que dejó la jornada'}</h3><div class="cu-list n${F.length}">${F.map((f,i)=>{
+  const el=$('curio'),night=L.periods[0];let F=L.facts||[];if(!F.length||!night){el.innerHTML='';return}
+  // no repetir lo que ya sale arriba (cifras de la noche) ni en los destacados
+  const P=[];night.games.forEach(g=>g.teams.forEach(s=>s.top.forEach(p=>P.push(p))));
+  const shown=new Set([...P].sort((a,b)=>b.gs-a.gs).slice(0,3).map(p=>p.pid));
+  ['pts','reb','ast',...(CUR==='nba'?[]:['val'])].forEach(k=>{const p=[...P].sort((a,b)=>b[k]-a[k])[0];if(p)shown.add(p.pid)});
+  F=F.filter(f=>!(f.pid&&shown.has(f.pid))&&f.tag!=='PARTIDAZO'&&f.tag!=='FINAL DE INFARTO').slice(0,4);
+  if(!F.length){el.innerHTML='';return}
+  const teamOf=f=>f.ab||(f.pid&&(()=>{for(const p of night.games)for(const t of p.teams)if(t.top.some(x=>x.pid===f.pid))return t.abbr})());
+  el.innerHTML=`<h3>${ICO.crown}${CUR==='nba'?'Lo que dejó la noche':'Lo que dejó la jornada'}</h3><div class="cu-list">${F.map(f=>{
     const ab=teamOf(f),t=TEAMS[ab]||{color:'333333',alt:'ffffff'},src=f.pid&&IMG.p[f.pid];
-    const vis=src?`<img class="cu-ph" src="${src}" alt="" loading="lazy">`:(ab?`<img class="cu-lg" src="${logo(ab)}" alt="" loading="lazy">`:'');
+    const vis=src?`<span class="cu-av"><img src="${src}" alt="" loading="lazy"></span>`:(ab?`<img class="cu-lg" src="${logo(ab)}" alt="" loading="lazy">`:'');
     const attr=f.pid?`data-player="${esc(f.pid)}"`:ab?`data-team="${esc(ab)}"`:'';
-    if(!f.n)return `<button type="button" class="cu" style="--tc:${tc(t)}" ${attr} title="${esc(f.t)}">${vis}<span class="cu-tx"><span class="cu-w">${esc(f.t)}</span></span></button>`;
-    return `<button type="button" class="cu${i===0?' hero':''}" style="--tc:${tc(t)}" ${attr} title="${esc(f.t)}">${vis}
-      <span class="cu-tx"><span class="cu-tag">${esc(f.tag||'')}</span><span class="cu-num${String(f.n).length>4?' long':''}">${esc(f.n)}<small>${esc(f.u||'')}</small></span><span class="cu-w">${esc(f.w||'')}</span><span class="cu-d">${esc(f.d||'')}</span></span></button>`}).join('')}</div>`;
+    if(!f.n)return `<button type="button" class="cu" style="--tc:${tc(t)};--ti:${ink(t)}" ${attr}><span class="cu-tx"><span class="cu-w">${esc(f.t)}</span></span>${vis}</button>`;
+    return `<button type="button" class="cu" style="--tc:${tc(t)};--ti:${ink(t)}" ${attr} title="${esc(f.t)}">
+      <span class="cu-num${String(f.n).length>4?' long':''}">${esc(f.n)}<small>${esc(f.u||'')}</small></span>
+      <span class="cu-tx"><span class="cu-tag">${esc(f.tag||'')}</span><span class="cu-w">${esc(f.w||'')}</span><span class="cu-d">${esc(f.d||'')}</span></span>${vis}</button>`}).join('')}</div>`;
 }
 /* ---------- partido ---------- */
 function teamRow(g,side){

@@ -110,7 +110,7 @@ def facts(lk, L, S):
     for x in out:
         if x.get('pid') and x['pid'] in pids: continue
         gid = x.get('gid')
-        if gid and per_game.get(gid, 0) >= 2: continue
+        if gid and per_game.get(gid, 0) >= 3: continue
         if x['k'] in ('fire', 'ice') and not x.get('pid'):
             if streaks >= 1: continue
             streaks += 1
@@ -119,7 +119,7 @@ def facts(lk, L, S):
         if x.get('pid'): pids.add(x['pid'])
         if gid: per_game[gid] = per_game.get(gid, 0) + 1
         res.append({k: v for k, v in x.items() if k != 's'})
-        if len(res) == 4: break
+        if len(res) == 8: break
     return res
 
 if __name__ == '__main__':
