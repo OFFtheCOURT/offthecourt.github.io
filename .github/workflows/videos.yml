@@ -74,8 +74,9 @@ jobs:
             mkdir -p /tmp/v && cd /tmp/v
             git init -q -b redes-videos
             git fetch -q --depth 1 "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" redes-videos && git checkout -q FETCH_HEAD -- . || true
-            while read f; do b=$(basename "$f"); pre=${b%_*}; rm -f ${pre}_*.mp4; cp "$f" .; done < "$GITHUB_WORKSPACE/redes/salida/nuevos.txt"
-            git add -A && git commit -qm "Vídeos" && git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:redes-videos
+            while read -r f || [ -n "$f" ]; do [ -z "$f" ] && continue; b=$(basename "$f"); pre=${b%_*}; rm -f ${pre}_*.mp4; cp "$f" .; done < "$GITHUB_WORKSPACE/redes/salida/nuevos.txt"
+            git add -A; git commit -qm "Vídeos"; git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:redes-videos
+            git ls-files | grep -q mp4   # si el vídeo no se ha guardado, el paso falla y no se apunta como hecho
             cd "$GITHUB_WORKSPACE"
           fi
           git add redes/videos.json

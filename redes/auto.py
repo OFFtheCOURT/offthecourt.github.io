@@ -188,7 +188,7 @@ def main():
         reg[lg] = {'fecha': f, 'archivo': os.path.basename(mp4), 'texto': texto, 'hecho': datetime.datetime.utcnow().isoformat() + 'Z', 'entregado': False}
         (reg.get('errores') or {}).pop(lg, None); hechos.append(mp4)
     json.dump(reg, open(REG, 'w'), ensure_ascii=False, indent=1)
-    open(os.path.join(R, 'salida', 'nuevos.txt'), 'w').write('\n'.join(hechos))
+    open(os.path.join(R, 'salida', 'nuevos.txt'), 'w').write(''.join(h + '\n' for h in hechos))
     print('vídeos nuevos:', hechos)
 
 
