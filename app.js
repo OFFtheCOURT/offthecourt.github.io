@@ -143,15 +143,11 @@ function gameCard(g){
   const nq=Math.max(g.teams[0].ls.length,4);
   const qlabels=Array.from({length:nq},(_,i)=>qlbl(i)).map(x=>`<span>${x}</span>`).join('');
   const [A,H]=g.teams,diff=Math.abs(A.score-H.score),[ca,ch]=pair(TEAMS[A.abbr],TEAMS[H.abbr]);
-  const b=[];
-  if(A.ls.length>4) b.push(`<span class="bdg ot">${A.ls.length>5?(A.ls.length-4)+' prórrogas':'Prórroga'}</span>`);
-  if(diff>=20) b.push(`<span class="bdg blow">Paliza +${diff}</span>`); else if(diff<=5) b.push(`<span class="bdg close">Igualado · ${diff}</span>`);
-  const mx=Math.max(0,...g.teams.flatMap(t=>t.top.map(p=>p.pts)));
-  if(mx>=(CUR==='nba'?40:28)) b.push(`<span class="bdg big">${mx} pts</span>`);
+  const b=[];  // sin mini etiquetas (prórroga, paliza, igualado, puntos): el marcador ya lo cuenta
   const tot=(A.score+H.score)||1;
   const when=CUR==='nba'?'':madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
   return `<article class="game" id="g${g.id}" data-teams="${esc(A.abbr)},${esc(H.abbr)}" style="--ca:${ca};--ch:${ch}">
-    <div class="g-head"><span class="badges"><span class="st">${when?esc(when):'Final'}</span>${b.join('')}</span><span class="ven">${esc(g.venue)}${g.city?'<span class="vc"> · '+esc(g.city)+'</span>':''}</span></div>
+    <div class="g-head"><span class="badges"><span class="st">${when?esc(when):'Final'}</span>${b.join('')}</span><span class="ven">${esc(g.venue)}${g.city&&!/\d/.test(g.city)&&g.city.length<26?'<span class="vc"> · '+esc(g.city)+'</span>':''}</span></div>
     <div class="qhead"><span></span><span></span><span class="qs">${qlabels}</span><span style="text-align:right">TOTAL</span></div>
     ${teamRow(g,0)}${teamRow(g,1)}
     <div class="margin" title="Reparto de puntos"><i style="width:${A.score/tot*100}%;background:${ca}"></i><i style="width:${H.score/tot*100}%;background:${ch}"></i></div>

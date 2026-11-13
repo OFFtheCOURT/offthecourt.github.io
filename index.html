@@ -10,6 +10,20 @@
 .lang-pop button .ok{margin-left:auto;font-style:normal;color:var(--accent);opacity:0}.lang-pop button.on .ok{opacity:1}.lang-pop button.on{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 @media (max-width:480px){header.top>.wrap{column-gap:5px!important}header.top .theme-btn{width:36px!important;height:36px!important;margin-left:0;border-radius:12px}#langBtn .flag{width:22px;height:15px}header.top .wordmark{font-size:22px}header.top .menu-btn{width:36px;height:36px;padding:0;justify-content:center;border-radius:12px}header.top .menu-btn .mb-t{display:none}header.top .leagues{min-width:0;max-width:100%;flex:1 1 100%}header.top .lg-b{min-width:0;flex:1 1 0}header.top .lg-t{min-width:0}header.top .lg-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header.top .brand img,header.top .brand svg{max-height:40px}}
 @media (max-width:760px){#searchBtn{margin-left:auto!important}#themeBtn{margin-left:0}header.top .lang-dd{order:3}#themeBtn{order:4}header.top .menu{order:5}header.top .leagues{order:6}}
+
+/* tarjetas de partido cuadradas: columna del total fija, sin saltos de línea y flecha del ganador fuera del flujo */
+.trow,.qhead{grid-template-columns:54px minmax(0,1fr) auto 108px}
+.trow{min-height:80px}
+.trow .score{white-space:nowrap;position:relative}
+.trow.win .score::after{position:absolute;right:-15px;top:50%;margin:0;transform:translateY(-50%)}
+@media (max-width:640px){.trow,.qhead{grid-template-columns:44px minmax(0,1fr) 72px}.trow{min-height:70px}}
+.g-head .ven{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+
+.trow.win .score::after{content:none!important;display:none!important}
+.g-foot{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) 44px;flex-wrap:nowrap}
+.g-foot .btn{min-width:0;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-inline:8px}
+.g-foot .sh-btn{padding:0}.g-foot .sh-l{display:none}
+@media (max-width:640px){.g-foot{grid-template-columns:1fr 1fr 44px!important}.g-foot>:nth-child(1):not(:last-child){grid-column:1}.g-foot>:nth-child(2):not(:last-child){grid-column:2/4}.g-foot>:nth-child(3):not(:last-child){grid-column:1/3}.g-foot .btn{font-size:12px}}
 </style></head><body><title>Offcourt</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -94,6 +108,11 @@ h2{font-size:clamp(36px,5.4vw,62px);font-weight:900}
   font:600 12px var(--f-label);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .g-head .st{color:var(--fg);font-weight:700;white-space:nowrap}
 .g-head .ven{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+
+.trow.win .score::after{content:none}
+.g-foot{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) 44px;flex-wrap:nowrap}
+.g-foot .btn{min-width:0;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-inline:8px}
+.g-foot .sh-btn{padding:0}.g-foot .sh-l{display:none}
 .trow{display:grid;grid-template-columns:54px minmax(0,1fr) auto 70px;align-items:center;gap:12px;padding:12px 16px;position:relative}
 .trow::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:0 4px 4px 0;background:var(--ti)}
 .trow + .trow{border-top:1px solid var(--line)}
@@ -1518,15 +1537,11 @@ function gameCard(g){
   const nq=Math.max(g.teams[0].ls.length,4);
   const qlabels=Array.from({length:nq},(_,i)=>qlbl(i)).map(x=>`<span>${x}</span>`).join('');
   const [A,H]=g.teams,diff=Math.abs(A.score-H.score),[ca,ch]=pair(TEAMS[A.abbr],TEAMS[H.abbr]);
-  const b=[];
-  if(A.ls.length>4) b.push(`<span class="bdg ot">${A.ls.length>5?(A.ls.length-4)+' prórrogas':'Prórroga'}</span>`);
-  if(diff>=20) b.push(`<span class="bdg blow">Paliza +${diff}</span>`); else if(diff<=5) b.push(`<span class="bdg close">Igualado · ${diff}</span>`);
-  const mx=Math.max(0,...g.teams.flatMap(t=>t.top.map(p=>p.pts)));
-  if(mx>=(CUR==='nba'?40:28)) b.push(`<span class="bdg big">${mx} pts</span>`);
+  const b=[];  // sin mini etiquetas (prórroga, paliza, igualado, puntos): el marcador ya lo cuenta
   const tot=(A.score+H.score)||1;
   const when=CUR==='nba'?'':madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
   return `<article class="game" id="g${g.id}" data-teams="${esc(A.abbr)},${esc(H.abbr)}" style="--ca:${ca};--ch:${ch}">
-    <div class="g-head"><span class="badges"><span class="st">${when?esc(when):'Final'}</span>${b.join('')}</span><span class="ven">${esc(g.venue)}${g.city?'<span class="vc"> · '+esc(g.city)+'</span>':''}</span></div>
+    <div class="g-head"><span class="badges"><span class="st">${when?esc(when):'Final'}</span>${b.join('')}</span><span class="ven">${esc(g.venue)}${g.city&&!/\d/.test(g.city)&&g.city.length<26?'<span class="vc"> · '+esc(g.city)+'</span>':''}</span></div>
     <div class="qhead"><span></span><span></span><span class="qs">${qlabels}</span><span style="text-align:right">TOTAL</span></div>
     ${teamRow(g,0)}${teamRow(g,1)}
     <div class="margin" title="Reparto de puntos"><i style="width:${A.score/tot*100}%;background:${ca}"></i><i style="width:${H.score/tot*100}%;background:${ch}"></i></div>
