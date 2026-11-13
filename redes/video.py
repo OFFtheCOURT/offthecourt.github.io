@@ -361,7 +361,7 @@ def montar():
         b = [dict(x, o=tm(x['o']), d=max(0.05, tm(x['o'] + x['d']) - tm(x['o']))) for x in b]
         w = caption_words(seg['t'], mode, b, d)
         for x in w: x['o'] = round(x['o'] + PAD_IN, 3)
-        PAD_SEG = PAD_IN + (.55 if (seg['id'] == 'intro' and DATA_CINE) else 0)   # portada de cine: medio segundo de telón cerrado con las luces antes de la voz
+        PAD_SEG = PAD_IN + (.35 if (seg['id'] == 'intro' and DATA_CINE) else 0)   # portada de cine: medio segundo de telón cerrado con las luces antes de la voz
         if PAD_SEG != PAD_IN:
             for x in w: x['o'] = round(x['o'] + PAD_SEG - PAD_IN, 3)
         def when(key):
@@ -439,8 +439,9 @@ def montar():
         for f_ in seg.get('focos', []):
             a_, h_ = f_['partido'].split('-')
             idx = next((i for i, r in enumerate(DATA['results']) if r['l']['ab'] == h_ and r['v']['ab'] == a_), None)
-            tt = next((w['o'] for w in intro['words'] if w['src'] == f_['clave']), None)
-            if tt is None: tt = next((w['o'] for w in intro['words'] if f_['clave'].split()[-1].lower() in w['src'].lower()), None)
+            ult = focos[-1]['t'] + .2 if focos else -1   # cada titular se busca después del anterior
+            tt = next((w['o'] for w in intro['words'] if w['o'] > ult and w['src'] == f_['clave']), None)
+            if tt is None: tt = next((w['o'] for w in intro['words'] if w['o'] > ult and f_['clave'].split()[-1].lower() in w['src'].lower()), None)
             if idx is not None and tt is not None: focos.append({'i': idx, 't': round(tt - .12, 3), 'tag': f_.get('etiqueta') or DATA['results'][idx].get('tag')})
         if not focos:
             hot = [i for i, r in enumerate(DATA['results']) if r.get('tag')][:4] or [0]

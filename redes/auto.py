@@ -107,7 +107,8 @@ def guion(lg, nivel=0):
     cap_ = lambda x: re.sub(r'^(\{?)(\w)', lambda m_: m_.group(1) + m_.group(2).upper(), x)
     intro = ' '.join('¡' + cap_(f) + '!' for f in frases)   # un titular por frase: deja respirar cada entrada
     if len(intro.split()) < 8: intro = intro[:-1] + f', en la {SIGLA[lg]}!'
-    seg = [{'id': 'intro', 't': intro, 'focos': [{'clave': clave(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in con]}]
+    primera = lambda h: re.sub(r'[{}|¡!]', ' ', h).split()[0]   # el titular entra con la primera palabra de su frase
+    seg = [{'id': 'intro', 't': intro, 'focos': [{'clave': primera(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in con]}]
     orden = con + [x for x in info if x not in con]
     corto = nivel >= 1 or len(orden) >= 8
     for i, x in enumerate(orden):
