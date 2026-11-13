@@ -1,0 +1,718 @@
+{
+ "es-ES-AlvaroNeural_r": [
+  {
+   "id": "todo",
+   "texto": "Cincuenta y dos de Kéid Cáningam en doble prórroga, paliza histórica de Minesóta, Búker frena a Shárlot y los Síksers ya van diez y tres. Doble prórroga en Uáshington: Kéid Cáningam firma 52 puntos y 11 asistencias, y los Pístons ganan 144 a 140. Minesóta arrasa 133 a 94 a Dálas, su mayor paliza del año, con 24 de Bóuns Jáiland y seis triples de Lamélo Bol. Dévin Búker anota 30 y los Sans frenan a los Jórnets por 101 a 96 en Fínix. Los Síksers vencen 123 a 112 a Toronto, con 27 de Tairís Máksi y 20 de Yoél Embíd, pese a los 31 de Ar Yei Bárret. Esta noche, los Niks visitan a los Péisers y el Zánder juega contra los Clípers. Esto es Ófkort.",
+   "palabras": [
+    {
+     "w": "Cincuenta",
+     "o": 0.097333,
+     "d": 0.524541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 0.633041,
+     "d": 0.0335,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "dos",
+     "o": 0.677666,
+     "d": 0.178583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 0.867416,
+     "d": 0.078125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Kéid",
+     "o": 0.956708,
+     "d": 0.256708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Cáningam",
+     "o": 1.224541,
+     "d": 0.46875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "en",
+     "o": 1.704458,
+     "d": 0.100458,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "doble",
+     "o": 1.816083,
+     "d": 0.223208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "prórroga",
+     "o": 2.050458,
+     "d": 0.401791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "paliza",
+     "o": 2.708916,
+     "d": 0.3125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "histórica",
+     "o": 3.032583,
+     "d": 0.390625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 3.434375,
+     "d": 0.066958,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Minesóta",
+     "o": 3.5125,
+     "d": 0.524541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Búker",
+     "o": 4.313375,
+     "d": 0.424125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "frena",
+     "o": 4.748666,
+     "d": 0.245541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 5.005375,
+     "d": 0.044625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Shárlot",
+     "o": 5.061166,
+     "d": 0.401791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 5.474125,
+     "d": 0.0335,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "los",
+     "o": 5.51875,
+     "d": 0.133916,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Síksers",
+     "o": 5.663833,
+     "d": 0.401791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "ya",
+     "o": 6.076791,
+     "d": 0.12275,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "van",
+     "o": 6.210708,
+     "d": 0.145083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "diez",
+     "o": 6.366958,
+     "d": 0.200875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 6.579,
+     "d": 0.0335,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "tres",
+     "o": 6.623666,
+     "d": 0.43525,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Doble",
+     "o": 7.826333,
+     "d": 0.346,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "prórroga",
+     "o": 8.1835,
+     "d": 0.346,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "en",
+     "o": 8.540625,
+     "d": 0.078125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Uáshington",
+     "o": 8.629916,
+     "d": 0.558041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Kéid",
+     "o": 9.411166,
+     "d": 0.234375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Cáningam",
+     "o": 9.656708,
+     "d": 0.457583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "firma",
+     "o": 10.125458,
+     "d": 0.267875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "52 puntos",
+     "o": 10.404458,
+     "d": 0.9486669,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 11.364291,
+     "d": 0.044625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "11 asistencias",
+     "o": 11.420083,
+     "d": 0.8928329,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 12.547333,
+     "d": 0.12275,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "los",
+     "o": 12.68125,
+     "d": 0.15625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Pístons",
+     "o": 12.848666,
+     "d": 0.368291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "ganan",
+     "o": 13.228125,
+     "d": 0.279,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "144 a 140",
+     "o": 13.518291,
+     "d": 1.908459,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Minesóta",
+     "o": 16.199541,
+     "d": 0.546875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "arrasa",
+     "o": 16.757583,
+     "d": 0.346,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "133 a 94",
+     "o": 17.11475,
+     "d": 1.618291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 18.744208,
+     "d": 0.0223329,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Dálas",
+     "o": 18.777666,
+     "d": 0.346,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "su",
+     "o": 19.313375,
+     "d": 0.133916,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "mayor",
+     "o": 19.4585,
+     "d": 0.267875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "paliza",
+     "o": 19.7375,
+     "d": 0.3125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "del",
+     "o": 20.061166,
+     "d": 0.12275,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "año",
+     "o": 20.195083,
+     "d": 0.279,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "con",
+     "o": 20.716958,
+     "d": 0.212041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "24",
+     "o": 20.940166,
+     "d": 0.513375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 21.46475,
+     "d": 0.089291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Bóuns",
+     "o": 21.565166,
+     "d": 0.401791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Jáiland",
+     "o": 21.978125,
+     "d": 0.424125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 22.413375,
+     "d": 0.055791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "seis",
+     "o": 22.480375,
+     "d": 0.223208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "triples",
+     "o": 22.71475,
+     "d": 0.323666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 23.049541,
+     "d": 0.066958,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Lamélo",
+     "o": 23.127666,
+     "d": 0.279,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Bol",
+     "o": 23.417875,
+     "d": 0.390625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Dévin",
+     "o": 24.578583,
+     "d": 0.379458,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Búker",
+     "o": 24.969208,
+     "d": 0.256708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "anota",
+     "o": 25.237041,
+     "d": 0.245541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "30",
+     "o": 25.49375,
+     "d": 0.267875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 25.77275,
+     "d": 0.0335,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "los",
+     "o": 25.817416,
+     "d": 0.145083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Sans",
+     "o": 25.973666,
+     "d": 0.234375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "frenan",
+     "o": 26.219208,
+     "d": 0.234375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 26.46475,
+     "d": 0.0223329,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "los",
+     "o": 26.498208,
+     "d": 0.145083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Jórnets",
+     "o": 26.654458,
+     "d": 0.390625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "por",
+     "o": 27.05625,
+     "d": 0.145083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "101 a 96",
+     "o": 27.2125,
+     "d": 1.12725,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "en",
+     "o": 28.350875,
+     "d": 0.12275,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Fínix",
+     "o": 28.484833,
+     "d": 0.491083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Los",
+     "o": 29.748666,
+     "d": 0.279,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Síksers",
+     "o": 30.038833,
+     "d": 0.334833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "vencen",
+     "o": 30.384833,
+     "d": 0.346,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "123 a 112",
+     "o": 30.741958,
+     "d": 1.361625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 32.11475,
+     "d": 0.0223329,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Toronto",
+     "o": 32.148208,
+     "d": 0.46875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "con",
+     "o": 32.896,
+     "d": 0.234375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "27",
+     "o": 33.1415,
+     "d": 0.513375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 33.666083,
+     "d": 0.100458,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Tairís",
+     "o": 33.777666,
+     "d": 0.3125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Máksi",
+     "o": 34.101333,
+     "d": 0.3125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 34.425,
+     "d": 0.0335,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "20",
+     "o": 34.469625,
+     "d": 0.267875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 34.748666,
+     "d": 0.100458,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Yoél",
+     "o": 34.86025,
+     "d": 0.223208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Embíd",
+     "o": 35.094625,
+     "d": 0.290166,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "pese",
+     "o": 35.596875,
+     "d": 0.212041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 35.820083,
+     "d": 0.0223329,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "los",
+     "o": 35.853583,
+     "d": 0.145083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "31",
+     "o": 36.009833,
+     "d": 0.502208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 36.523208,
+     "d": 0.111625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Ar",
+     "o": 36.646,
+     "d": 0.100458,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Yei",
+     "o": 36.757583,
+     "d": 0.18975,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Bárret",
+     "o": 36.9585,
+     "d": 0.390625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Esta",
+     "o": 38.1165,
+     "d": 0.290166,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "noche",
+     "o": 38.417875,
+     "d": 0.346,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "los",
+     "o": 39.020541,
+     "d": 0.111625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Niks",
+     "o": 39.143291,
+     "d": 0.18975,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "visitan",
+     "o": 39.344208,
+     "d": 0.323666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 39.679,
+     "d": 0.0223329,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "los",
+     "o": 39.7125,
+     "d": 0.145083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Péisers",
+     "o": 39.86875,
+     "d": 0.43525,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 40.315166,
+     "d": 0.044625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "el",
+     "o": 40.371,
+     "d": 0.111625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Zánder",
+     "o": 40.49375,
+     "d": 0.3125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "juega",
+     "o": 40.817416,
+     "d": 0.256708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "contra",
+     "o": 41.08525,
+     "d": 0.234375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "los",
+     "o": 41.330791,
+     "d": 0.12275,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Clípers",
+     "o": 41.46475,
+     "d": 0.558041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Esto",
+     "o": 42.792875,
+     "d": 0.323666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "es",
+     "o": 43.127666,
+     "d": 0.111625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Ófkort",
+     "o": 43.250458,
+     "d": 0.424125,
+     "k": "WordBoundary"
+    }
+   ]
+  }
+ ]
+}
