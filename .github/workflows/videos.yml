@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: videos
@@ -27,7 +28,7 @@ concurrency:
 jobs:
   auto:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 210
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,23 +37,37 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Comprobar si hay algo que hacer (rápido)
+      - name: Comprobar y, si falta poco para el final, esperar aquí (actualizando los datos)
         id: mira
         env:
           OFFCOURT_IGNORA_HECHO: '1'
+          GH_TOKEN: ${{ github.token }}
           FORZAR: ${{ github.event.inputs.forzar }}
           LIGAS: ${{ github.event.inputs.ligas }}
         run: |
+          git config --global user.name "offcourt-bot"; git config --global user.email "offcourt-bot@users.noreply.github.com"
           python3 - <<'PY'
-          import json, os, subprocess, sys
+          import json, os, subprocess, sys, time
           reg = json.load(open('redes/videos.json')) if os.path.exists('redes/videos.json') else {}
-          hay = []
-          for lg in (os.environ.get('LIGAS') or 'nba el acb').split():
-              out = subprocess.run([sys.executable, 'redes/video.py', '--liga', lg, 'estado'], capture_output=True, text=True).stdout.strip().splitlines()
-              st = json.loads(out[-1]) if out else {}
-              print(lg, st.get('estado'), st.get('noche'))
-              if st.get('estado') == 'LISTO' and ((reg.get(lg) or {}).get('fecha') != st.get('noche') or os.environ.get('FORZAR') == 'true'): hay.append(lg)
+          def st(lg, cmd='estado'):
+              out = subprocess.run([sys.executable, 'redes/video.py', '--liga', lg, cmd], capture_output=True, text=True).stdout.strip().splitlines()
+              try: return json.loads(out[-1])
+              except Exception: return {}
+          def pendiente(lg, s):
+              return (reg.get(lg) or {}).get('fecha') != s.get('noche') or os.environ.get('FORZAR') == 'true'
+          ligas = (os.environ.get('LIGAS') or 'nba el acb').split(); t0 = time.time(); hay = []
+          while True:
+              hay, espera = [], []
+              for lg in ligas:
+                  s = st(lg); print(lg, s.get('estado'), s.get('noche'), s.get('minutos_restantes', ''), flush=True)
+                  if not pendiente(lg, s): continue
+                  if s.get('estado') == 'LISTO': hay.append(lg)
+                  elif s.get('estado') == 'ESPERANDO' and s.get('minutos_restantes', 999) <= 150: espera.append(lg)
+              if not espera or time.time() - t0 > 150 * 60: break
+              print('esperando el final de', espera, flush=True)
+              st(espera[0], 'esperar')          # actualiza la web (workflow de datos) y espera hasta ~9 min
           open(os.environ['GITHUB_OUTPUT'], 'a').write(f"ligas={' '.join(hay)}\n")
+          print('a hacer:', hay)
           PY
       - name: Herramientas para el vídeo
         if: steps.mira.outputs.ligas != ''
