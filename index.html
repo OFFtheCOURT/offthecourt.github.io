@@ -1354,7 +1354,7 @@ const I18N_POST={
    [/\b(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\b/g,m=>({Lunes:'Dilluns',Martes:'Dimarts','Miércoles':'Dimecres',Jueves:'Dijous',Viernes:'Divendres','Sábado':'Dissabte',Domingo:'Diumenge'})[m]],
    [/\b(lunes|martes|miércoles|jueves|viernes|sábado|domingo)\b/g,m=>({lunes:'dilluns',martes:'dimarts','miércoles':'dimecres',jueves:'dijous',viernes:'divendres','sábado':'dissabte',domingo:'diumenge'})[m]],
    [/\b(lun|mié|jue|vie|sáb|dom)\b/g,m=>({lun:'dl.','mié':'dc.',jue:'dj.',vie:'dv.','sáb':'ds.',dom:'dg.'})[m]],
-   [/\b(\d{1,2})(?:-(\d{1,2}))? (ene|feb|abr|may|jun|jul|ago|sept|oct|nov|dic)\b/g,(m,a,b,mo)=>`${a}${b?'-'+b:''} ${({ene:'gen.',feb:'febr.',abr:'abr.',may:'maig',jun:'juny',jul:'jul.',ago:'ag.',sept:'set.',oct:'oct.',nov:'nov.',dic:'des.'})[mo]}`]]};
+   [/\b(\d{1,2})(?:-(\d{1,2}))? (ene|feb|abr|may|jun|jul|ago|sept|oct|nov|dic)\b(?!\.)/g,(m,a,b,mo)=>`${a}${b?'-'+b:''} ${({ene:'gen.',feb:'febr.',abr:'abr.',may:'maig',jun:'juny',jul:'jul.',ago:'ag.',sept:'set.',oct:'oct.',nov:'nov.',dic:'des.'})[mo]}`]]};
 const I18N_H={ // títulos con palabra resaltada: texto español completo → HTML traducido
  'Partidos de la noche':['Last <span class="hl">night</span>','Partits de la <span class="hl">nit</span>'],'Esta noche se juega':['Tonight\'s <span class="hl">games</span>','Aquesta nit es <span class="hl">juga</span>'],
  'Hoy se juega':['Games <span class="hl">today</span>','Avui es <span class="hl">juga</span>'],'Hoy hay jornada':['Game <span class="hl">day</span>','Avui hi ha <span class="hl">jornada</span>'],
@@ -1377,13 +1377,14 @@ function tr(s){
   return i18nPost(raw);
 }
 function i18nPost(s){const P=I18N_POST[LANG];if(!P||!/[a-záéíóúº]/i.test(s))return s;for(const [r,f] of P)s=s.replace(r,f);return s}
+const I18N_DONE=new WeakMap();  // texto que ya hemos traducido: no se vuelve a pasar (evita bucles)
 function i18nNode(root){
   if(LANG==='es')return;
   const els=root.nodeType===1?[root,...root.querySelectorAll('h1,h2')]:[];
   els.forEach(e=>{if(!/^H[12]$/.test(e.tagName)||!e.querySelector('.hl'))return;const key=e.textContent.replace(/\s+/g,' ').trim(),h=I18N_H[key];if(h){const v=h[LANG==='en'?0:1];if(e.innerHTML!==v)e.innerHTML=v}});
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;const todo=[];
   if(root.nodeType===3)todo.push(root);else while(n=w.nextNode())todo.push(n);
-  for(const x of todo){if(x.parentElement&&x.parentElement.closest('script,style,.no-tr'))continue;const v=tr(x.nodeValue);if(v!==x.nodeValue)x.nodeValue=v}
+  for(const x of todo){if(x.parentElement&&x.parentElement.closest('script,style,.no-tr'))continue;if(I18N_DONE.get(x)===x.nodeValue)continue;const v=tr(x.nodeValue);if(v!==x.nodeValue)x.nodeValue=v;I18N_DONE.set(x,x.nodeValue)}
   if(root.nodeType===1)[root,...root.querySelectorAll('[title],[aria-label],[placeholder]')].forEach(e=>{for(const a of ['title','aria-label','placeholder']){const v=e.getAttribute&&e.getAttribute(a);if(v){const t=tr(v);if(t!==v)e.setAttribute(a,t)}}});
 }
 function i18nStart(){
