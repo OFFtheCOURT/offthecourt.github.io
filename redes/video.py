@@ -361,12 +361,15 @@ def montar():
         b = [dict(x, o=tm(x['o']), d=max(0.05, tm(x['o'] + x['d']) - tm(x['o']))) for x in b]
         w = caption_words(seg['t'], mode, b, d)
         for x in w: x['o'] = round(x['o'] + PAD_IN, 3)
+        PAD_SEG = PAD_IN + (.55 if (seg['id'] == 'intro' and DATA_CINE) else 0)   # portada de cine: medio segundo de telón cerrado con las luces antes de la voz
+        if PAD_SEG != PAD_IN:
+            for x in w: x['o'] = round(x['o'] + PAD_SEG - PAD_IN, 3)
         def when(key):
             t = next((x['o'] for x in w if x['src'] == key), None)
             if t is None: t = next((x['o'] for x in w if key.split()[-1] in x['src']), None)
             return t if t is not None else PAD_IN
         if seg['id'] == 'intro':
-            scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(3.6, d + PAD_IN + (.75 if DATA_CINE else .35)), 2), 'off': PAD_IN, 'words': w}); continue
+            scenes.append({'type': 'intro', 'id': 'intro', 'dur': round(max(3.6, d + PAD_SEG + (.75 if DATA_CINE else .35)), 2), 'off': PAD_SEG, 'words': w}); continue
         if seg['id'] == 'outro':
             ton = []; hl = []
             for g in ((N['upcoming'][0]['games'] if N.get('upcoming') else []) if LIGA == 'nba' else proximos(N, n['fecha'])[1]):
@@ -443,6 +446,8 @@ def montar():
             hot = [i for i, r in enumerate(DATA['results']) if r.get('tag')][:4] or [0]
             focos = [{'i': i, 't': round(.5 + k * (intro['dur'] - 1.2) / len(hot), 3), 'tag': DATA['results'][i].get('tag')} for k, i in enumerate(hot)]
         intro['focos'] = focos
+        # cada titular necesita ~1 s para entrar y volar a su sitio antes de que la cámara se meta en el primer partido
+        intro['dur'] = round(max(intro['dur'], max(f['t'] for f in focos) + 1.95), 2)
         nxt = scenes[scenes.index(intro) + 1] if scenes.index(intro) + 1 < len(scenes) else None
         if nxt and nxt['type'] == 'game': nxt['fromCine'] = True; intro.pop('next', None)
     _hero = {x['id'] for x in n['segmentos'] if x.get('hero')}
@@ -537,7 +542,7 @@ def render():
     intro_ = next((x for x in D['scenes'] if x['type'] == 'intro'), {})
     if intro_.get('focos'):
         # sin petardos: tono de draft al empezar y campanilla en cada titular
-        ev = [('pick', 0.0)] + [x for f_ in intro_['focos'][1:] for x in (('whoosh', max(0, f_['t'] - .12)), ('pick2', f_['t']))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
+        ev = [('pick', 0.0), ('whoosh', max(0, intro_['focos'][0]['t'] - .1))] + [x for f_ in intro_['focos'][1:] for x in (('whoosh', max(0, f_['t'] - .12)), ('pick2', f_['t']))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
     nm = len(D['mini'])
     if not intro_.get('focos'): ev += [('pop', .15 + i * min(.1, .8 / max(1, nm))) for i in range(nm)]
     for i, sc in enumerate(D['scenes']):

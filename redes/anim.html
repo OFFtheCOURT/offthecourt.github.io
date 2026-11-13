@@ -553,15 +553,15 @@ function cineTela(t){ // telón del escenario con pliegues (color por liga: NBA 
     X.beginPath();X.moveTo(0,-200);X.lineTo(150,-200);X.quadraticCurveTo(60+Math.sin(t*1.1)*6,700,95,1320);X.lineTo(0,1320);X.closePath();X.fill();
     X.fillStyle=dark?'#c9a24a':'#ffd27a';rr(20,760,90,18,9);X.fill();X.restore()});
 }
-function cineHeader(t){ // letrero con bombillas: en el primer segundo parpadea todo a la vez
-  const blink=t<1.1,allOn=Math.floor(t*14)%2==0,glow=blink&&allOn;
+function cineHeader(t,t0){ // letrero con bombillas: hasta que se abre el telón parpadea todo a la vez
+  const blink=t<(t0||.5)+.6,allOn=Math.floor(t*14)%2==0,glow=blink&&allOn;
   X.fillStyle='#3a1424';rr(150,70,780,130,20);X.fill();X.strokeStyle='#ffd27a';X.lineWidth=5;rr(150,70,780,130,20);X.stroke();
   for(let i=0;i<24;i++){const px=i<12?168+i*67:168+(i-12)*67,py=i<12?82:188,on=blink?allOn:((Math.floor(t*12)+i)%3)!=0;X.fillStyle=on?'#ffe7a8':'#5a3a20';if(on&&blink){X.shadowColor='#ffd27a';X.shadowBlur=22}X.beginPath();X.arc(px,py,blink?7:5,0,7);X.fill();X.shadowBlur=0}
   X.textAlign='center';X.font=`900 24px ${FL}`;X.letterSpacing='9px';X.fillStyle=ACC2;X.fillText('OFFCOURT CINEMA · '+(D.dateLabel||'').toUpperCase(),540,120);X.letterSpacing='0px';
   X.font=`900 62px ${FD}`;X.fillStyle=blink&&!allOn?'#8a8fa0':'#fff';X.shadowColor=ACC;X.shadowBlur=glow?46:20;X.fillText(D.eyebrow||'LA NOCHE NBA',540,180);X.shadowBlur=0;X.textAlign='left';
   if(glow){X.save();X.globalCompositeOperation='lighter';const g=X.createRadialGradient(540,135,40,540,135,620);g.addColorStop(0,'rgba(255,220,140,.35)');g.addColorStop(1,'rgba(255,220,140,0)');X.fillStyle=g;X.fillRect(0,-200,W,900);X.restore()}}
-function cineTelonFrente(t){ // telón cerrado que se abre en el segundo 0
-  const op=eio((t-.2)/.85);if(op>=1)return;const c=TH.tela||'#a3122a',dark=lum(c)<.12,lo=dark?'#050505':mix(c,'#000000',.55),hi=dark?'#3a3a3a':mix(c,'#ffffff',.18),mid=dark?c:mix(c,'#000000',.2);
+function cineTelonFrente(t,t0){ // telón cerrado que se abre justo cuando sale el primer titular
+  const op=eio((t-(t0||.2)+.05)/.6);if(op>=1)return;const c=TH.tela||'#a3122a',dark=lum(c)<.12,lo=dark?'#050505':mix(c,'#000000',.55),hi=dark?'#3a3a3a':mix(c,'#ffffff',.18),mid=dark?c:mix(c,'#000000',.2);
   [-1,1].forEach(d=>{X.save();const half=W/2+220,off=op*(half+60),x0=d<0?-220-off:540+off;
     X.beginPath();X.rect(x0,-200,half,1520);X.clip();
     for(let i=0;i<12;i++){const x=x0+i*(half/11)+Math.sin(t*3+i)*4*(op>0?1:0),w=half/11+2;const g=X.createLinearGradient(x,0,x+w,0);g.addColorStop(0,lo);g.addColorStop(.4,mid);g.addColorStop(.6,hi);g.addColorStop(1,lo);X.fillStyle=g;X.fillRect(x,-200,w,1520)}
@@ -656,7 +656,7 @@ function cineEntry(f,k,g,a,t,LYr,cam){
   X.restore()}
 function introCine(sc,t){
   const RS=D.results||[],n=RS.length,GR=cineGrid(n),LY=GR.tiles,F=(sc.focos||[]),tend=sc.dur-.75;
-  const cur=[...F].reverse().find(f=>t>=f.t-.001)||(F.length&&t<F[0].t?F[0]:null),curK=cur?F.indexOf(cur):-1;
+  const T0=F.length?F[0].t:.2,cur=[...F].reverse().find(f=>t>=f.t-.001)||null,curK=cur?F.indexOf(cur):-1;
   // cámara: plano general con empujón hacia el partido del titular; al final entra en el primero
   let cx=540,cy=860,z=1;
   if(cur){const r=LY[cur.i],q=eio((t-cur.t)/.5);cx=lerp(540,lerp(540,r.x+r.w/2,.06),q);cy=lerp(860,lerp(860,r.y+r.h/2,.08),q);z=1+.012*curK+.02*Math.max(0,1-(t-cur.t)/.4)}
@@ -668,7 +668,7 @@ function introCine(sc,t){
   // sala
   X.fillStyle='#121b36';X.fillRect(-W,-H,3*W,3*H);
   cineTela(t);
-  cineHeader(t);
+  cineHeader(t,T0);
   // huecos de los titulares (encima de la pantalla)
   for(let k=0;k<Math.min(4,F.length);k++){const s=cineSlot(k);X.setLineDash([10,8]);X.strokeStyle='rgba(255,255,255,.14)';X.lineWidth=2;rr(s.x,s.y,s.w,s.h,20);X.stroke();X.setLineDash([])}
   // pantalla grande con todos los partidos
@@ -680,11 +680,11 @@ function introCine(sc,t){
     cineTile(g,r,t,i,foc?2:(cur&&t<tend?1:0));X.restore()});
   // titulares ya colocados
   F.slice(0,4).forEach((f,k)=>{if(t<f.t+1.0)return;const s=cineSlot(k),act=f===cur?Math.max(0,1-(t-f.t-.55)/.6):0;cineBadge(f,k,RS[f.i],s.x+s.w/2,s.y+s.h/2,1+.04*act,act||(f===cur?.35:0),t)});
-  cineTelonFrente(t);if(t<1.1)cineHeader(t);
+  cineTelonFrente(t,T0);if(t<T0+.65)cineHeader(t,T0);
   const cheer=cur?clamp(1-sinceF/1.1):0;cineAudience(t,Math.max(cheer,t<1?1:0));
   X.restore();
   // titular que entra: una entrada distinta para cada uno y vuela a su hueco encima de la pantalla
-  if(cur&&curK<4&&sinceF<1.0&&t<tend){const a=curK==0?Math.max(.12,sinceF+.12):Math.max(0,sinceF);if(a<.8)cineEntry(cur,curK,RS[cur.i],a,t,LY[cur.i],{cx,cy,z});
+  if(cur&&curK<4&&sinceF<1.0&&t<tend){const a=Math.max(0,sinceF)+(curK==0?.06:0);if(a<.8)cineEntry(cur,curK,RS[cur.i],a,t,LY[cur.i],{cx,cy,z});
     if(a>.68){const s=cineSlot(curK),fly=eio((a-.68)/.32),sx=(s.x+s.w/2-cx)*z+540,sy=(s.y+s.h/2-cy)*z+960;
       X.save();X.translate(lerp(540,sx,fly),lerp(1000,sy,fly));X.rotate((1-fly)*.06);cineBadge(cur,curK,RS[cur.i],0,0,lerp(1.8,z,fly),1,t);X.restore()}}
   if(cur&&curK>0&&sinceF>=0&&sinceF<.1){X.save();X.globalAlpha=.3*(1-sinceF/.1);X.fillStyle='#fff';X.fillRect(0,0,W,H);X.restore()}

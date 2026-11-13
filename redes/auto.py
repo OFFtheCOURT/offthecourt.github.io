@@ -104,8 +104,8 @@ def guion(lg, nivel=0):
     con = [x for x in info if x['hook']][: (4 if nivel == 0 else 3)]
     if not con: con = info[:1]; con[0]['hook'] = (1, f"{eq(con[0]['W'])} gana {con[0]['W']['puntos']} a {con[0]['L']['puntos']}", 'VICTORIA')
     frases = [x['hook'][1] for x in con]
-    intro = (', '.join(frases[:-1]) + ' y ' + frases[-1]) if len(frases) > 1 else frases[0]
-    intro = '¡' + re.sub(r'^(\{?)(\w)', lambda m_: m_.group(1) + m_.group(2).upper(), intro) + '!'
+    cap_ = lambda x: re.sub(r'^(\{?)(\w)', lambda m_: m_.group(1) + m_.group(2).upper(), x)
+    intro = ' '.join('¡' + cap_(f) + '!' for f in frases)   # un titular por frase: deja respirar cada entrada
     if len(intro.split()) < 8: intro = intro[:-1] + f', en la {SIGLA[lg]}!'
     seg = [{'id': 'intro', 't': intro, 'focos': [{'clave': clave(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in con]}]
     orden = con + [x for x in info if x not in con]
