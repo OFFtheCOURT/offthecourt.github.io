@@ -55,7 +55,7 @@ const ICO={
  target:'<svg class="ico target" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>',
  star:'<svg class="ico istar" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" fill="currentColor"/></svg>'};
 const streakN=s=>parseInt(String(s||'').replace(/\D/g,''))||0;
-const streakIco=s=>{const n=streakN(s),k=String(s||'')[0];return n>=3?(k==='W'?ICO.fire:k==='L'?ICO.ice:''):''};
+const streakIco=s=>'';  // sin iconos de fuego/hielo: la racha se ve por el color
 const medal=i=>i<3?`<span class="medal m${i+1}">${i+1}</span>`:`${i+1}`;
 /* ---------- récords y curiosidades de la jornada (calculadas en curio.py) ---------- */
 function renderCurio(){
@@ -67,7 +67,7 @@ function renderCurio(){
   F=F.filter(f=>!(f.pid&&shown.has(f.pid))&&f.tag!=='PARTIDAZO'&&f.tag!=='FINAL DE INFARTO').slice(0,4);
   if(!F.length){el.innerHTML='';return}
   const teamOf=f=>f.ab||(f.pid&&(()=>{for(const p of night.games)for(const t of p.teams)if(t.top.some(x=>x.pid===f.pid))return t.abbr})());
-  el.innerHTML=`<h3>${ICO.crown}${CUR==='nba'?'Lo que dejó la noche':'Lo que dejó la jornada'}</h3><div class="cu-list">${F.map(f=>{
+  el.innerHTML=`<h3>${CUR==='nba'?'Lo que dejó la noche':'Lo que dejó la jornada'}</h3><div class="cu-list">${F.map(f=>{
     const ab=teamOf(f),t=TEAMS[ab]||{color:'333333',alt:'ffffff'},src=f.pid&&IMG.p[f.pid];
     const vis=src?`<span class="cu-av"><img src="${src}" alt="" loading="lazy"></span>`:(ab?`<img class="cu-lg" src="${logo(ab)}" alt="" loading="lazy">`:'');
     const attr=f.pid?`data-player="${esc(f.pid)}"`:ab?`data-team="${esc(ab)}"`:'';
@@ -131,7 +131,7 @@ function crEx(p){
 function topCol(s){
   const t=TEAMS[s.abbr];
   return `<div class="tcol" style="--tc:${tc(t)}"><h4><img src="${logo(s.abbr)}" alt="">${esc(t.short)} · Top 5</h4>
-  <div class="cromos">${s.top.map((p,i)=>{const ph=photo(p);return `<div class="cromo ${i===0?'mvp':''}" data-player="${esc(p.pid)}">${i===0?`<span class="cr-mvp">${ICO.crown}MVP</span>`:''}
+  <div class="cromos">${s.top.map((p,i)=>{const ph=photo(p);return `<div class="cromo ${i===0?'mvp':''}" data-player="${esc(p.pid)}">${i===0?`<span class="cr-mvp">MVP</span>`:''}
      <div class="cr-ph ${ph?'':'fb'}">${ph||initials(p.n)}${ph?'':`<span class="cr-num">${esc(p.num)}</span>`}<span class="cr-pos">${p.pos?esc(p.pos)+' · ':''}${p.min}'</span></div>
      <div class="cr-nm">${esc(p.n)}</div>
      <div class="cr-st"><div><b>${p.pts}</b><small>PTS</small></div><div><b>${p.reb}</b><small>REB</small></div><div><b>${p.ast}</b><small>AST</small></div></div>
@@ -144,10 +144,10 @@ function gameCard(g){
   const qlabels=Array.from({length:nq},(_,i)=>qlbl(i)).map(x=>`<span>${x}</span>`).join('');
   const [A,H]=g.teams,diff=Math.abs(A.score-H.score),[ca,ch]=pair(TEAMS[A.abbr],TEAMS[H.abbr]);
   const b=[];
-  if(A.ls.length>4) b.push(`<span class="bdg ot">${ICO.clock}${A.ls.length>5?(A.ls.length-4)+' prórrogas':'Prórroga'}</span>`);
-  if(diff>=20) b.push(`<span class="bdg blow">${ICO.bolt}Paliza +${diff}</span>`); else if(diff<=5) b.push(`<span class="bdg close">${ICO.target}Igualado · ${diff}</span>`);
+  if(A.ls.length>4) b.push(`<span class="bdg ot">${A.ls.length>5?(A.ls.length-4)+' prórrogas':'Prórroga'}</span>`);
+  if(diff>=20) b.push(`<span class="bdg blow">Paliza +${diff}</span>`); else if(diff<=5) b.push(`<span class="bdg close">Igualado · ${diff}</span>`);
   const mx=Math.max(0,...g.teams.flatMap(t=>t.top.map(p=>p.pts)));
-  if(mx>=(CUR==='nba'?40:28)) b.push(`<span class="bdg big">${ICO.fire}${mx} pts</span>`);
+  if(mx>=(CUR==='nba'?40:28)) b.push(`<span class="bdg big">${mx} pts</span>`);
   const tot=(A.score+H.score)||1;
   const when=CUR==='nba'?'':madrid(g.utc,{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
   return `<article class="game" id="g${g.id}" data-teams="${esc(A.abbr)},${esc(H.abbr)}" style="--ca:${ca};--ch:${ch}">
@@ -156,7 +156,7 @@ function gameCard(g){
     ${teamRow(g,0)}${teamRow(g,1)}
     <div class="margin" title="Reparto de puntos"><i style="width:${A.score/tot*100}%;background:${ca}"></i><i style="width:${H.score/tot*100}%;background:${ch}"></i></div>
     <div class="stars">${g.teams.map(s=>{const p=s.top[0];if(!p)return '';const t=TEAMS[s.abbr];const ph=photo(p);
-      return `<div class="star" data-player="${esc(p.pid)}" style="--tc:${tc(t)}"><div class="av ${ph?'':'fb'}">${ph||initials(p.n)}</div><div class="who"><div class="tg">Mejor de ${esc(t.short)}</div><b>${esc(p.n)}${p.pts>=(CUR==='nba'?30:22)?`<span class="hot-hand" title="Mano caliente: ${p.pts} puntos">${ICO.fire}</span>`:''}</b><span><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast${CUR!=='nba'?' · '+p.val+' val':''}</span></div></div>`}).join('')}</div>
+      return `<div class="star" data-player="${esc(p.pid)}" style="--tc:${tc(t)}"><div class="av ${ph?'':'fb'}">${ph||initials(p.n)}</div><div class="who"><div class="tg">Mejor de ${esc(t.short)}</div><b>${esc(p.n)}</b><span><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast${CUR!=='nba'?' · '+p.val+' val':''}</span></div></div>`}).join('')}</div>
     <div class="g-foot">
       <button class="btn grow" type="button" aria-expanded="false" aria-controls="${id}" data-toggle="${id}"><span class="lbl-l">Estadísticas y top 5</span><span class="lbl-s">Detalles</span> <span class="car">▾</span></button>
       ${g.bx?`<button class="btn bx-btn" type="button" data-box="${esc(g.id)}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></svg>Ficha completa</button>`:''}
@@ -323,7 +323,7 @@ function confTable(grp){
    const cut=(r.seed===z.po||r.seed===z.pi||(z.rel&&r.seed===n-z.rel))?'cut':'';
    const form=r.form?`<span class="form" title="Del más antiguo al más reciente">${r.form.slice(-5).map((x,i,a)=>`<i class="${x}${i===a.length-1?' last':''}">${x==='W'?'V':'D'}</i>`).join('')}</span>`:`<span class="dots" title="${r.l10}">${Array.from({length:10},(_,i)=>`<i class="${i<(parseInt(r.l10)||0)?'on':''}"></i>`).join('')}</span>`;
    return `<tr class="${cls} ${cut}" data-ab="${esc(r.abbr)}" data-team="${esc(r.abbr)}">
-    <td class="sd"><span>${r.seed===1?ICO.crown:r.seed}</span></td>
+    <td class="sd"><span>${r.seed}</span></td>
     <td class="tm"><div><img src="${logo(r.abbr)}" alt=""><span>${esc(t.short)}</span></div></td>
     <td class="wl"><b>${r.w}-${r.l}</b></td>
     <td><span class="pct">${r.pct}</span><div class="pbar"><i style="width:${(r.w/Math.max(r.w+r.l,1))*100}%;--tcol:${ink(t)}"></i></div></td>
@@ -346,7 +346,7 @@ function ldrCard(c){
   const li=(x,j)=>{const tt=TEAMS[x.abbr]||t;const s=IMG.p[x.pid];return `<li data-player="${esc(x.pid)}" style="--tc:${tc(tt)}" ${j>=5?'data-x hidden':''}><span class="r">${j+1}</span><span class="av ${s?'':'fb'}">${s?`<img src="${s}" alt="">`:`<img src="${logo(x.abbr)}" alt="" style="width:22px;height:22px;object-fit:contain;margin:auto">`}</span><span class="nm">${esc(x.n)}<small>${[x.abbr,x.pos].filter(Boolean).map(esc).join(' · ')}</small></span><span class="v">${x.v}</span></li>`};
   const src=IMG.p[p.pid];
   return `<article class="ldr"><div class="ldr-hero" data-player="${esc(p.pid)}" style="--tc:${tc(t)}">
-    <span class="cat">${ICO.crown}${esc(c.t)}</span><span class="val">${p.v}</span>
+    <span class="cat">${esc(c.t)}</span><span class="val">${p.v}</span>
     <img class="tl" src="${logo(p.abbr)}" alt="">
     ${src?`<img class="ph" src="${src}" alt="${esc(p.n)}" title="${credit(p.pid)}">`:`<span class="ph-fb">${initials(p.n)}</span>`}
     <span class="who"><b>${esc(p.n)}</b><span>${[t.short,p.num?'#'+p.num:'',p.pos].filter(Boolean).map(esc).join(' · ')}</span></span></div>
@@ -834,7 +834,7 @@ async function openTeam(ab){track('equipo/'+CUR+'/'+ab,'Ficha equipo: '+ab+' ('+
       ${g.done?`<span class="r"><b class="wlb ${w?'W':'L'}">${w?'V':'D'}</b>${my}-${ot}</span>`:`<span class="r t">${madrid(g.utc,{weekday:'short'}).replace('.','')} ${madrid(g.utc,{hour:'2-digit',minute:'2-digit'})}</span>`}</div>`};
   pfOpen(`${pfX}<header class="pf-head" style="--tc:${tc(t)};--ti:${col}"><img class="pf-logo" src="${logo(ab)}" alt="">
      <div class="pf-ttl"><small>${esc(grp?grp.name:'')}</small><h3>${esc(t.name)}</h3>
-      <div class="pf-sub"><b>${r.w??'–'}-${r.l??'–'}</b>${r.seed?`<span>${r.seed===1?ICO.crown:''}${r.seed}º</span>`:''}${r.strk?`<span class="strk ${(r.strk||'-')[0]} ${streakN(r.strk)>=3?'hot':''}">${streakIco(r.strk)}${String(r.strk).replace(/^W/,'V').replace(/^L/,'D')}</span>`:''}<span class="form">${form}</span></div></div>
+      <div class="pf-sub"><b>${r.w??'–'}-${r.l??'–'}</b>${r.seed?`<span>${r.seed}º</span>`:''}${r.strk?`<span class="strk ${(r.strk||'-')[0]} ${streakN(r.strk)>=3?'hot':''}">${streakIco(r.strk)}${String(r.strk).replace(/^W/,'V').replace(/^L/,'D')}</span>`:''}<span class="form">${form}</span></div></div>
      <button type="button" class="pf-fav ${favAb()===ab?'on':''}" data-pffav="${esc(ab)}" title="Marcar como mi equipo">${ICO.star}<span>${favAb()===ab?'Mi equipo':'Hacer mi equipo'}</span></button></header>
    <div class="pf-tiles">${[['Puntos a favor',r.ppg],['Puntos en contra',r.opp],['Diferencia',r.diff],['En casa',r.home],['Fuera',r.road]].filter(x=>x[1]!=null&&x[1]!=='').map(x=>`<div><small>${x[0]}</small><b>${esc(x[1])}</b></div>`).join('')}</div>
    <h4 class="pf-h">Posición ${CUR==='nba'?'semana a semana':'jornada a jornada'}</h4><div class="pf-card">${rankChart(rankHistory(ab),col)}</div>
@@ -859,7 +859,7 @@ async function openPlayer(pid){track('jugador/'+CUR,'Ficha jugador ('+CUR+')');
   // posición en la liga (jugadores con al menos la mitad de partidos del que más ha jugado)
   const all=Object.values(P).map(x=>({x,a:avgs(x)})),mx=Math.max(...all.map(o=>o.a.gp)),q=all.filter(o=>o.a.gp>=Math.max(1,mx*0.5));
   const rk=k=>{if(a.gp<Math.max(1,mx*0.5))return '';const v=a[k];return 1+q.filter(o=>o.a[k]>v).length};
-  const tile=(lbl,v,k)=>{const r=k?rk(k):'';return `<div class="${r&&r<=10?'top':''}"><small>${lbl}</small><b>${v}</b>${r&&r<=50?`<em>${r<=3?ICO.crown:''}${r}º de la liga</em>`:''}</div>`};
+  const tile=(lbl,v,k)=>{const r=k?rk(k):'';return `<div class="${r&&r<=10?'top':''}"><small>${lbl}</small><b>${v}</b>${r&&r<=50?`<em>${r}º de la liga</em>`:''}</div>`};
   const gs=p.g.slice().reverse(),best=p.g.reduce((b,g)=>(!b||g[G_.pts]>b[G_.pts])?g:b,null);
   const maxP=Math.max(10,...p.g.map(g=>g[G_.pts]));
   const bars=p.g.map((g,i)=>{const h=Math.max(3,g[G_.pts]/maxP*100);return `<span class="b ${g[G_.res]==='V'?'W':'L'}" style="height:${h}%" title="${g[G_.date]} · ${g[G_.home]?'vs':'@'} ${g[G_.opp]} · ${g[G_.pts]} pts"><i>${g[G_.pts]}</i></span>`}).join('');
