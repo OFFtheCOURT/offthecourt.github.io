@@ -59,12 +59,15 @@ const streakIco=s=>{const n=streakN(s),k=String(s||'')[0];return n>=3?(k==='W'?I
 const medal=i=>i<3?`<span class="medal m${i+1}">${i+1}</span>`:`${i+1}`;
 /* ---------- récords y curiosidades de la jornada (calculadas en curio.py) ---------- */
 function renderCurio(){
-  const F=L.facts||[],el=$('curio');if(!F.length){el.innerHTML='';return}
-  const icon=k=>ICO[k]||ICO.star;
-  el.innerHTML=`<h3>${ICO.crown}${CUR==='nba'?'Lo que dejó la noche':'Lo que dejó la jornada'}</h3><div class="cu-list">${F.map(f=>{
-    const ab=f.ab||(f.pid&&(()=>{for(const p of L.periods[0].games)for(const t of p.teams)if(t.top.some(x=>x.pid===f.pid))return t.abbr})()),t=TEAMS[ab]||{color:'333333'};
-    const src=f.pid&&IMG.p[f.pid],vis=f.pid?(src?`<span class="av" style="--tc:${tc(t)}"><img src="${src}" alt=""></span>`:`<span class="ci">${icon(f.k)}</span>`):(ab?`<img class="lg" src="${logo(ab)}" alt="">`:`<span class="ci">${icon(f.k)}</span>`);
-    return `<button type="button" class="cu" style="--tc:${tc(t)}" ${f.pid?`data-player="${esc(f.pid)}"`:ab?`data-team="${esc(ab)}"`:''}>${vis}<span>${esc(f.t)}</span><span class="ci" style="margin-left:auto;background:none;width:24px">${icon(f.k)}</span></button>`}).join('')}</div>`;
+  const F=(L.facts||[]).slice(0,4),el=$('curio');if(!F.length){el.innerHTML='';return}
+  const teamOf=f=>f.ab||(f.pid&&(()=>{for(const p of L.periods[0].games)for(const t of p.teams)if(t.top.some(x=>x.pid===f.pid))return t.abbr})());
+  el.innerHTML=`<h3>${ICO.crown}${CUR==='nba'?'Lo que dejó la noche':'Lo que dejó la jornada'}</h3><div class="cu-list n${F.length}">${F.map((f,i)=>{
+    const ab=teamOf(f),t=TEAMS[ab]||{color:'333333',alt:'ffffff'},src=f.pid&&IMG.p[f.pid];
+    const vis=src?`<img class="cu-ph" src="${src}" alt="" loading="lazy">`:(ab?`<img class="cu-lg" src="${logo(ab)}" alt="" loading="lazy">`:'');
+    const attr=f.pid?`data-player="${esc(f.pid)}"`:ab?`data-team="${esc(ab)}"`:'';
+    if(!f.n)return `<button type="button" class="cu" style="--tc:${tc(t)}" ${attr} title="${esc(f.t)}">${vis}<span class="cu-tx"><span class="cu-w">${esc(f.t)}</span></span></button>`;
+    return `<button type="button" class="cu${i===0?' hero':''}" style="--tc:${tc(t)}" ${attr} title="${esc(f.t)}">${vis}
+      <span class="cu-tx"><span class="cu-tag">${esc(f.tag||'')}</span><span class="cu-num${String(f.n).length>4?' long':''}">${esc(f.n)}<small>${esc(f.u||'')}</small></span><span class="cu-w">${esc(f.w||'')}</span><span class="cu-d">${esc(f.d||'')}</span></span></button>`}).join('')}</div>`;
 }
 /* ---------- partido ---------- */
 function teamRow(g,side){
