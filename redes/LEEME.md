@@ -1,3 +1,12 @@
+# CÓMO SE HACEN AHORA LOS VÍDEOS (desde el 13-11-2026)
+
+Los vídeos diarios los hace **GitHub Actions** (`.github/workflows/videos.yml`), no una sesión de Claude:
+cada 10 minutos (02-10 y 17-23 UTC) mira cada liga con `video.py estado`; cuando sale LISTO y la noche no está
+en `redes/videos.json`, `redes/auto.py` escribe el guion (formato de abajo), genera la voz con edge-tts, monta y
+renderiza (unos 5 minutos), guarda el MP4 en la rama `redes-videos` y lo apunta en `redes/videos.json` con
+`"entregado": false`. Las tareas de Claude "Offcourt · entregar vídeos" (a las :07 y :37) solo lo recogen y lo envían.
+Para rehacer uno a mano: Actions → "Vídeos automáticos" → Run workflow (ligas, forzar). No marques `hecho.json` a mano.
+
 # FORMATO DE LOS VÍDEOS — NBA, EUROLIGA Y ACB (manda sobre el resto de este documento; se narran TODOS los partidos disputados)
 
 **ANTES DE ESCRIBIR EL GUION LEE `redes/IDENTIDAD.md`** (guía de marca del usuario: manda en tono, hook, ritmo y prioridades). Resumen:
