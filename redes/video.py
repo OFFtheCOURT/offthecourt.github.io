@@ -110,6 +110,7 @@ def borrador():
     else:
         prox_fecha, gs = proximos(N, fecha); up = {'games': gs}
     hoy = [{'partido': f"{g['teams'][0]['abbr']}-{g['teams'][1]['abbr']}", 'visitante': T[g['teams'][0]['abbr']]['name'], 'local': T[g['teams'][1]['abbr']]['name'],
+            'visitante_corto': T[g['teams'][0]['abbr']]['short'], 'local_corto': T[g['teams'][1]['abbr']]['short'],
             'hora_es': hora_es(g.get('utc'))} for g in up['games']]
     pron = json.load(open(os.path.join(R, 'pronunciacion.json'), encoding='utf-8'))
     nombres = sorted({p['nombre'] for g in games for s in ('visitante', 'local') for p in g[s]['jugadores']} | {T[a]['name'] for a in T})
@@ -191,8 +192,37 @@ def voz():
     sys.exit('la voz sigue saliendo vacía en: ' + ', '.join(vacios))
 
 
+def _voz_local(n, voice):
+    """locución con edge-tts aquí mismo (GitHub Actions): mismo resultado que voz.yml"""
+    import asyncio, edge_tts
+    name, modo = voice.split(':') if ':' in voice else (voice, 'o'); vkey = f'{name}_{modo}'
+    d = os.path.join(OUT, 'voz'); shutil.rmtree(d, ignore_errors=True); os.makedirs(os.path.join(d, vkey))
+    rate, tono = n.get('velocidad', '+12%'), n.get('tono', '+2Hz'); res = []
+    async def una(s):
+        t = _texto(s['t'], modo); f = os.path.join(d, vkey, s['id'] + '.mp3')
+        for intento in range(5):
+            pal = []
+            try:
+                c = edge_tts.Communicate(t, name, rate=rate, pitch=tono, boundary='WordBoundary')
+                with open(f, 'wb') as fh:
+                    async for ch in c.stream():
+                        if ch['type'] == 'audio': fh.write(ch['data'])
+                        elif ch['type'] in ('WordBoundary', 'SentenceBoundary'): pal.append({'w': ch['text'], 'o': ch['offset'] / 1e7, 'd': ch['duration'] / 1e7, 'k': ch['type']})
+                if os.path.getsize(f) < 2000: raise RuntimeError('audio vacío')
+                return {'id': s['id'], 'texto': t, 'palabras': pal}
+            except Exception as e:
+                print('reintento voz', s['id'], repr(e)); await asyncio.sleep(3 + 4 * intento)
+        raise SystemExit('la voz sale vacía')
+    async def todas():
+        for s in n['segmentos']: res.append(await una(s))
+    asyncio.run(todas())
+    json.dump({vkey: res}, open(os.path.join(d, 'tiempos.json'), 'w'), ensure_ascii=False)
+    print('voz local lista:', vkey)
+
+
 def _voz_una_vez(n=None):
     n = n or noche(); voice = n.get('voz', 'es-ES-AlvaroNeural:r')
+    if os.environ.get('OFFCOURT_TTS_LOCAL'): return _voz_local(n, voice)
     guion = [{'id': s['id'], 't': s['t']} for s in n['segmentos']]
     payload = {'ref': 'main', 'inputs': {'guion': base64.b64encode(json.dumps(guion, ensure_ascii=False).encode()).decode(), 'voces': voice, 'rate': n.get('velocidad', '+12%'), 'tono': n.get('tono', '+2Hz')}}
     pf = os.path.join(OUT, 'dispatch.json'); json.dump(payload, open(pf, 'w'))
@@ -559,6 +589,7 @@ def _restante(detail):
     return None
 
 def hecho_de(lg):
+    if os.environ.get('OFFCOURT_IGNORA_HECHO'): return None   # el automático lleva su propio registro (redes/videos.json)
     h = json.load(open(HECHO)) if os.path.exists(HECHO) else {}
     if 'fecha' in h and lg == 'nba': return h['fecha']
     return (h.get(lg) or {}).get('fecha')

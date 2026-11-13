@@ -1,0 +1,83 @@
+name: Vídeos automáticos
+
+# Cada 10 minutos en las franjas de partidos: si una liga ha terminado su noche/jornada y aún no tiene vídeo,
+# escribe el guion, genera la voz, monta y renderiza el vídeo aquí mismo (sin depender de ninguna sesión de Claude).
+# El MP4 queda en la rama redes-videos y el registro en redes/videos.json; Claude solo lo recoge y lo envía.
+on:
+  schedule:
+    - cron: '*/10 2-10,17-23 * * *'   # UTC: NBA de madrugada en España, EuroLiga y ACB por la tarde-noche
+  workflow_dispatch:
+    inputs:
+      ligas:
+        description: 'Ligas (nba el acb, vacío = todas)'
+        required: false
+        default: ''
+      forzar:
+        description: 'Rehacer aunque ya exista el vídeo de esa noche'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: videos
+  cancel-in-progress: false
+
+jobs:
+  auto:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Comprobar si hay algo que hacer (rápido)
+        id: mira
+        env:
+          OFFCOURT_IGNORA_HECHO: '1'
+          FORZAR: ${{ github.event.inputs.forzar }}
+          LIGAS: ${{ github.event.inputs.ligas }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, sys
+          reg = json.load(open('redes/videos.json')) if os.path.exists('redes/videos.json') else {}
+          hay = []
+          for lg in (os.environ.get('LIGAS') or 'nba el acb').split():
+              out = subprocess.run([sys.executable, 'redes/video.py', '--liga', lg, 'estado'], capture_output=True, text=True).stdout.strip().splitlines()
+              st = json.loads(out[-1]) if out else {}
+              print(lg, st.get('estado'), st.get('noche'))
+              if st.get('estado') == 'LISTO' and ((reg.get(lg) or {}).get('fecha') != st.get('noche') or os.environ.get('FORZAR') == 'true'): hay.append(lg)
+          open(os.environ['GITHUB_OUTPUT'], 'a').write(f"ligas={' '.join(hay)}\n")
+          PY
+      - name: Herramientas para el vídeo
+        if: steps.mira.outputs.ligas != ''
+        run: |
+          pip install -q edge-tts numpy
+          npm i --no-save --silent playwright-core
+          which ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+          ls /usr/bin/google-chrome
+      - name: Hacer los vídeos
+        if: steps.mira.outputs.ligas != ''
+        env:
+          OFFCOURT_FORZAR: ${{ github.event.inputs.forzar == 'true' && '1' || '' }}
+        run: python3 redes/auto.py ${{ steps.mira.outputs.ligas }}
+      - name: Guardar el MP4 (rama redes-videos) y el registro (main)
+        if: steps.mira.outputs.ligas != ''
+        run: |
+          git config --global user.name "offcourt-bot"; git config --global user.email "offcourt-bot@users.noreply.github.com"
+          if [ -s redes/salida/nuevos.txt ]; then
+            mkdir -p /tmp/v && cd /tmp/v
+            git init -q -b redes-videos
+            git fetch -q --depth 1 "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" redes-videos && git checkout -q FETCH_HEAD -- . || true
+            while read f; do b=$(basename "$f"); pre=${b%_*}; rm -f ${pre}_*.mp4; cp "$f" .; done < "$GITHUB_WORKSPACE/redes/salida/nuevos.txt"
+            git add -A && git commit -qm "Vídeos" && git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:redes-videos
+            cd "$GITHUB_WORKSPACE"
+          fi
+          git add redes/videos.json
+          git diff --cached --quiet || git commit -qm "Vídeos automáticos: registro"
+          for i in 1 2 3 4; do git pull -q --rebase origin main && git push -q origin HEAD:main && break; sleep 5; done
