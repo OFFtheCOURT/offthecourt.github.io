@@ -136,7 +136,11 @@ def guion(lg, nivel=0):
     def nom(c):
         a_ = _art(c); q = '{%s|%s}' % (c, PRON[c]) if c in PRON and PRON[c] != c else c
         return (a_ + ' ' if a_ else '') + q
-    cuando = 'Esta noche' if lg == 'nba' else ('Mañana' if b.get('proximo_dia') and b['proximo_dia'] > b['fecha'] else 'Próximamente')
+    cuando = 'Esta noche' if lg == 'nba' else 'Próximamente'
+    if lg != 'nba' and b.get('proximo_dia'):
+        d0 = datetime.date.fromisoformat(b['fecha']); d1 = datetime.date.fromisoformat(b['proximo_dia'])
+        dias = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+        cuando = 'Mañana' if (d1 - d0).days == 1 else (f"El {dias[d1.weekday()]}" if 1 < (d1 - d0).days < 7 else f"El {d1.day} de {['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][d1.month - 1]}")
     if prox:
         dos = prox[:1] if nivel >= 1 else prox[:2]
         ps = [f"{nom(x.get('visitante_corto') or x['visitante'])} contra {nom(x.get('local_corto') or x['local'])}" for x in dos]
