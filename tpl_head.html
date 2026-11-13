@@ -1014,6 +1014,18 @@ html[data-theme="light"] .cmp-r .v.w{filter:brightness(.85) saturate(1.2)}
 .mp-lang{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}.mp-lang span{font-size:16px}
 .mp-lang button{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:5px 12px;font:800 11px var(--f-label);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
 .mp-lang button.on{background:var(--hot);border-color:transparent;color:#120a02}
+
+/* ===== Selector de idioma con banderas (junto a buscar y tema) ===== */
+.lang-dd{position:relative;flex:none}
+.flag{width:24px;height:16px;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.12);display:block;flex:none}
+#langBtn .flag{width:26px;height:17px}
+.lang-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:60;min-width:180px;padding:6px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:0 18px 40px -16px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:2px}
+.lang-pop[hidden]{display:none}
+.lang-pop button{display:flex;align-items:center;gap:12px;padding:10px 12px;border:0;border-radius:10px;background:none;color:var(--fg);font:700 14.5px var(--f-body);cursor:pointer;text-align:left}
+.lang-pop button:hover{background:var(--card2)}
+.lang-pop button .ok{margin-left:auto;font-style:normal;color:var(--accent);opacity:0}.lang-pop button.on .ok{opacity:1}.lang-pop button.on{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+@media (max-width:480px){header.top>.wrap{column-gap:5px!important}header.top .theme-btn{width:36px!important;height:36px!important;margin-left:0;border-radius:12px}#langBtn .flag{width:22px;height:15px}header.top .wordmark{font-size:22px}header.top .menu-btn{width:36px;height:36px;padding:0;justify-content:center;border-radius:12px}header.top .menu-btn .mb-t{display:none}header.top .leagues{min-width:0;max-width:100%;flex:1 1 100%}header.top .lg-b{min-width:0;flex:1 1 0}header.top .lg-t{min-width:0}header.top .lg-t b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header.top .brand img,header.top .brand svg{max-height:40px}}
+@media (max-width:760px){#searchBtn{margin-left:auto!important}#themeBtn{margin-left:0}header.top .lang-dd{order:3}#themeBtn{order:4}header.top .menu{order:5}header.top .leagues{order:6}}
 </style>
 <script data-goatcounter="https://offcourt.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
@@ -1052,13 +1064,13 @@ html[data-theme="light"] .cmp-r .v.w{filter:brightness(.85) saturate(1.2)}
       <button type="button" class="lg-b" data-lg="acb" aria-pressed="false"><span class="lg-ic">%%LOGO_ACB%%</span><span class="lg-t"><b>ACB</b><small>Liga Endesa</small></span></button>
     </nav>
     <button class="theme-btn" id="searchBtn" type="button" aria-label="Buscar equipos y jugadores" title="Buscar (tecla /)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/></svg></button>
+    <div class="lang-dd" id="langDd"><button class="theme-btn" id="langBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Idioma" title="Idioma"><span class="lang-cur" id="langCur"><svg class="flag" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#c60b1e"/><rect y="5" width="30" height="10" fill="#ffc400"/></svg></span></button><div class="lang-pop" id="langPop" hidden><button type="button" data-lang="es"><svg class="flag" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#c60b1e"/><rect y="5" width="30" height="10" fill="#ffc400"/></svg><span>Español</span><i class="ok">✓</i></button><button type="button" data-lang="ca"><svg class="flag" viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#fcdd09"/><path d="M0 2.6h30M0 7.1h30M0 11.6h30M0 16.1h30" stroke="#da121a" stroke-width="2.2"/></svg><span>Català</span><i class="ok">✓</i></button><button type="button" data-lang="en"><svg class="flag" viewBox="0 0 60 40" aria-hidden="true"><clipPath id="ukc"><rect width="60" height="40"/></clipPath><g clip-path="url(#ukc)"><rect width="60" height="40" fill="#012169"/><path d="M0 0l60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0l60 40M60 0L0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="12"/><path d="M30 0v40M0 20h60" stroke="#c8102e" stroke-width="7"/></g></svg><span>English</span><i class="ok">✓</i></button></div></div>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="Cambiar a modo claro" title="Modo claro / oscuro"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg></button>
     <div class="menu">
       <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="menuPanel">
         <span class="burger" aria-hidden="true"><i></i><i></i><i></i></span><span class="mb-t">Menú</span>
       </button>
       <div class="menu-panel" id="menuPanel" hidden>
-        <div class="mp-lang"><span>🌐</span><button type="button" data-lang="es">Español</button><button type="button" data-lang="ca">Català</button><button type="button" data-lang="en">English</button></div>
         <div class="mp-head">¿Qué quieres consultar?</div>
         <div class="mp-grid" id="menuGrid"></div>
       </div>

@@ -12,6 +12,17 @@ const LOCALE=()=>({es:'es-ES',ca:'ca-ES',en:'en-GB'})[LANG];
 document.documentElement.lang=LANG;
 // [español, english, català]
 const I18N_D=[
+// Lo que dejó la noche (curio.py): etiquetas, unidades y líneas
+['MÁXIMO DEL AÑO','SEASON HIGH','MÀXIM DE L\'ANY'],['TRIPLE-DOBLE','TRIPLE-DOUBLE','TRIPLE-DOBLE'],['DOBLE-DOBLE','DOUBLE-DOUBLE','DOBLE-DOBLE'],['EN RACHA','ON A ROLL','EN RATXA'],
+['MEJOR RACHA','BEST STREAK','MILLOR RATXA'],['EN CAÍDA LIBRE','IN FREE FALL','EN CAIGUDA LLIURE'],['EXHIBICIÓN','SHOWTIME','EXHIBICIÓ'],['PUNTERÍA PERFECTA','PERFECT SHOOTING','PUNTERIA PERFECTA'],
+['RÉCORD DE TRIPLES','THREE-POINT RECORD','RÈCORD DE TRIPLES'],['LLUVIA DE TRIPLES','RAINING THREES','PLUJA DE TRIPLES'],['¡POR FIN!','AT LAST!','PER FI!'],['RÉCORD DEL AÑO','SEASON RECORD','RÈCORD DE L\'ANY'],
+['PALIZA DEL AÑO','BLOWOUT OF THE YEAR','PALLISSA DE L\'ANY'],['PARTIDAZO','INSTANT CLASSIC','PARTIDÀS'],['FINAL DE INFARTO','THRILLER','FINAL D\'INFART'],
+['SEGUIDAS','IN A ROW','SEGUIDES'],['DERROTAS','LOSSES','DERROTES'],['PUNTOS','POINTS','PUNTS'],['VICTORIA','WIN','VICTÒRIA'],['PALIZA','MARGIN','PALLISSA'],['EN TIROS','FG','EN TIRS'],
+['PRÓRROGA','OVERTIME','PRÒRROGA'],['PRÓRROGAS','OVERTIMES','PRÒRROGUES'],['AL LÍMITE','TO THE WIRE','AL LÍMIT'],['TRIPLES','THREES','TRIPLES'],
+['Partidazo hasta el final','A classic to the very end','Partidàs fins al final'],['Se decidió en la última posesión','Decided on the last possession','Es va decidir en l\'última possessió'],
+['La mayor anotación de la temporada','The highest score of the season','La màxima anotació de la temporada'],
+['. Fotos de jugadores: Wikimedia Commons, con licencias libres; cuando no hay foto libre se muestran las iniciales.','. Player photos: Wikimedia Commons, under free licences; when there is no free photo, initials are shown.','. Fotos de jugadors: Wikimedia Commons, amb llicències lliures; quan no hi ha foto lliure es mostren les inicials.'],
+['Este ·','East ·','Est ·'],['Oeste ·','West ·','Oest ·'],['Idioma','Language','Idioma'],
 ['Agenda','Schedule','Agenda'],['Calendario','Calendar','Calendari'],['Clasificación','Standings','Classificació'],['Líderes','Leaders','Líders'],
 ['Líderes individuales','Individual leaders','Líders individuals'],['Estadísticas','Stats','Estadístiques'],['Estadísticas equipos','Team stats','Estadístiques equips'],
 ['Estadísticas de equipo','Team stats','Estadístiques d\'equip'],['Estadísticas y top 5','Stats & top 5','Estadístiques i top 5'],['Mi equipo','My team','El meu equip'],['★ Mi equipo','★ My team','★ El meu equip'],
@@ -86,12 +97,17 @@ const I18N_D=[
 ];
 // [expresión regular sobre el texto español, inglés, catalán] ($1, $2… y {t:$1} = traducir esa parte)
 const I18N_RX=[
+[/^RÉCORD (NBA|EUROLIGA|ACB)$/,'{t:$1} RECORD','RÈCORD {t:$1}'],[/^Última: (\d+-\d+) a (.+)$/,'Last: $1 vs $2','Últim: $1 contra $2'],
+[/^(.+) · (\d+) prórrogas$/,'$1 · $2OT','$1 · $2 pròrrogues'],[/^(.+) · prórroga$/,'$1 · OT','$1 · pròrroga'],
+[/^Paliza \+(\d+)$/,'Blowout +$1','Pallissa +$1'],[/^Igualado · (\d+)$/,'Close game · $1','Igualat · $1'],
+[/^Elige tu equipo de la (NBA|EuroLiga|ACB)$/,'Pick your {t:$1} team','Tria el teu equip de l\'{t:$1}'],
+[/^([ABPE]|AP) · (\d+')$/,'{t:$1} · $2','$1 · $2'],[/^(.+) · ([ABPE]|AP)$/,'$1 · {t:$2}','$1 · $2'],
 [/^(\d+) partidos$/,'$1 games','$1 partits'],[/^(\d+) partido$/,'$1 game','$1 partit'],[/^(\d+) jugados$/,'$1 played','$1 jugats'],
 [/^(\d+) partidos · (\d+) puntos en total · media de ([\d.,]+) por equipo$/,'$1 games · $2 total points · $3 per team','$1 partits · $2 punts en total · mitjana de $3 per equip'],
 [/^(\d+) partidos? · primer salto a las (\S+) \(hora de España\) · datos actualizados a las (\S+)$/,'$1 games · first tip-off $2 (Spanish time) · data updated $3','$1 partits · primer salt a les $2 (hora d\'Espanya) · dades actualitzades a les $3'],
 [/^(\d+) partidos? · primer salto a las (\S+) \(hora de España\)$/,'$1 games · first tip-off $2 (Spanish time)','$1 partits · primer salt a les $2 (hora d\'Espanya)'],
 [/^(\d+) puntos · (\d+) por equipo$/,'$1 points · $2 per team','$1 punts · $2 per equip'],
-[/^(.+) por delante$/,'$1 ahead','$1 per davant'],[/^Mejor de (.+)$/,'Best · $1','Millor de $1'],[/^Mejor parcial · (.+)$/,'Best run · $1','Millor parcial · $1'],
+[/^(.+) por delante$/,'$1 ahead','$1 per davant'],[/^Mejor de (.+)$/,'Top for $1','El millor · $1'],[/^Mejor parcial · (.+)$/,'Best run · $1','Millor parcial · $1'],
 [/^Máx\. ventaja (.+)$/,'Biggest lead $1','Màx. avantatge $1'],[/^Comparar con… \((.+)\)$/,'Compare with… ($1)','Comparar amb… ($1)'],
 [/^Destacado · (.+) gana a (.+)$/,'Standout · $1 beat $2','Destacat · $1 guanya $2'],[/^Destacado · (.+) cae ante (.+)$/,'Standout · $1 fall to $2','Destacat · $1 cau davant $2'],
 [/^MVP de la (jornada|noche) · (.+) gana a (.+)$/,'MVP of the {t:$1} · $2 beat $3','MVP de la {t:$1} · $2 guanya $3'],[/^MVP de la (jornada|noche) · (.+) cae ante (.+)$/,'MVP of the {t:$1} · $2 fall to $3','MVP de la {t:$1} · $2 cau davant $3'],
@@ -120,7 +136,7 @@ const I18N_RX=[
 [/^Ranking de los (\d+) equipos$/,'Ranking of the $1 teams','Rànquing dels $1 equips'],[/^Equipos de la (.+)$/,'{t:$1} teams','Equips de la {t:$1}'],
 [/^Del (\d+) al (\d+) entran directos a playoffs; del (\d+) al (\d+) juegan el play-in\.$/,'$1 to $2 go straight to the playoffs; $3 to $4 play the play-in.','Del $1 al $2 van directes als playoffs; del $3 al $4 juguen el play-in.'],
 [/^Del (\d+) al (\d+) juegan los playoffs por el título; los (\d+) últimos descienden\.$/,'$1 to $2 play the title playoffs; the bottom $3 are relegated.','Del $1 al $2 juguen els playoffs pel títol; els $3 últims baixen.'],
-[/^(\d+)º de la liga$/,'#$1 in the league','$1r de la lliga'],[/^(\d+) ofe\.$/,'$1 off.','$1 ofe.'],[/^(\d+) p\.$/,'$1 g.','$1 p.'],[/^(\d+) prórrogas$/,'$1 overtimes','$1 pròrrogues'],
+[/^(\d+)º de la liga$/,'#$1 in the league','$1º de la lliga'],[/^(\d+) ofe\.$/,'$1 off.','$1 ofe.'],[/^(\d+) p\.$/,'$1 g.','$1 p.'],[/^(\d+) prórrogas$/,'$1 overtimes','$1 pròrrogues'],
 [/^Medias por partido de la temporada \((.+)\)\. Toca un jugador para ver su ficha\.$/,'Season per-game averages ({t:$1}). Tap a player to open their profile.','Mitjanes per partit de la temporada ({t:$1}). Toca un jugador per veure\'n la fitxa.'],
 [/^Ficha completa · (.+)$/,'Box score · $1','Fitxa completa · $1'],[/^Sin resultados para «(.+)»$/,'No results for «$1»','Sense resultats per a «$1»'],
 [/^Avisos de los partidos de (.+)$/,'Alerts for $1 games','Avisos dels partits de $1'],[/^Ordenar por (.+)$/,'Sort by {t:$1}','Ordenar per {t:$1}'],[/^Mano caliente: (\d+) puntos$/,'Hot hand: $1 points','Mà calenta: $1 punts'],
@@ -143,12 +159,12 @@ I18N_D.push(['Base','Point guard','Base'],['Escolta','Shooting guard','Escorta']
  ['valoración (pir)','efficiency (PIR)','valoració (PIR)'],['robos','steals','robatoris'],['tapones','blocks','taps'],['triples','3-pointers','triples'],['Sin partidos','No games','Sense partits'],['jornada','round','jornada'],['Anoche','Last night','Ahir a la nit'],['Este','East','Est'],['Oeste','West','Oest'],['PR','OT','PR'],['noche','night','nit'],['jornadas','rounds','jornades'],['días','days','dies'],['Mejor ataque:','Best offence:','Millor atac:']);
 // pasada final sobre cualquier texto: días, meses y fechas que llegan escritos en español desde los datos
 const I18N_POST={
- en:[[/\(fecha de EE\. UU\.\)/g,'(US date)'],[/horario de España/g,'Spanish time'],[/ a las /g,' at '],[/\b(\d{1,2}) de (enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)(?: de (\d{4}))?/gi,(m,d,mo,y)=>`${d} ${({enero:'January',febrero:'February',marzo:'March',abril:'April',mayo:'May',junio:'June',julio:'July',agosto:'August',septiembre:'September',octubre:'October',noviembre:'November',diciembre:'December'})[mo.toLowerCase()]}${y?' '+y:''}`],
+ en:[[/(\d+)º/g,(m,n)=>{n=+n;const t=n%100;return n+((t>10&&t<14)?'th':({1:'st',2:'nd',3:'rd'})[n%10]||'th')}],[/\(fecha de EE\. UU\.\)/g,'(US date)'],[/horario de España/g,'Spanish time'],[/ a las /g,' at '],[/\b(\d{1,2}) de (enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)(?: de (\d{4}))?/gi,(m,d,mo,y)=>`${d} ${({enero:'January',febrero:'February',marzo:'March',abril:'April',mayo:'May',junio:'June',julio:'July',agosto:'August',septiembre:'September',octubre:'October',noviembre:'November',diciembre:'December'})[mo.toLowerCase()]}${y?' '+y:''}`],
    [/\b(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\b/g,m=>({Lunes:'Monday',Martes:'Tuesday','Miércoles':'Wednesday',Jueves:'Thursday',Viernes:'Friday','Sábado':'Saturday',Domingo:'Sunday'})[m]],
    [/\b(lunes|martes|miércoles|jueves|viernes|sábado|domingo)\b/g,m=>({lunes:'Monday',martes:'Tuesday','miércoles':'Wednesday',jueves:'Thursday',viernes:'Friday','sábado':'Saturday',domingo:'Sunday'})[m]],
    [/\b(lun|mié|jue|vie|sáb|dom)\b/g,m=>({lun:'Mon','mié':'Wed',jue:'Thu',vie:'Fri','sáb':'Sat',dom:'Sun'})[m]],
    [/\b(\d{1,2})(?:-(\d{1,2}))? (ene|feb|abr|may|jun|jul|ago|sept|oct|nov|dic)\b/g,(m,a,b,mo)=>`${a}${b?'-'+b:''} ${({ene:'Jan',feb:'Feb',abr:'Apr',may:'May',jun:'Jun',jul:'Jul',ago:'Aug',sept:'Sep',oct:'Oct',nov:'Nov',dic:'Dec'})[mo]}`]],
- ca:[[/\(fecha de EE\. UU\.\)/g,'(data dels EUA)'],[/horario de España/g,'horari d\'Espanya'],[/ a las /g,' a les '],[/\b(\d{1,2}) de (enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)(?: de (\d{4}))?/gi,(m,d,mo,y)=>{const n=({enero:'gener',febrero:'febrer',marzo:'març',abril:'abril',mayo:'maig',junio:'juny',julio:'juliol',agosto:'agost',septiembre:'setembre',octubre:'octubre',noviembre:'novembre',diciembre:'desembre'})[mo.toLowerCase()];return `${d} ${/^[ao]/.test(n)?"d'":'de '}${n}${y?' de '+y:''}`}],
+ ca:[[/(\d+)º/g,(m,n)=>n+(({1:'r',2:'n',3:'r',4:'t'})[+n]||'è')],[/\(fecha de EE\. UU\.\)/g,'(data dels EUA)'],[/horario de España/g,'horari d\'Espanya'],[/ a las /g,' a les '],[/\b(\d{1,2}) de (enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)(?: de (\d{4}))?/gi,(m,d,mo,y)=>{const n=({enero:'gener',febrero:'febrer',marzo:'març',abril:'abril',mayo:'maig',junio:'juny',julio:'juliol',agosto:'agost',septiembre:'setembre',octubre:'octubre',noviembre:'novembre',diciembre:'desembre'})[mo.toLowerCase()];return `${d} ${/^[ao]/.test(n)?"d'":'de '}${n}${y?' de '+y:''}`}],
    [/\b(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\b/g,m=>({Lunes:'Dilluns',Martes:'Dimarts','Miércoles':'Dimecres',Jueves:'Dijous',Viernes:'Divendres','Sábado':'Dissabte',Domingo:'Diumenge'})[m]],
    [/\b(lunes|martes|miércoles|jueves|viernes|sábado|domingo)\b/g,m=>({lunes:'dilluns',martes:'dimarts','miércoles':'dimecres',jueves:'dijous',viernes:'divendres','sábado':'dissabte',domingo:'diumenge'})[m]],
    [/\b(lun|mié|jue|vie|sáb|dom)\b/g,m=>({lun:'dl.','mié':'dc.',jue:'dj.',vie:'dv.','sáb':'ds.',dom:'dg.'})[m]],
@@ -162,8 +178,8 @@ const I18N_H={ // títulos con palabra resaltada: texto español completo → HT
  'Estadísticas de equipos':['Team <span class="hl">stats</span>','Estadístiques d\'<span class="hl">equips</span>'],'Líderes individuales':['Individual <span class="hl">leaders</span>','Líders <span class="hl">individuals</span>'],
  'Próximos partidos':['Upcoming <span class="hl">games</span>','Propers <span class="hl">partits</span>'],
 };
-const I18N_TOK={es:{},en:{jornada:'round',noche:'night','días':'days',jornadas:'rounds',NBA:'NBA',EuroLiga:'EuroLeague',ACB:'ACB',puntos:'points',rebotes:'rebounds',asistencias:'assists','de valoración':'efficiency'},
-  ca:{jornada:'jornada',noche:'nit','días':'dies',jornadas:'jornades',NBA:'NBA',EuroLiga:'Eurolliga',ACB:'ACB',puntos:'punts',rebotes:'rebots',asistencias:'assistències','de valoración':'de valoració'}};
+const I18N_TOK={es:{},en:{A:'F',B:'G',P:'C',E:'G',AP:'PF',EUROLIGA:'EUROLEAGUE',jornada:'round',noche:'night','días':'days',jornadas:'rounds',NBA:'NBA',EuroLiga:'EuroLeague',ACB:'ACB',puntos:'points',rebotes:'rebounds',asistencias:'assists','de valoración':'efficiency'},
+  ca:{EUROLIGA:'EUROLLIGA',jornada:'jornada',noche:'nit','días':'dies',jornadas:'jornades',NBA:'NBA',EuroLiga:'Eurolliga',ACB:'ACB',puntos:'punts',rebotes:'rebots',asistencias:'assistències','de valoración':'de valoració'}};
 const I18N_MAP=(()=>{const m={};if(LANG==='es')return m;const k=LANG==='en'?1:2;I18N_D.forEach(r=>{m[r[0]]=r[k]});return m})();
 function tr(s){
   if(LANG==='es'||!s)return s;const raw=String(s),t=raw.trim();if(!t)return raw;
@@ -174,14 +190,14 @@ function tr(s){
   for(const r of I18N_RX){const m=t.match(r[0]);if(m){let o=r[k].replace(/\{t:\$(\d)\}/g,(_,i)=>{const v=m[i]||'';return I18N_TOK[LANG][v]||I18N_MAP[v]||v}).replace(/\$(\d)/g,(_,i)=>m[i]||'');return i18nPost(lead+o+tail)}}
   return i18nPost(raw);
 }
-function i18nPost(s){const P=I18N_POST[LANG];if(!P||!/[a-záéíóú]/i.test(s))return s;for(const [r,f] of P)s=s.replace(r,f);return s}
+function i18nPost(s){const P=I18N_POST[LANG];if(!P||!/[a-záéíóúº]/i.test(s))return s;for(const [r,f] of P)s=s.replace(r,f);return s}
 function i18nNode(root){
   if(LANG==='es')return;
   const els=root.nodeType===1?[root,...root.querySelectorAll('h1,h2')]:[];
   els.forEach(e=>{if(!/^H[12]$/.test(e.tagName)||!e.querySelector('.hl'))return;const key=e.textContent.replace(/\s+/g,' ').trim(),h=I18N_H[key];if(h){const v=h[LANG==='en'?0:1];if(e.innerHTML!==v)e.innerHTML=v}});
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;const todo=[];
   if(root.nodeType===3)todo.push(root);else while(n=w.nextNode())todo.push(n);
-  for(const x of todo){if(x.parentElement&&x.parentElement.closest('script,style,svg,.no-tr'))continue;const v=tr(x.nodeValue);if(v!==x.nodeValue)x.nodeValue=v}
+  for(const x of todo){if(x.parentElement&&x.parentElement.closest('script,style,.no-tr'))continue;const v=tr(x.nodeValue);if(v!==x.nodeValue)x.nodeValue=v}
   if(root.nodeType===1)[root,...root.querySelectorAll('[title],[aria-label],[placeholder]')].forEach(e=>{for(const a of ['title','aria-label','placeholder']){const v=e.getAttribute&&e.getAttribute(a);if(v){const t=tr(v);if(t!==v)e.setAttribute(a,t)}}});
 }
 function i18nStart(){
