@@ -10,6 +10,11 @@ def j(u): return json.loads(get(u))
 from zoneinfo import ZoneInfo
 ET=datetime.datetime.now(ZoneInfo('America/New_York')).date()
 days=[(ET-datetime.timedelta(days=1+i)) for i in range(11)]
+# si la noche de hoy (hora de EE. UU.) ya ha terminado entera antes de medianoche, cuenta ya como resultado
+try:
+    _sb=j(f"{API}/scoreboard?dates={ET.strftime('%Y%m%d')}")
+    if _sb.get('events') and all(e['status']['type'].get('completed') for e in _sb['events']): days=[ET]+days[:-1]
+except Exception as _e: print('noche de hoy:', _e)
 out={'generated':datetime.date.today().isoformat(),'days':[]}
 teams={}
 players={}

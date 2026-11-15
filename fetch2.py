@@ -25,6 +25,7 @@ for i in range(3):
         odds=(c.get('odds') or [{}])[0].get('details','')
         stt=e['status']['type']
         gs.append({'id':e['id'],'utc':e['date'],'teams':tm,'tv':tv[:2],'venue':c.get('venue',{}).get('fullName',''),'odds':odds,'state':stt.get('state','pre'),'detail':stt.get('shortDetail',''),'live':f"https://www.espn.com/nba/game/_/gameId/{e['id']}"})
+    if i==0 and gs and all(g['state']=='post' for g in gs): continue   # ya acabada: va en resultados (fetch.py)
     up.append({'date':(ET+datetime.timedelta(days=i)).isoformat(),'games':gs})
 ex['upcoming']=up
 # standings
