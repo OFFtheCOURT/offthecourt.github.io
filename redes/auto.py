@@ -148,7 +148,7 @@ def guion(lg, nivel=0):
         out = f"{cuando}, {' y '.join(ps)}. ¿Quién dará la sorpresa? Esto es {{OFFCOURT|Ófkort}}."
         res = {x['partido']: clave(nom(x.get('visitante_corto') or x['visitante'])) for x in dos}
     else:
-        out, res = f"Mañana, más baloncesto en la {SIGLA[lg]}. Esto es {{OFFCOURT|Ófkort}}.", {}
+        out, res = f"Muy pronto, más baloncesto en la {SIGLA[lg]}. ¡No te lo pierdas! Esto es {{OFFCOURT|Ófkort}}.", {}
     seg.append({'id': 'outro', 't': out, 'resaltar': res})
     n = {'fecha': b['fecha'], 'auto': True, 'segmentos': seg}
     json.dump(n, open(os.path.join(R, 'salida', lg, 'noche.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
