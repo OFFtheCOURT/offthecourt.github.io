@@ -18,6 +18,13 @@ def num(x):
     except: return 0
 def summ(eid):
     return eid, j(f'{API}/summary?event={eid}')
+# si todos los partidos de hoy (fecha de Nueva York) ya han terminado, la noche cuenta ya como jugada:
+# así no hay que esperar a la medianoche de Nueva York (06:00 en España) para verla en la web
+try:
+    _ev=j(f'{API}/scoreboard?dates={ET.strftime("%Y%m%d")}')['events']
+    if _ev and all(e['status']['type']['completed'] for e in _ev):
+        days=[ET]+days[:10]; print('noche de hoy ya terminada:', ET)
+except Exception as _e: print('sin marcador de hoy', _e)
 for day in days:
     ds=day.strftime('%Y%m%d')
     sb=j(f'{API}/scoreboard?dates={ds}')
