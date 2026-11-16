@@ -482,9 +482,9 @@ def _musica(path, dur, drop, bpm=116, seed=1):
         if 0 <= i < n: out[i:i + len(x)] += x[:n - i]
     tt = lambda d: np.arange(int(SR * d)) / SR
     t1 = tt(.42); kick = np.sin(2 * np.pi * (45 * t1 + 70 / 9 * (1 - np.exp(-t1 * 9)))) * np.exp(-t1 * 7) * .95
-    t2 = tt(.22); nz = rng.standard_normal(len(t2)); nz = nz - np.convolve(nz, np.ones(6) / 6, 'same')
-    clap = (nz * np.exp(-t2 * 18) + .5 * np.sin(2 * np.pi * 190 * t2) * np.exp(-t2 * 30)) * .45
-    t3 = tt(.05); hh = rng.standard_normal(len(t3)); hh = (hh - np.convolve(hh, np.ones(3) / 3, 'same')) * np.exp(-t3 * 70) * .22
+    t2 = tt(.22); nz = rng.standard_normal(len(t2)); nz = np.convolve(nz, np.ones(5) / 5, 'same') - np.convolve(nz, np.ones(40) / 40, 'same')
+    clap = (.6 * nz * np.exp(-t2 * 24) + .7 * np.sin(2 * np.pi * 190 * t2) * np.exp(-t2 * 22)) * .3   # caja suave, sin chasquido
+    t3 = tt(.06); hh = rng.standard_normal(len(t3)); hh = (np.convolve(hh, np.ones(2) / 2, 'same') - np.convolve(hh, np.ones(10) / 10, 'same')) * np.exp(-t3 * 55) * .09
     roots = [55.0, 43.65, 65.41, 49.0]                     # La - Fa - Do - Sol
     chords = [[220, 261.6, 329.6], [174.6, 220, 261.6], [261.6, 329.6, 392], [196, 246.9, 293.7]]
     beat = 0; t = 0.0
@@ -494,7 +494,8 @@ def _musica(path, dur, drop, bpm=116, seed=1):
             put(kick, t)
             if pos in (1, 3): put(clap, t)
             if pos == 2.5 or (pos == 3.5 and bar % 2): put(kick * .6, t)
-        for h in (0, .5): put(hh * (1 if full else .45) * (1.2 if h else .8), t + h * b)
+        if full:                                             # charles solo con la batería entera (en la intro sonaba a petardos)
+            for h in (0, .5): put(hh * (1.2 if h else .8), t + h * b)
         if pos == 0:
             d = 4 * b; tb = tt(d); f = roots[bar]
             pump = np.clip((np.mod(tb, b) / (b * .45)), .25, 1) if full else np.ones(len(tb))
@@ -505,7 +506,7 @@ def _musica(path, dur, drop, bpm=116, seed=1):
         beat += .5; t = beat * b
     if drop > 1.2:                                           # subida de ruido antes del drop
         tr = tt(min(2.4, drop)); r = rng.standard_normal(len(tr)); k = tr / tr[-1]
-        r = np.convolve(r, np.ones(9) / 9, 'same'); put(r * k ** 2.2 * .5, drop - tr[-1])
+        r = np.convolve(r, np.ones(40) / 40, 'same') * 3; put(r * k ** 2.2 * .4, drop - tr[-1])
     fade = np.ones(n); m = int(SR * 1.5); fade[-m:] = np.linspace(1, 0, m); out *= fade
     out = out / (np.abs(out).max() + 1e-9) * .9
     import wave
