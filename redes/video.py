@@ -542,20 +542,31 @@ def _sfx(d):
     pk2 = np.zeros(int(SR * 1.0))
     put(pk2, bell(784.0, .9, .5), 0); put(pk2, bell(1174.7, .9, .5), .09)
     save('pick2.wav', pk2 / np.abs(pk2).max() * .8)
+    # "noticias": sintonía de informativo propia — acorde de metales + timbal + teletipo
+    nw = np.zeros(int(SR * 3.4))
+    put(nw, brass((293.7, 370.0, 440.0, 587.3), 1.8) * 1.4, 0.0)
+    tt = np.arange(int(SR * 1.2)) / SR; put(nw, .7 * np.sin(2 * np.pi * (55 * tt + 30 / 6 * (1 - np.exp(-tt * 6)))) * np.exp(-tt * 3.2), 0.0)
+    put(nw, bell(1174.7, 1.0, .35), .02); put(nw, bell(1760.0, 1.0, .22), .1)
+    for k in range(22):
+        tb = np.arange(int(SR * .05)) / SR; fq = 1318.5 if k % 2 == 0 else 987.8
+        put(nw, .13 * (1 - k / 24) * np.sin(2 * np.pi * fq * tb) * np.exp(-tb * 60) * np.minimum(1, tb / .002), .3 + k * .125)
+    for k in range(6):
+        tb = np.arange(int(SR * .32)) / SR; put(nw, .22 * (1 - k / 7) * sum(np.sin(2 * np.pi * 73.4 * h * tb) / h for h in (1, 2, 3)) * np.exp(-tb * 9), .5 + k * .5)
+    save('noticias.wav', nw / np.abs(nw).max() * .85)
     # si el usuario deja su propio tono en redes/sonidos/pick.(wav|mp3|m4a), se usa ese
     for ext in ('wav', 'mp3', 'm4a'):
         own = os.path.join(R, 'sonidos', 'pick.' + ext)
         if os.path.exists(own):
             subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', own, '-ac', '1', '-ar', str(SR), os.path.join(d, 'pick.wav')], check=True)
             subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', own, '-t', '1.2', '-af', 'afade=t=out:st=.9:d=.3', '-ac', '1', '-ar', str(SR), os.path.join(d, 'pick2.wav')], check=True); break
-    t = np.arange(int(SR * .6)) / SR; save('hit.wav', (.9 * np.sin(2 * np.pi * (48 * t + 60 / 10 * (1 - np.exp(-t * 10)))) * np.exp(-t * 8) + .25 * np.random.default_rng(3).standard_normal(len(t)) * np.exp(-t * 40)) * .9)
+    t = np.arange(int(SR * .6)) / SR; nz = np.convolve(np.random.default_rng(3).standard_normal(len(t)), np.ones(60) / 60, 'same'); save('hit.wav', (.9 * np.sin(2 * np.pi * (48 * t + 60 / 10 * (1 - np.exp(-t * 10)))) * np.exp(-t * 8) + .5 * nz * np.exp(-t * 22)) * .9)
     t = np.arange(int(SR * 1.3)) / SR; r = np.random.default_rng(4).standard_normal(len(t)); r = r - np.convolve(r, np.ones(int(30 - 26 * 0)) / 30, 'same')
     save('riser.wav', r * (t / t[-1]) ** 2.5 * .55 + .2 * np.sin(2 * np.pi * (200 * t + 400 * t * t)) * (t / t[-1]) ** 2)
     t = np.arange(int(SR * 1.1)) / SR; bz = np.sign(np.sin(2 * np.pi * 220 * t)) * .5 + np.sign(np.sin(2 * np.pi * 277 * t)) * .3; save('buzzer.wav', bz * np.minimum(1, t / .01) * np.exp(-np.maximum(0, t - .9) * 20) * .45)
     # notas al encenderse cada resultado: escala pentatónica ascendente (campanita + golpe suave)
     for k, semi in enumerate((0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26)):
         f = 523.25 * 2 ** (semi / 12); tt = np.arange(int(SR * .5)) / SR
-        x = bell(f, .5, .55) + .35 * np.sin(2 * np.pi * 90 * tt) * np.exp(-tt * 25) + .15 * np.random.default_rng(k).standard_normal(len(tt)) * np.exp(-tt * 60)
+        x = bell(f, .5, .55) + .18 * np.sin(2 * np.pi * 90 * tt) * np.exp(-tt * 18)
         save(f'luz{k}.wav', x / np.abs(x).max() * .7)
     t = np.arange(int(SR * .4)) / SR; r = np.random.default_rng(1).standard_normal(len(t)); r = np.convolve(r, np.ones(8) / 8, 'same') - np.convolve(r, np.ones(60) / 60, 'same'); save('whoosh.wav', r * np.sin(np.pi * t / .4) ** 2 * .5)
 
@@ -592,7 +603,7 @@ def render():
     intro_ = next((x for x in D['scenes'] if x['type'] == 'intro'), {})
     if intro_.get('focos'):
         # sin petardos: tono de draft al empezar y campanilla en cada titular
-        ev = [('pick', 0.0), ('crowd', 0.0), ('riser', max(0, intro_['dur'] - 1.35)), ('whoosh', max(0, intro_['focos'][0]['t'] - .1))] + [x for f_ in intro_['focos'][1:] for x in (('whoosh', max(0, f_['t'] - .12)), ('pick2', f_['t']))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
+        ev = [('noticias', 0.0), ('crowd', 0.4), ('riser', max(0, intro_['dur'] - 1.35)), ('whoosh', max(0, intro_['focos'][0]['t'] - .1))] + [x for f_ in intro_['focos'][1:] for x in (('whoosh', max(0, f_['t'] - .12)), ('pick2', f_['t']))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
     if intro_.get('focos'):
         # cada resultado se enciende con una nota que va subiendo (misma fórmula que anim.html: LUZ(i))
         fs4 = intro_['focos'][:4]; ev.append(('whoosh', fs4[-1]['t'] + .72))  # los diarios vuelan a su hueco
@@ -609,7 +620,7 @@ def render():
             if i + 1 < len(D['scenes']) and D['scenes'][i + 1]['type'] == 'outro': ev.append(('buzzer', starts[i] + sc['dur'] - 1.0))
         if sc['type'] == 'outro': ev += [('pop', starts[i] + h) for h in sc.get('hl', []) if h is not None]
     if HASTA: ev = [e for e in ev if e[1] < HASTA]
-    vol = {**{f'luz{k}': .42 for k in range(12)}, 'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .35, 'pick': .6, 'pick2': .45, 'hit': .6, 'riser': .5, 'buzzer': .35}
+    vol = {**{f'luz{k}': .32 for k in range(12)}, 'noticias': .62, 'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .18, 'pick': .6, 'pick2': .45, 'hit': .6, 'riser': .5, 'buzzer': .35}
     open(os.path.join(esc, 'v.txt'), 'w').write(''.join(f"file 's{i}.mp4'\n" for i in range(len(D['scenes']))))
     open(os.path.join(esc, 'a.txt'), 'w').write(''.join(f"file 'a{i}.wav'\n" for i in range(len(D['scenes']))))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'v.txt'), '-c', 'copy', os.path.join(esc, 'v.mp4'))
