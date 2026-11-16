@@ -1,0 +1,270 @@
+{
+ "en-US-AndrewMultilingualNeural_o": [
+  {
+   "id": "m2",
+   "texto": "La noche de la NBA en un minuto. Aquí te dejo toda la información necesaria para que no te pierdas nada.",
+   "palabras": [
+    {
+     "w": "La",
+     "o": 0.085791,
+     "d": 0.098041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "noche",
+     "o": 0.196083,
+     "d": 0.269583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 0.465666,
+     "d": 0.085791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "la",
+     "o": 0.551458,
+     "d": 0.122541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "NBA",
+     "o": 0.674,
+     "d": 0.526958,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "en",
+     "o": 1.21325,
+     "d": 0.171583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "un",
+     "o": 1.397041,
+     "d": 0.073541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "minuto",
+     "o": 1.470583,
+     "d": 0.453416,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Aquí",
+     "o": 2.328416,
+     "d": 0.220583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "te",
+     "o": 2.549,
+     "d": 0.098041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "dejo",
+     "o": 2.647041,
+     "d": 0.294125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "toda",
+     "o": 2.941166,
+     "d": 0.294125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "la",
+     "o": 3.235291,
+     "d": 0.073541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "información",
+     "o": 3.308833,
+     "d": 0.539208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "necesaria",
+     "o": 3.848041,
+     "d": 0.6005,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "para",
+     "o": 4.460791,
+     "d": 0.220583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "que",
+     "o": 4.681375,
+     "d": 0.110291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "no",
+     "o": 4.803916,
+     "d": 0.147041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "te",
+     "o": 4.96325,
+     "d": 0.122541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "pierdas",
+     "o": 5.085791,
+     "d": 0.441166,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "nada",
+     "o": 5.526958,
+     "d": 0.355375,
+     "k": "WordBoundary"
+    }
+   ]
+  }
+ ],
+ "en-US-BrianMultilingualNeural_o": [
+  {
+   "id": "m2",
+   "texto": "La noche de la NBA en un minuto. Aquí te dejo toda la información necesaria para que no te pierdas nada.",
+   "palabras": [
+    {
+     "w": "La",
+     "o": 0.073541,
+     "d": 0.147041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "noche",
+     "o": 0.232833,
+     "d": 0.306375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "de",
+     "o": 0.551458,
+     "d": 0.110291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "la",
+     "o": 0.674,
+     "d": 0.159333,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "NBA",
+     "o": 0.845583,
+     "d": 0.6005,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "en",
+     "o": 1.458333,
+     "d": 0.196083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "un",
+     "o": 1.666666,
+     "d": 0.122541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "minuto",
+     "o": 1.801458,
+     "d": 0.563708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Aquí",
+     "o": 2.745083,
+     "d": 0.281875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "te",
+     "o": 3.039208,
+     "d": 0.110291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "dejo",
+     "o": 3.16175,
+     "d": 0.294125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "toda",
+     "o": 3.468125,
+     "d": 0.318625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "la",
+     "o": 3.799,
+     "d": 0.073541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "información",
+     "o": 3.884791,
+     "d": 0.61275,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "necesaria",
+     "o": 4.509791,
+     "d": 0.63725,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "para",
+     "o": 5.159333,
+     "d": 0.232833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "que",
+     "o": 5.404416,
+     "d": 0.110291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "no",
+     "o": 5.526958,
+     "d": 0.171583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "te",
+     "o": 5.710791,
+     "d": 0.134791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "pierdas",
+     "o": 5.857833,
+     "d": 0.465666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "nada",
+     "o": 6.335791,
+     "d": 0.428916,
+     "k": "WordBoundary"
+    }
+   ]
+  }
+ ]
+}
