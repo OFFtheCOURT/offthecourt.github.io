@@ -755,22 +755,19 @@ function cineHaz(fr,t,on){ // haz del proyector desde la cabina, por encima del 
   const R=rng(41);for(let i=0;i<70;i++){const x=R()*W,y=fr.y+R()*(py-fr.y),dx=Math.sin(t*.6+i)*14,dy=-((t*12+i*9)%60);X.fillStyle='rgba(255,255,255,'+(.25*on*R())+')';X.beginPath();X.arc(x+dx,y+dy,1+R()*1.8,0,7);X.fill()}
   X.restore()}
 // los titulares salen como PORTADA DE DIARIO (cuatro formas de llegar: giro clásico, caída, deslizamiento y volteo)
-function cineDiario(f,k,g,a,t){
-  const W_=cineWin(g),L_=cineLose(g),col=vis(W_),tg=f.tag||'',fade=a<.05?a/.05:1-clamp((a-.66)/.14),st=k%4,H_=cineHero(g),q=clamp(a/.34);
-  X.save();X.globalAlpha=fade;
-  X.fillStyle=hex('#04060c',k==0?.55:.82);X.fillRect(0,0,W,H);rays(col,t,.8);
-  // movimiento de entrada
-  let x=540,y=900,rot=0,sc=1,sx=1;
-  if(st==0){const e=eo(q);rot=(1-e)*Math.PI*4;sc=lerp(.08,1,e)}
-  else if(st==1){const b=back(q);y=lerp(-700,900,clamp(b,0,1.2));rot=(1-eo(q))*-.35+.03;sc=1}
-  else if(st==2){const e=eo(q);x=lerp(1700,540,e);rot=lerp(.5,-.035,e)}
-  else{const e=eio(q);sx=Math.max(.02,Math.abs(Math.cos((1-e)*Math.PI)));sc=lerp(.85,1,e)}
-  const hit=a>.32&&a<.5?(1-(a-.32)/.18):0;sc*=1+.05*hit;
-  X.save();X.translate(x+(hit?Math.sin(t*90)*10*hit:0),y);X.rotate(rot);X.scale(sc*sx,sc);
-  diarioPortada(tg,W_,L_,col,H_,t);
-  X.restore();
-  if(a>.32&&a<.42){X.fillStyle=hex('#ffffff',.5*(1-(a-.32)/.1));X.fillRect(0,0,W,H)}
-  X.restore()}
+const DIARIO_POSE=[[-14,-8,-.035],[22,10,.04],[-20,24,-.022],[16,40,.03]];
+function diarioPose(k,a,t){ // dónde está el diario k a los a segundos de entrar (cuatro formas de llegar)
+  const st=k%4,q=clamp(a/.34),P=DIARIO_POSE[st];let x=540+P[0],y=900+P[1],rot=P[2],sc=.94,sx=1;
+  if(st==0){const e=eo(q);rot+=(1-e)*Math.PI*4;sc*=lerp(.08,1,e)}
+  else if(st==1){const b=back(q);y=lerp(-700,y,clamp(b,0,1.2));rot+=(1-eo(q))*-.35}
+  else if(st==2){const e=eo(q);x=lerp(1700,x,e);rot=lerp(.5,rot,e)}
+  else{const e=eio(q);sx=Math.max(.02,Math.abs(Math.cos((1-e)*Math.PI)));sc*=lerp(.85,1,e)}
+  const hit=a>.32&&a<.5?(1-(a-.32)/.18):0;sc*=1+.05*hit;if(hit)x+=Math.sin(t*90)*10*hit;
+  return {x,y,rot,sc,sx}}
+function cineDiario(f,k,g,a,t,alpha,sqx,sqy){
+  const W_=cineWin(g),L_=cineLose(g),col=vis(W_),P=diarioPose(k,a,t);
+  X.save();X.globalAlpha=alpha;X.translate(P.x,P.y);X.rotate(P.rot);X.scale(P.sc*P.sx*(sqx||1),P.sc*(sqy||1));
+  diarioPortada(f.tag||'',W_,L_,col,cineHero(g),t);X.restore()}
 function diarioPortada(tg,W_,L_,col,H_,t){
   const pw=860,ph=1180,x0=-pw/2,y0=-ph/2,SER='Georgia,"Times New Roman",serif',ink='#14110d';
   X.save();X.shadowColor='rgba(0,0,0,.6)';X.shadowBlur=60;X.shadowOffsetY=24;X.fillStyle='#efe8d8';X.fillRect(x0,y0,pw,ph);X.restore();
@@ -840,15 +837,23 @@ function introCine(sc,t){
       X.strokeStyle=hex(col,1-q);X.lineWidth=8*(1-q)+1;rr(cx_-r.w/2-q*60,cy_-r.h/2-q*40,r.w+q*120,r.h+q*80,10+q*20);X.stroke();
       const R5=rng(i*13+5);for(let p=0;p<16;p++){const a=R5()*6.283,v=120+R5()*260;X.fillStyle=p%3?hex(col,1-q):hex('#ffffff',1-q);X.beginPath();X.arc(cx_+Math.cos(a)*v*eo(q)*1.6,cy_+Math.sin(a)*v*eo(q)+200*q*q,(3+R5()*4)*(1-q*.6),0,7);X.fill()}
       X.restore()}});
-  // titulares ya colocados
-  F.slice(0,4).forEach((f,k)=>{if(t<f.t+1.0)return;const s=cineSlot(k),act=f===cur?Math.max(0,1-(t-f.t-.55)/.6):0;cineBadge(f,k,RS[f.i],s.x+s.w/2,s.y+s.h/2,1+.04*act,act||(f===cur?.35:0),t)});
+  // titulares ya colocados (después de que los diarios vuelen a su hueco)
+  const F4=F.slice(0,4),flyS=F4.length?F4[F4.length-1].t+.75:0,dly=k=>(F4.length-1-k)*.14,land=k=>flyS+dly(k)+.55;
+  F4.forEach((f,k)=>{if(t<land(k))return;const s=cineSlot(k),act=Math.max(0,1-(t-land(k))/.6);cineBadge(f,k,RS[f.i],s.x+s.w/2,s.y+s.h/2,1+.04*act,act||(f===cur?.35:0),t)});
   cineTelonFrente(t,T0);if(t<T0+.65)cineHeader(t,T0);
   const cheer=cur?clamp(1-sinceF/1.1):0;cineAudience(t,Math.max(cheer,t<1?1:0));cineHaz(fr,t,on*fl);
   X.restore();
   // titular que entra: una entrada distinta para cada uno y vuela a su hueco encima de la pantalla
-  if(cur&&curK<4&&sinceF<1.0&&t<tend){const a=Math.max(0,sinceF)+(curK==0?.06:0);if(a<.8)cineDiario(cur,curK,RS[cur.i],a,t);
-    if(a>.68){const s=cineSlot(curK),fly=eio((a-.68)/.32),sx=(s.x+s.w/2-cx)*z+540,sy=(s.y+s.h/2-cy)*z+960;
-      X.save();X.translate(lerp(540,sx,fly),lerp(1000,sy,fly));X.rotate((1-fly)*.06);cineBadge(cur,curK,RS[cur.i],0,0,lerp(1.1,z,fly),1,t);X.restore()}}
+  if(F4.length&&t>=F4[0].t&&t<land(0)){
+    // fondo oscuro con rayos mientras los diarios están en pantalla; se va al volar
+    const ov=1-clamp((t-flyS)/.5),wc=vis(cineWin(RS[(cur||F4[0]).i]));X.save();X.globalAlpha=ov;X.fillStyle='rgba(4,6,12,.8)';X.fillRect(0,0,W,H);rays(wc,t,.8);X.restore();
+    F4.forEach((f,k)=>{if(t<f.t)return;const a=t-f.t+(k==0?.06:0),fp=clamp((t-flyS-dly(k))/.55);if(fp>=1)return;
+      if(fp<=0){cineDiario(f,k,RS[f.i],a,t,k<curK&&t<flyS?.97:1);return}
+      // vuela a su hueco y se convierte en rectángulo
+      const s=cineSlot(k),P=diarioPose(k,9,t),e=eio(fp),sx=(s.x+s.w/2-cx)*z+540,sy=(s.y+s.h/2-cy)*z+960,
+        px=lerp(P.x,sx,e),py=lerp(P.y,sy,e),pw=lerp(860*P.sc,s.w*z,e),ph=lerp(1180*P.sc,s.h*z,e),ap=clamp((fp-.35)/.4);
+      X.save();X.globalAlpha=1-ap;X.translate(px,py);X.rotate(P.rot*(1-e));X.scale(pw/860,ph/1180);diarioPortada(f.tag||'',cineWin(RS[f.i]),cineLose(RS[f.i]),vis(cineWin(RS[f.i])),cineHero(RS[f.i]),t);X.restore();
+      if(ap>0){X.save();X.globalAlpha=ap;X.translate(px,py);X.scale(pw/(936),ph/78);cineBadge(f,k,RS[f.i],0,0,1,1,t);X.restore()}})}
   if(cur&&curK>0&&sinceF>=0&&sinceF<.1){X.save();X.globalAlpha=.3*(1-sinceF/.1);X.fillStyle='#fff';X.fillRect(0,0,W,H);X.restore()}
   // confeti en cada titular
   F.forEach(f=>{const q=t-f.t;if(q<0||q>1.2)return;const R4=rng(Math.floor(f.t*100)+3);X.save();for(let i=0;i<60;i++){const a=R4()*Math.PI*2,sp=500+R4()*900;const x=540+Math.cos(a)*sp*q,y=820+Math.sin(a)*sp*q-500*q+1100*q*q;X.globalAlpha=clamp(1-q/1.2);X.fillStyle=[ACC,TH.b,'#ffffff',G2,'#ffd23f'][i%5];X.save();X.translate(x,y);X.rotate(q*9+i);X.fillRect(-9,-5,18,10);X.restore()}X.restore()});
