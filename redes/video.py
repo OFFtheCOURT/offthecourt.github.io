@@ -552,6 +552,11 @@ def _sfx(d):
     t = np.arange(int(SR * 1.3)) / SR; r = np.random.default_rng(4).standard_normal(len(t)); r = r - np.convolve(r, np.ones(int(30 - 26 * 0)) / 30, 'same')
     save('riser.wav', r * (t / t[-1]) ** 2.5 * .55 + .2 * np.sin(2 * np.pi * (200 * t + 400 * t * t)) * (t / t[-1]) ** 2)
     t = np.arange(int(SR * 1.1)) / SR; bz = np.sign(np.sin(2 * np.pi * 220 * t)) * .5 + np.sign(np.sin(2 * np.pi * 277 * t)) * .3; save('buzzer.wav', bz * np.minimum(1, t / .01) * np.exp(-np.maximum(0, t - .9) * 20) * .45)
+    # notas al encenderse cada resultado: escala pentatónica ascendente (campanita + golpe suave)
+    for k, semi in enumerate((0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26)):
+        f = 523.25 * 2 ** (semi / 12); tt = np.arange(int(SR * .5)) / SR
+        x = bell(f, .5, .55) + .35 * np.sin(2 * np.pi * 90 * tt) * np.exp(-tt * 25) + .15 * np.random.default_rng(k).standard_normal(len(tt)) * np.exp(-tt * 60)
+        save(f'luz{k}.wav', x / np.abs(x).max() * .7)
     t = np.arange(int(SR * .4)) / SR; r = np.random.default_rng(1).standard_normal(len(t)); r = np.convolve(r, np.ones(8) / 8, 'same') - np.convolve(r, np.ones(60) / 60, 'same'); save('whoosh.wav', r * np.sin(np.pi * t / .4) ** 2 * .5)
 
 
@@ -588,6 +593,11 @@ def render():
     if intro_.get('focos'):
         # sin petardos: tono de draft al empezar y campanilla en cada titular
         ev = [('pick', 0.0), ('crowd', 0.0), ('riser', max(0, intro_['dur'] - 1.35)), ('whoosh', max(0, intro_['focos'][0]['t'] - .1))] + [x for f_ in intro_['focos'][1:] for x in (('whoosh', max(0, f_['t'] - .12)), ('pick2', f_['t']))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
+    if intro_.get('focos'):
+        # cada resultado se enciende con una nota que va subiendo (misma fórmula que anim.html: LUZ(i))
+        nres = len(D.get('results') or []); lastF = intro_['focos'][-1]['t']
+        step = min(.55, max(.16, (lastF + .9 - .12) / max(1, nres)))
+        ev += [(f'luz{i % 12}', .12 + i * step) for i in range(nres)]
     nm = len(D['mini'])
     if not intro_.get('focos'): ev += [('pop', .15 + i * min(.1, .8 / max(1, nm))) for i in range(nm)]
     for i, sc in enumerate(D['scenes']):
@@ -597,7 +607,7 @@ def render():
             if i + 1 < len(D['scenes']) and D['scenes'][i + 1]['type'] == 'outro': ev.append(('buzzer', starts[i] + sc['dur'] - 1.0))
         if sc['type'] == 'outro': ev += [('pop', starts[i] + h) for h in sc.get('hl', []) if h is not None]
     if HASTA: ev = [e for e in ev if e[1] < HASTA]
-    vol = {'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .35, 'pick': .6, 'pick2': .45, 'hit': .6, 'riser': .5, 'buzzer': .35}
+    vol = {**{f'luz{k}': .42 for k in range(12)}, 'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .35, 'pick': .6, 'pick2': .45, 'hit': .6, 'riser': .5, 'buzzer': .35}
     open(os.path.join(esc, 'v.txt'), 'w').write(''.join(f"file 's{i}.mp4'\n" for i in range(len(D['scenes']))))
     open(os.path.join(esc, 'a.txt'), 'w').write(''.join(f"file 'a{i}.wav'\n" for i in range(len(D['scenes']))))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'v.txt'), '-c', 'copy', os.path.join(esc, 'v.mp4'))
