@@ -50,9 +50,13 @@ jobs:
           import asyncio, base64, json, os, re, subprocess, sys
           sys.path.insert(0, 'ov')
           import torch, edge_tts
-          from openvoice.api import ToneColorConverter
+          from openvoice.api import ToneColorConverter, OpenVoiceBaseClass
           G = json.loads(base64.b64decode(os.environ['GUION']).decode())
-          tc = ToneColorConverter('ck/config.json', device='cpu', enable_watermark=False)
+          # sin marca de agua (el constructor de OpenVoice no acepta desactivarla)
+          tc = ToneColorConverter.__new__(ToneColorConverter)
+          OpenVoiceBaseClass.__init__(tc, 'ck/config.json', device='cpu')
+          tc.watermark_model = None
+          tc.version = getattr(tc.hps, '_version_', 'v1')
           tc.load_ckpt('ck/checkpoint.pth')
           tgt = tc.extract_se(['w/ref.wav'])
           # texto largo de la propia voz fuente para sacar bien su timbre
