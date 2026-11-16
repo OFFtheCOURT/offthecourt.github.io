@@ -755,54 +755,55 @@ function cineHaz(fr,t,on){ // haz del proyector desde la cabina, por encima del 
   const R=rng(41);for(let i=0;i<70;i++){const x=R()*W,y=fr.y+R()*(py-fr.y),dx=Math.sin(t*.6+i)*14,dy=-((t*12+i*9)%60);X.fillStyle='rgba(255,255,255,'+(.25*on*R())+')';X.beginPath();X.arc(x+dx,y+dy,1+R()*1.8,0,7);X.fill()}
   X.restore()}
 // los titulares salen como PORTADA DE DIARIO (cuatro formas de llegar: giro clásico, caída, deslizamiento y volteo)
-const DIARIO_POSE=[[-14,-8,-.035],[22,10,.04],[-20,24,-.022],[16,40,.03]];
-function diarioPose(k,a,t){ // dónde está el diario k a los a segundos de entrar (cuatro formas de llegar)
-  const st=k%4,q=clamp(a/.34),P=DIARIO_POSE[st];let x=540+P[0],y=900+P[1],rot=P[2],sc=.94,sx=1;
-  if(st==0){const e=eo(q);rot+=(1-e)*Math.PI*4;sc*=lerp(.08,1,e)}
-  else if(st==1){const b=back(q);y=lerp(-700,y,clamp(b,0,1.2));rot+=(1-eo(q))*-.35}
-  else if(st==2){const e=eo(q);x=lerp(1700,x,e);rot=lerp(.5,rot,e)}
-  else{const e=eio(q);sx=Math.max(.02,Math.abs(Math.cos((1-e)*Math.PI)));sc*=lerp(.85,1,e)}
-  const hit=a>.32&&a<.5?(1-(a-.32)/.18):0;sc*=1+.05*hit;if(hit)x+=Math.sin(t*90)*10*hit;
-  return {x,y,rot,sc,sx}}
-function cineDiario(f,k,g,a,t,alpha,sqx,sqy){
-  const W_=cineWin(g),L_=cineLose(g),col=vis(W_),P=diarioPose(k,a,t);
-  X.save();X.globalAlpha=alpha;X.translate(P.x,P.y);X.rotate(P.rot);X.scale(P.sc*P.sx*(sqx||1),P.sc*(sqy||1));
-  diarioPortada(f.tag||'',W_,L_,col,cineHero(g),t);X.restore()}
-function diarioPortada(tg,W_,L_,col,H_,t){
-  const pw=860,ph=1180,x0=-pw/2,y0=-ph/2,SER='Georgia,"Times New Roman",serif',ink='#14110d';
-  X.save();X.shadowColor='rgba(0,0,0,.6)';X.shadowBlur=60;X.shadowOffsetY=24;X.fillStyle='#efe8d8';X.fillRect(x0,y0,pw,ph);X.restore();
+const DIARIO_POSE=[[-14,-8,-.035],[22,10,.04],[-20,24,-.022],[16,40,.03]],DPRE=.12,DIN=.22,DPH=1040,HANG_Y=452,HANG_S=.47;
+function diarioPose(k,a,t){ // a = segundos desde que arranca; aterriza a los DIN s (justo cuando la voz empieza el titular)
+  const st=k%4,q=clamp(a/DIN),e=eo(q),P=DIARIO_POSE[st],C=window.__cam||{cx:540,cy:860,z:1};
+  let x=(540-C.cx)*C.z+540+P[0]*.6,y=(HANG_Y-C.cy)*C.z+960+P[1]*.25,rot=P[2],sc=HANG_S*C.z,sx=1,sy=1;
+  if(st==0){rot+=(1-e)*Math.PI*6;sc*=lerp(.04,1,e)}                       // GIRO de película
+  else if(st==1){y=lerp(-700,y,Math.pow(q,1.6));rot+=(1-q)*-.5}           // CAÍDA desde arriba
+  else if(st==2){sc*=lerp(4.5,1,Math.pow(q,1.8));rot+=(1-q)*.25}          // GOLPE contra la cámara
+  else{x=lerp(-700,x,Math.pow(q,1.5));rot+=(1-q)*-.6}                     // LATIGAZO lateral
+  const im=a-DIN;if(im>0){if(im<.25){const b=Math.sin(im/.25*Math.PI)*(1-im/.25);sy*=1-.08*b;sx*=1+.06*b;x+=Math.sin(t*95)*10*(1-im/.25)}
+    rot+=.06*Math.sin(im*13)*Math.exp(-im*3.5)}                           // se balancea colgado
+  return {x,y,rot,sc,sx,sy}}
+function cineDiario(f,k,g,a,t,alpha){
+  const W_=cineWin(g),L_=cineLose(g),col=vis(W_),H_=cineHero(g),q=clamp(a/DIN);
+  const one=(aa,al,pin)=>{const P=diarioPose(k,aa,t);X.save();X.globalAlpha=al;X.translate(P.x,P.y);X.rotate(P.rot);X.scale(P.sc*P.sx,P.sc*P.sy);diarioPortada(f.tag||'',W_,L_,col,H_,t,aa-DIN);
+    if(pin&&aa>DIN){X.fillStyle='#b7894f';rr(-22,-DPH/2-46,44,96,8);X.fill();X.fillStyle='#8a6136';X.fillRect(-22,-DPH/2-4,44,8);X.fillStyle='#d6d9de';X.fillRect(-16,-DPH/2+10,32,8)}X.restore()};
+  if(q<1)for(const d of[.06,.04,.02])one(Math.max(0,a-d),alpha*.18); // estela de movimiento
+  one(a,alpha,1);
+  // impacto: onda, papelitos, destello
+  const im=a-DIN;if(im>0&&im<.6){const P=diarioPose(k,DIN+.3,t),qq=im/.6,fz=P.sc/.94;X.save();X.globalCompositeOperation='lighter';
+    X.strokeStyle=hex('#ffffff',.9*(1-qq));X.lineWidth=18*(1-qq)+2;X.beginPath();X.ellipse(P.x,P.y,(430+qq*520)*fz,(520+qq*520)*fz,0,0,7);X.stroke();
+    X.strokeStyle=hex(col,1-qq);X.lineWidth=10*(1-qq)+2;X.beginPath();X.ellipse(P.x,P.y,(400+qq*380)*fz,(490+qq*380)*fz,0,0,7);X.stroke();X.restore();
+    const R=rng(k*31+7);X.save();for(let i=0;i<34;i++){const an=R()*6.283,v=500+R()*900,px=P.x+Math.cos(an)*(380+v*eo(qq))*fz,py=P.y+Math.sin(an)*(480+v*eo(qq))*fz+600*qq*qq;
+      X.globalAlpha=1-qq;X.fillStyle=i%3==0?col:i%3==1?'#efe8d8':'#ffffff';X.save();X.translate(px,py);X.rotate(qq*10+i);X.fillRect(-10,-6,20,12);X.restore()}X.restore();
+    if(im<.08){X.fillStyle=hex('#ffffff',.3*(1-im/.08));X.fillRect(0,0,W,H)}}}
+function diarioPortada(tg,W_,L_,col,H_,t,ia){ // portada limpia: cabecera, titular enorme, foto grande y resultado
+  if(ia===undefined)ia=9;const pw=860,ph=DPH,x0=-pw/2,y0=-ph/2,SER='Georgia,"Times New Roman",serif',ink='#14110d';
+  X.save();X.shadowColor='rgba(0,0,0,.65)';X.shadowBlur=60;X.shadowOffsetY=24;X.fillStyle='#efe8d8';X.fillRect(x0,y0,pw,ph);X.restore();
   const pg=X.createLinearGradient(x0,y0,x0+pw,y0+ph);pg.addColorStop(0,'rgba(255,255,255,.35)');pg.addColorStop(.6,'rgba(255,255,255,0)');pg.addColorStop(1,'rgba(120,100,60,.18)');X.fillStyle=pg;X.fillRect(x0,y0,pw,ph);
-  // pliegue central del periódico
-  X.fillStyle='rgba(0,0,0,.06)';X.fillRect(x0,y0+ph*.5-2,pw,4);
-  X.textAlign='center';X.fillStyle=ink;
-  X.font=`700 22px ${SER}`;X.letterSpacing='6px';X.fillText('EDICIÓN ESPECIAL',0,y0+52);X.letterSpacing='0px';
-  X.font=`900 86px ${SER}`;fitText('The Offcourt Times',SER,86,pw-80,900);X.fillText('The Offcourt Times',0,y0+140);
-  X.fillRect(x0+36,y0+162,pw-72,5);X.fillRect(x0+36,y0+172,pw-72,2);
-  X.font=`700 20px ${SER}`;X.letterSpacing='3px';X.textAlign='left';X.fillText((D.eyebrow||'LA NOCHE NBA').toUpperCase(),x0+40,y0+202);
-  X.textAlign='right';X.fillText((D.dateLabel||'').toUpperCase()+' · 1 €',x0+pw-40,y0+202);X.letterSpacing='0px';
-  X.fillRect(x0+36,y0+216,pw-72,2);
-  // titular enorme
-  X.textAlign='center';fitText(tg,FD,190,pw-70,900);X.fillStyle=ink;X.fillText(tg,0,y0+390);
-  // foto con trama de puntos y color del equipo
-  const fx=x0+40,fy=y0+420,fw=pw-80,fh=470;
+  X.textAlign='center';X.fillStyle=ink;fitText('The Offcourt Times',SER,72,pw-120,900);X.fillText('The Offcourt Times',0,y0+92);
+  X.fillRect(x0+36,y0+114,pw-72,5);X.fillRect(x0+36,y0+124,pw-72,2);
+  // titular: entra de golpe un instante después del impacto
+  const hp=clamp((ia+.02)/.16),hk=lerp(1.9,1,eo(hp));
+  if(hp>0){X.save();X.translate(0,y0+300);X.scale(hk,hk);X.globalAlpha*=hp;fitText(tg,FD,210,pw-60,900);X.fillStyle=ink;X.fillText(tg,0,0);X.restore()}
+  // foto grande con trama de puntos sobre el color del equipo
+  const fx=x0+30,fy=y0+330,fw=pw-60,fh=560;
   X.save();X.beginPath();X.rect(fx,fy,fw,fh);X.clip();
-  const bg=X.createLinearGradient(fx,fy,fx+fw,fy+fh);bg.addColorStop(0,mix(W_.c,'#ffffff',.08));bg.addColorStop(1,mix(W_.c,'#000000',.45));X.fillStyle=bg;X.fillRect(fx,fy,fw,fh);
-  X.fillStyle='rgba(0,0,0,.16)';for(let yy=fy;yy<fy+fh;yy+=14)for(let xx=fx+((yy/14)%2)*7;xx<fx+fw;xx+=14){X.beginPath();X.arc(xx,yy,3,0,7);X.fill()}
-  if(IM['t_'+W_.ab]){X.globalAlpha=.22;X.drawImage(IM['t_'+W_.ab],fx+fw-360,fy+60,400,400);X.globalAlpha=1}
-  if(H_&&IM['p_'+H_.pid]){const im=IM['p_'+H_.pid],r=(fh+30)/im.height;X.drawImage(im,fx+fw*.36-im.width*r/2,fy+fh-im.height*r+30,im.width*r,im.height*r)}
-  else if(IM['t_'+W_.ab])X.drawImage(IM['t_'+W_.ab],fx+fw/2-170,fy+60,340,340);
-  X.restore();X.strokeStyle=ink;X.lineWidth=3;X.strokeRect(fx,fy,fw,fh);
-  X.fillStyle=ink;X.font=`italic 600 24px ${SER}`;X.textAlign='left';X.fillText(H_?H_.name.split(' ').map(w=>w[0]+w.slice(1).toLowerCase()).join(' ')+', protagonista de la noche':'La noche de los '+W_.short,fx,fy+fh+34);
-  // marcador como subtítulo
-  X.textAlign='center';X.font=`900 64px ${FD}`;X.fillStyle=ink;
-  X.fillText(W_.short.toUpperCase()+' '+W_.score+'  ·  '+L_.score+' '+L_.short.toUpperCase(),0,fy+fh+112);
-  X.fillRect(x0+36,fy+fh+134,pw-72,2);
-  // columnas de texto
-  const cy=fy+fh+156,cw=(pw-72-40)/3;const R=rng(tg.length*7+3);X.fillStyle='rgba(20,17,13,.42)';
-  for(let c=0;c<3;c++)for(let l=0;l<6;l++){const lw=l==5?cw*(.35+R()*.4):cw*(.82+R()*.18);X.fillRect(x0+36+c*(cw+20),cy+l*21,lw,9)}
-  // sello en el color del ganador
-  X.save();X.translate(x0+pw-120,y0+520);X.rotate(-.18);X.fillStyle='rgba(239,232,216,.92)';X.beginPath();X.arc(0,0,74,0,7);X.fill();X.strokeStyle=col;X.fillStyle=col;X.lineWidth=6;X.globalAlpha=.9;
-  X.beginPath();X.arc(0,0,74,0,7);X.stroke();X.font=`900 34px ${FD}`;X.textAlign='center';X.fillText('¡EXTRA!',0,12);X.restore();
+  const bg=X.createLinearGradient(fx,fy,fx+fw,fy+fh);bg.addColorStop(0,mix(W_.c,'#ffffff',.1));bg.addColorStop(1,mix(W_.c,'#000000',.45));X.fillStyle=bg;X.fillRect(fx,fy,fw,fh);
+  X.fillStyle='rgba(0,0,0,.15)';for(let yy=fy;yy<fy+fh;yy+=14)for(let xx=fx+((yy/14)%2)*7;xx<fx+fw;xx+=14){X.beginPath();X.arc(xx,yy,3,0,7);X.fill()}
+  if(IM['t_'+W_.ab]){X.globalAlpha*=.25;X.drawImage(IM['t_'+W_.ab],fx+fw-380,fy+70,420,420);X.globalAlpha/=.25}
+  if(H_&&IM['p_'+H_.pid]){const im=IM['p_'+H_.pid],r=(fh+20)/im.height;X.drawImage(im,fx+fw*.4-im.width*r/2,fy+fh-im.height*r+20,im.width*r,im.height*r)}
+  else if(IM['t_'+W_.ab])X.drawImage(IM['t_'+W_.ab],fx+fw/2-190,fy+80,380,380);
+  X.restore();
+  // resultado en franja del color del ganador
+  const by=fy+fh,bh=ph-(fh+330)-30,bc=mix(W_.c,'#000000',.12);X.fillStyle=bc;X.fillRect(fx,by,fw,bh);
+  X.fillStyle='#fff';X.textAlign='center';const sc_=W_.short.toUpperCase()+' '+W_.score+'  ·  '+L_.score+' '+L_.short.toUpperCase();fitText(sc_,FD,76,fw-40,900);X.fillText(sc_,0,by+bh*.72);
+  // sello ¡EXTRA! que cae justo después
+  const sp=clamp((ia-.08)/.14);if(sp>0){const k2=lerp(2.4,1,eo(sp));X.save();X.translate(x0+pw-130,fy+100);X.rotate(-.2);X.scale(k2,k2);X.globalAlpha*=sp;
+    const stc=mix(W_.c,'#000000',.12);X.fillStyle='rgba(239,232,216,.95)';X.beginPath();X.arc(0,0,78,0,7);X.fill();X.strokeStyle=stc;X.lineWidth=7;X.beginPath();X.arc(0,0,72,0,7);X.stroke();
+    X.fillStyle=stc;X.font=`900 36px ${FD}`;X.fillText('¡EXTRA!',0,13);X.restore()}
   X.textAlign='left'}
 function introCine(sc,t){
   const RS=D.results||[],n=RS.length,GR=cineGrid(n),LY=GR.tiles,F=(sc.focos||[]),tend=sc.dur-.75;
@@ -821,7 +822,7 @@ function introCine(sc,t){
   cineTela(t);
   cineHeader(t,T0);
   // huecos de los titulares (encima de la pantalla)
-  for(let k=0;k<Math.min(4,F.length);k++){const s=cineSlot(k);X.setLineDash([10,8]);X.strokeStyle='rgba(255,255,255,.14)';X.lineWidth=2;rr(s.x,s.y,s.w,s.h,20);X.stroke();X.setLineDash([])}
+  if(!F.length||t>=F[Math.min(3,F.length-1)].t+.75)for(let k=0;k<Math.min(4,F.length);k++){const s=cineSlot(k);X.setLineDash([10,8]);X.strokeStyle='rgba(255,255,255,.14)';X.lineWidth=2;rr(s.x,s.y,s.w,s.h,20);X.stroke();X.setLineDash([])}
   // pantalla grande con todos los partidos
   const fr=GR.frame,lastF=F.length?F[F.length-1].t:sc.dur*.6,step=Math.min(.55,Math.max(.16,(lastF+.9-.12)/Math.max(1,n))),LUZ=i=>.12+i*step;
   const nOn=RS.filter((g,i)=>t>=LUZ(i)).length,on=n?nOn/n:0,fl=1;
@@ -844,15 +845,16 @@ function introCine(sc,t){
   const cheer=cur?clamp(1-sinceF/1.1):0;cineAudience(t,Math.max(cheer,t<1?1:0));cineHaz(fr,t,on*fl);
   X.restore();
   // titular que entra: una entrada distinta para cada uno y vuela a su hueco encima de la pantalla
-  if(F4.length&&t>=F4[0].t&&t<land(0)){
+  if(F4.length&&t>=F4[0].t-DPRE&&t<land(0)){
     // fondo oscuro con rayos mientras los diarios están en pantalla; se va al volar
-    const ov=1-clamp((t-flyS)/.5),wc=vis(cineWin(RS[(cur||F4[0]).i]));X.save();X.globalAlpha=ov;X.fillStyle='rgba(4,6,12,.8)';X.fillRect(0,0,W,H);rays(wc,t,.8);X.restore();
-    F4.forEach((f,k)=>{if(t<f.t)return;const a=t-f.t+(k==0?.06:0),fp=clamp((t-flyS-dly(k))/.55);if(fp>=1)return;
-      if(fp<=0){cineDiario(f,k,RS[f.i],a,t,k<curK&&t<flyS?.97:1);return}
+    window.__cam={cx,cy,z};const ov=1-clamp((t-flyS)/.4),wy=(HANG_Y-DPH*HANG_S/2-34-cy)*z+960;
+    X.save();X.globalAlpha=ov;X.strokeStyle='rgba(20,16,12,.9)';X.lineWidth=4*z;X.beginPath();X.moveTo(0,wy-18);X.quadraticCurveTo(540,wy+22,W,wy-18);X.stroke();X.restore();
+    F4.forEach((f,k)=>{if(t<f.t-DPRE)return;const a=t-f.t+DPRE,fp=clamp((t-flyS-dly(k))/.55);if(fp>=1)return;
+      if(fp<=0){cineDiario(f,k,RS[f.i],a,t,1);return}
       // vuela a su hueco y se convierte en rectángulo
       const s=cineSlot(k),P=diarioPose(k,9,t),e=eio(fp),sx=(s.x+s.w/2-cx)*z+540,sy=(s.y+s.h/2-cy)*z+960,
-        px=lerp(P.x,sx,e),py=lerp(P.y,sy,e),pw=lerp(860*P.sc,s.w*z,e),ph=lerp(1180*P.sc,s.h*z,e),ap=clamp((fp-.35)/.4);
-      X.save();X.globalAlpha=1-ap;X.translate(px,py);X.rotate(P.rot*(1-e));X.scale(pw/860,ph/1180);diarioPortada(f.tag||'',cineWin(RS[f.i]),cineLose(RS[f.i]),vis(cineWin(RS[f.i])),cineHero(RS[f.i]),t);X.restore();
+        px=lerp(P.x,sx,e),py=lerp(P.y,sy,e),pw=lerp(860*P.sc,s.w*z,e),ph=lerp(DPH*P.sc,s.h*z,e),ap=clamp((fp-.35)/.4);
+      X.save();X.globalAlpha=1-ap;X.translate(px,py);X.rotate(P.rot*(1-e));X.scale(pw/860,ph/DPH);diarioPortada(f.tag||'',cineWin(RS[f.i]),cineLose(RS[f.i]),vis(cineWin(RS[f.i])),cineHero(RS[f.i]),t);X.restore();
       if(ap>0){X.save();X.globalAlpha=ap;X.translate(px,py);X.scale(pw/(936),ph/78);cineBadge(f,k,RS[f.i],0,0,1,1,t);X.restore()}})}
   if(cur&&curK>0&&sinceF>=0&&sinceF<.1){X.save();X.globalAlpha=.3*(1-sinceF/.1);X.fillStyle='#fff';X.fillRect(0,0,W,H);X.restore()}
   // confeti en cada titular

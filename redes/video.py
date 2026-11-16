@@ -596,7 +596,7 @@ def render():
     if intro_.get('focos'):
         # cada resultado se enciende con una nota que va subiendo (misma fórmula que anim.html: LUZ(i))
         fs4 = intro_['focos'][:4]; ev.append(('whoosh', fs4[-1]['t'] + .72))  # los diarios vuelan a su hueco
-        ev += [('hit', f_['t'] + .32 + (.06 if k == 0 else 0)) for k, f_ in enumerate(intro_['focos'][:4])]  # golpe del diario al caer
+        ev += [('hit', f_['t'] + .1) for k, f_ in enumerate(intro_['focos'][:4])]  # golpe del diario al caer
         nres = len(D.get('results') or []); lastF = intro_['focos'][-1]['t']
         step = min(.55, max(.16, (lastF + .9 - .12) / max(1, nres)))
         ev += [(f'luz{i % 12}', .12 + i * step) for i in range(nres)]
