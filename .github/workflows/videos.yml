@@ -16,6 +16,14 @@ on:
         description: 'Rehacer aunque ya exista el vídeo de esa noche'
         type: boolean
         default: false
+      prueba:
+        description: 'Prueba: no se apunta ni se entrega (va a la rama redes-prueba)'
+        type: boolean
+        default: false
+      hasta:
+        description: 'Prueba: solo los primeros N segundos'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -80,9 +88,18 @@ jobs:
         if: steps.mira.outputs.ligas != ''
         env:
           OFFCOURT_FORZAR: ${{ github.event.inputs.forzar == 'true' && '1' || '' }}
+          OFFCOURT_PRUEBA: ${{ github.event.inputs.prueba == 'true' && '1' || '' }}
+          OFFCOURT_HASTA: ${{ github.event.inputs.hasta }}
         run: python3 redes/auto.py ${{ steps.mira.outputs.ligas }}
+      - name: Guardar la prueba (rama redes-prueba)
+        if: steps.mira.outputs.ligas != '' && github.event.inputs.prueba == 'true'
+        run: |
+          mkdir -p /tmp/p && cd /tmp/p && git init -q -b redes-prueba
+          git config --global user.name "offcourt-bot"; git config --global user.email "offcourt-bot@users.noreply.github.com"
+          while read -r f || [ -n "$f" ]; do [ -n "$f" ] && cp "$f" .; done < "$GITHUB_WORKSPACE/redes/salida/nuevos.txt"
+          git add -A; git commit -qm "Prueba"; git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:redes-prueba
       - name: Guardar el MP4 (rama redes-videos) y el registro (main)
-        if: steps.mira.outputs.ligas != ''
+        if: steps.mira.outputs.ligas != '' && github.event.inputs.prueba != 'true'
         run: |
           git config --global user.name "offcourt-bot"; git config --global user.email "offcourt-bot@users.noreply.github.com"
           if [ -s redes/salida/nuevos.txt ]; then

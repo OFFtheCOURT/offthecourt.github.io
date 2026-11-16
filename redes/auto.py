@@ -170,7 +170,8 @@ def video(lg):
         if d <= 61: break
     sh('--liga', lg, 'render')
     out = os.path.join(R, 'salida', lg)
-    mp4 = [f for f in os.listdir(out) if f.endswith('.mp4') and n['fecha'] in f and 'prueba' not in f][0]
+    prueba = bool(os.environ.get('OFFCOURT_HASTA'))
+    mp4 = [f for f in os.listdir(out) if f.endswith('.mp4') and n['fecha'] in f and (('prueba' in f) == prueba)][0]
     texto = ' '.join(re.sub(r'\{([^|}]*)\|[^}]*\}', r'\1', s['t']) for s in n['segmentos'])
     return os.path.join(out, mp4), n['fecha'], texto
 
@@ -190,6 +191,7 @@ def main():
         except Exception as e:
             print(lg, 'ERROR', e); reg.setdefault('errores', {})[lg] = {'fecha': fecha, 'error': str(e)[-400:], 'hora': datetime.datetime.utcnow().isoformat()}
             continue
+        if os.environ.get('OFFCOURT_PRUEBA'): hechos.append(mp4); continue   # prueba: no se apunta ni se entrega
         reg[lg] = {'fecha': f, 'archivo': os.path.basename(mp4), 'texto': texto, 'hecho': datetime.datetime.utcnow().isoformat() + 'Z', 'entregado': False}
         (reg.get('errores') or {}).pop(lg, None); hechos.append(mp4)
     json.dump(reg, open(REG, 'w'), ensure_ascii=False, indent=1)

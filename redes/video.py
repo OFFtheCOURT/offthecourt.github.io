@@ -361,7 +361,7 @@ def montar():
         b = [dict(x, o=tm(x['o']), d=max(0.05, tm(x['o'] + x['d']) - tm(x['o']))) for x in b]
         w = caption_words(seg['t'], mode, b, d)
         for x in w: x['o'] = round(x['o'] + PAD_IN, 3)
-        PAD_SEG = PAD_IN + (.35 if (seg['id'] == 'intro' and DATA_CINE) else 0)   # portada de cine: medio segundo de telón cerrado con las luces antes de la voz
+        PAD_SEG = PAD_IN + (.12 if (seg['id'] == 'intro' and DATA_CINE) else 0)   # portada de cine: medio segundo de telón cerrado con las luces antes de la voz
         if PAD_SEG != PAD_IN:
             for x in w: x['o'] = round(x['o'] + PAD_SEG - PAD_IN, 3)
         def when(key):
@@ -471,6 +471,46 @@ def fotogramas(lst):
     sh('node', os.path.join(R, 'render.js'), 'frames', lst)
 
 
+
+def _musica(path, dur, drop, bpm=116, seed=1):
+    """base musical propia (sin derechos): intro filtrada con subida, 'drop' al entrar en el primer partido,
+    batería + bajo + acordes. Se mezcla por debajo de la voz (la voz la aparta sola)."""
+    import numpy as np
+    SR = 48000; n = int(SR * (dur + .2)); out = np.zeros(n); b = 60 / bpm; rng = np.random.default_rng(seed)
+    def put(x, t):
+        i = int(t * SR)
+        if 0 <= i < n: out[i:i + len(x)] += x[:n - i]
+    tt = lambda d: np.arange(int(SR * d)) / SR
+    t1 = tt(.42); kick = np.sin(2 * np.pi * (45 * t1 + 70 / 9 * (1 - np.exp(-t1 * 9)))) * np.exp(-t1 * 7) * .95
+    t2 = tt(.22); nz = rng.standard_normal(len(t2)); nz = nz - np.convolve(nz, np.ones(6) / 6, 'same')
+    clap = (nz * np.exp(-t2 * 18) + .5 * np.sin(2 * np.pi * 190 * t2) * np.exp(-t2 * 30)) * .45
+    t3 = tt(.05); hh = rng.standard_normal(len(t3)); hh = (hh - np.convolve(hh, np.ones(3) / 3, 'same')) * np.exp(-t3 * 70) * .22
+    roots = [55.0, 43.65, 65.41, 49.0]                     # La - Fa - Do - Sol
+    chords = [[220, 261.6, 329.6], [174.6, 220, 261.6], [261.6, 329.6, 392], [196, 246.9, 293.7]]
+    beat = 0; t = 0.0
+    while t < dur:
+        bar = int(beat // 4) % 4; pos = beat % 4; full = t >= drop
+        if full:
+            put(kick, t)
+            if pos in (1, 3): put(clap, t)
+            if pos == 2.5 or (pos == 3.5 and bar % 2): put(kick * .6, t)
+        for h in (0, .5): put(hh * (1 if full else .45) * (1.2 if h else .8), t + h * b)
+        if pos == 0:
+            d = 4 * b; tb = tt(d); f = roots[bar]
+            pump = np.clip((np.mod(tb, b) / (b * .45)), .25, 1) if full else np.ones(len(tb))
+            bass = sum(np.sin(2 * np.pi * f * k * tb) / k ** 1.6 for k in range(1, 6)) * pump * (.34 if full else .0)
+            pad = sum(np.sin(2 * np.pi * fr * tb + .3 * np.sin(2 * np.pi * .4 * tb)) + .5 * np.sin(2 * np.pi * fr * 1.003 * tb) for fr in chords[bar])
+            pad = pad * np.minimum(1, tb / .25) * np.exp(-np.maximum(0, tb - d + .3) * 6) * (.035 if full else .05)
+            put(bass + pad, t)
+        beat += .5; t = beat * b
+    if drop > 1.2:                                           # subida de ruido antes del drop
+        tr = tt(min(2.4, drop)); r = rng.standard_normal(len(tr)); k = tr / tr[-1]
+        r = np.convolve(r, np.ones(9) / 9, 'same'); put(r * k ** 2.2 * .5, drop - tr[-1])
+    fade = np.ones(n); m = int(SR * 1.5); fade[-m:] = np.linspace(1, 0, m); out *= fade
+    out = out / (np.abs(out).max() + 1e-9) * .9
+    import wave
+    w = wave.open(path, 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((out * 32767).astype(np.int16).tobytes()); w.close()
+
 def _sfx(d):
     """efectos sintetizados (sin derechos): golpe, pop y barrido"""
     import wave
@@ -508,6 +548,10 @@ def _sfx(d):
         if os.path.exists(own):
             subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', own, '-ac', '1', '-ar', str(SR), os.path.join(d, 'pick.wav')], check=True)
             subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', own, '-t', '1.2', '-af', 'afade=t=out:st=.9:d=.3', '-ac', '1', '-ar', str(SR), os.path.join(d, 'pick2.wav')], check=True); break
+    t = np.arange(int(SR * .6)) / SR; save('hit.wav', (.9 * np.sin(2 * np.pi * (48 * t + 60 / 10 * (1 - np.exp(-t * 10)))) * np.exp(-t * 8) + .25 * np.random.default_rng(3).standard_normal(len(t)) * np.exp(-t * 40)) * .9)
+    t = np.arange(int(SR * 1.3)) / SR; r = np.random.default_rng(4).standard_normal(len(t)); r = r - np.convolve(r, np.ones(int(30 - 26 * 0)) / 30, 'same')
+    save('riser.wav', r * (t / t[-1]) ** 2.5 * .55 + .2 * np.sin(2 * np.pi * (200 * t + 400 * t * t)) * (t / t[-1]) ** 2)
+    t = np.arange(int(SR * 1.1)) / SR; bz = np.sign(np.sin(2 * np.pi * 220 * t)) * .5 + np.sign(np.sin(2 * np.pi * 277 * t)) * .3; save('buzzer.wav', bz * np.minimum(1, t / .01) * np.exp(-np.maximum(0, t - .9) * 20) * .45)
     t = np.arange(int(SR * .4)) / SR; r = np.random.default_rng(1).standard_normal(len(t)); r = np.convolve(r, np.ones(8) / 8, 'same') - np.convolve(r, np.ones(60) / 60, 'same'); save('whoosh.wav', r * np.sin(np.pi * t / .4) ** 2 * .5)
 
 
@@ -543,24 +587,29 @@ def render():
     intro_ = next((x for x in D['scenes'] if x['type'] == 'intro'), {})
     if intro_.get('focos'):
         # sin petardos: tono de draft al empezar y campanilla en cada titular
-        ev = [('pick', 0.0), ('whoosh', max(0, intro_['focos'][0]['t'] - .1))] + [x for f_ in intro_['focos'][1:] for x in (('whoosh', max(0, f_['t'] - .12)), ('pick2', f_['t']))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
+        ev = [('pick', 0.0), ('crowd', 0.0), ('riser', max(0, intro_['dur'] - 1.35)), ('whoosh', max(0, intro_['focos'][0]['t'] - .1))] + [x for f_ in intro_['focos'][1:] for x in (('whoosh', max(0, f_['t'] - .12)), ('pick2', f_['t']))] + [('whoosh', intro_['dur'] - .5), ('boom', intro_['dur'] - .1)]
     nm = len(D['mini'])
     if not intro_.get('focos'): ev += [('pop', .15 + i * min(.1, .8 / max(1, nm))) for i in range(nm)]
     for i, sc in enumerate(D['scenes']):
         if i: ev.append(('whoosh', starts[i] - .15))
         if sc['type'] == 'game':
-            ev.append(('boom', starts[i] + .05)); ev += [('pop', starts[i] + c['t']) for c in sc.get('cards', [])]
+            ev.append(('boom', starts[i] + .05)); ev += [('hit', starts[i] + c['t']) for c in sc.get('cards', [])]
+            if i + 1 < len(D['scenes']) and D['scenes'][i + 1]['type'] == 'outro': ev.append(('buzzer', starts[i] + sc['dur'] - 1.0))
         if sc['type'] == 'outro': ev += [('pop', starts[i] + h) for h in sc.get('hl', []) if h is not None]
     if HASTA: ev = [e for e in ev if e[1] < HASTA]
-    vol = {'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .5, 'pick': .6, 'pick2': .45}
+    vol = {'boom': .55, 'pop': .4, 'whoosh': .45, 'crowd': .35, 'pick': .6, 'pick2': .45, 'hit': .6, 'riser': .5, 'buzzer': .35}
     open(os.path.join(esc, 'v.txt'), 'w').write(''.join(f"file 's{i}.mp4'\n" for i in range(len(D['scenes']))))
     open(os.path.join(esc, 'a.txt'), 'w').write(''.join(f"file 'a{i}.wav'\n" for i in range(len(D['scenes']))))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'v.txt'), '-c', 'copy', os.path.join(esc, 'v.mp4'))
     sh('ffmpeg', '-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', os.path.join(esc, 'a.txt'), '-c:a', 'pcm_s16le', os.path.join(esc, 'a.wav'))
+    tot = sum(sc['dur'] for sc in D['scenes']); drop = intro_.get('dur', 2.0) if intro_ else 1.5
+    _musica(os.path.join(sfx, 'musica.wav'), min(tot, HASTA or tot), drop, seed=int(re.sub(r'\D', '', n['fecha']) or 1) % 97)
     inp = ['-i', os.path.join(esc, 'a.wav')]; flt = []
     for k, (nme, tt) in enumerate(ev):
         inp += ['-i', os.path.join(sfx, nme + '.wav')]; flt.append(f'[{k + 1}]adelay={int(max(0, tt) * 1000)}|{int(max(0, tt) * 1000)},volume={vol[nme]}[e{k}]')
-    flt.append('[0]' + ''.join(f'[e{k}]' for k in range(len(ev))) + f'amix=inputs={len(ev) + 1}:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=9[o]')
+    km = len(ev) + 1; inp += ['-i', os.path.join(sfx, 'musica.wav')]
+    flt.append(f'[0]asplit=2[voz][llave];[{km}]volume=0.30[mus];[mus][llave]sidechaincompress=threshold=0.03:ratio=8:attack=15:release=350:makeup=1[musd]')
+    flt.append('[voz]' + ''.join(f'[e{k}]' for k in range(len(ev))) + f'[musd]amix=inputs={len(ev) + 2}:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=9[o]')
     sh('ffmpeg', '-v', 'error', '-y', *inp, '-filter_complex', ';'.join(flt), '-map', '[o]', '-ar', '48000', '-ac', '2', os.path.join(esc, 'mix.wav'))
     shutil.move(os.path.join(esc, 'mix.wav'), os.path.join(esc, 'a.wav'))
     final = os.path.join(OUT, f"offcourt_{'noche_nba' if LIGA == 'nba' else LIGA}_{n['fecha']}{'_prueba' if HASTA else ''}.mp4")
