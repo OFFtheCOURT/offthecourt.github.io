@@ -66,7 +66,11 @@ jobs:
                   'Vamos con el resumen completo, partido a partido, sin perder ni un segundo.')
           def texto(t, modo): return re.sub(r'\{([^|}]*)\|([^}]*)\}', lambda m: m.group(1) if modo == 'o' else m.group(2), t)
           async def tts(t, voz, rate, tono, f):
-              await edge_tts.Communicate(t, voz, rate=rate, pitch=tono).save(f + '.mp3')
+              for intento in range(5):
+                  try:
+                      await edge_tts.Communicate(t, voz, rate=rate, pitch=tono).save(f + '.mp3'); break
+                  except Exception as e:
+                      print('reintento', voz, repr(e)); await asyncio.sleep(3 + 4 * intento)
               subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', f + '.mp3', '-ac', '1', '-ar', '22050', f + '.wav'], check=True)
           async def main():
               for v in os.environ['VOCES'].split(','):
