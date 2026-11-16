@@ -1,0 +1,92 @@
+name: Clonar voz (muestra)
+
+# Convierte la locución de edge-tts al timbre de una grabación propia (OpenVoice V2, licencia MIT).
+# La grabación llega como input (opus en base64) y no se guarda en el repositorio.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Grabación de referencia (opus en base64)'
+        required: true
+      guion:
+        description: 'Guion JSON en base64: [{id,t}]'
+        required: true
+      voces:
+        description: 'voz:rate:tono separadas por comas'
+        required: false
+        default: 'es-ES-AlvaroNeural:-2%:-14Hz,en-US-AndrewMultilingualNeural:+2%:+0Hz'
+
+permissions:
+  contents: write
+
+jobs:
+  clon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Dependencias
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg >/dev/null
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q "numpy<2" librosa==0.10.2 soundfile edge-tts unidecode inflect eng_to_ipa pypinyin jieba cn2an
+          git clone -q --depth 1 https://github.com/myshell-ai/OpenVoice ov
+          mkdir -p ck && cd ck
+          curl -sSfL -o config.json https://huggingface.co/myshell-ai/OpenVoiceV2/resolve/main/converter/config.json
+          curl -sSfL -o checkpoint.pth https://huggingface.co/myshell-ai/OpenVoiceV2/resolve/main/converter/checkpoint.pth
+      - name: Clonar
+        env:
+          REF: ${{ github.event.inputs.ref }}
+          GUION: ${{ github.event.inputs.guion }}
+          VOCES: ${{ github.event.inputs.voces }}
+        run: |
+          mkdir -p out w
+          echo "$REF" | base64 -d > w/ref.opus
+          # limpia la grabación: sin graves de calle, sin silencios largos
+          ffmpeg -y -v error -i w/ref.opus -ac 1 -ar 22050 -af "highpass=f=70,silenceremove=stop_periods=-1:stop_duration=0.4:stop_threshold=-40dB" w/ref.wav
+          cat > clon.py <<'EOF'
+          import asyncio, base64, json, os, re, subprocess, sys
+          sys.path.insert(0, 'ov')
+          import torch, edge_tts
+          from openvoice.api import ToneColorConverter
+          G = json.loads(base64.b64decode(os.environ['GUION']).decode())
+          tc = ToneColorConverter('ck/config.json', device='cpu', enable_watermark=False)
+          tc.load_ckpt('ck/checkpoint.pth')
+          tgt = tc.extract_se(['w/ref.wav'])
+          # texto largo de la propia voz fuente para sacar bien su timbre
+          BASE = ('Buenas noches y bienvenidos. Hoy repasamos todo lo que ha pasado en la pista: '
+                  'remontadas, triples sobre la bocina y actuaciones que no se olvidan. '
+                  'Los partidos se deciden en los detalles, y anoche hubo muchos detalles. '
+                  'Vamos con el resumen completo, partido a partido, sin perder ni un segundo.')
+          def texto(t, modo): return re.sub(r'\{([^|}]*)\|([^}]*)\}', lambda m: m.group(1) if modo == 'o' else m.group(2), t)
+          async def tts(t, voz, rate, tono, f):
+              await edge_tts.Communicate(t, voz, rate=rate, pitch=tono).save(f + '.mp3')
+              subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', f + '.mp3', '-ac', '1', '-ar', '22050', f + '.wav'], check=True)
+          async def main():
+              for v in os.environ['VOCES'].split(','):
+                  voz, rate, tono = v.split(':')
+                  modo = 'r' if voz.startswith('es-') else 'o'
+                  corto = voz.split('-')[2].replace('MultilingualNeural', '').replace('Neural', '')
+                  await tts(BASE, voz, rate, tono, f'w/base_{corto}')
+                  src = tc.extract_se([f'w/base_{corto}.wav'])
+                  for s in G:
+                      f = f"w/{s['id']}_{corto}"
+                      await tts(texto(s['t'], modo), voz, rate, tono, f)
+                      for tau in (0.3,):
+                          tc.convert(audio_src_path=f + '.wav', src_se=src, tgt_se=tgt, output_path=f"out/{s['id']}_{corto}_clon.wav", tau=tau)
+                      subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', f + '.mp3', f"out/{s['id']}_{corto}_original.mp3"], check=True)
+                      print('ok', s['id'], corto)
+          asyncio.run(main())
+          EOF
+          python3 clon.py
+          ls -la out
+      - name: Guardar en la rama redes-clon
+        run: |
+          cd out
+          git init -q -b redes-clon
+          git config user.name "offcourt-bot"
+          git config user.email "offcourt-bot@users.noreply.github.com"
+          git add -A && git commit -qm "Muestra de voz clonada"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" redes-clon
