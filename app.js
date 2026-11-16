@@ -1198,6 +1198,7 @@ if(LIVE){setInterval(()=>{if(!avisosOn())return;for(const lg of Object.keys(AV))
 
 if(LIVE&&'serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 try{const s=localStorage.getItem('offcourt-league');if(s&&LG[s])CUR=s}catch(e){}
+{const q=new URLSearchParams(location.search).get('liga');if(q&&LG[q])CUR=q}   // enlaces directos a una liga: ?liga=nba|el|acb
 document.addEventListener('click',e=>{const a=e.target.closest('a[target=_blank]');if(!a)return;const t=/Seguir en directo/.test(a.textContent)?'directo':/Resumen/i.test(a.textContent)?'resumen':(a.classList.contains('clip')?'jugada':'');if(t)track('salida/'+t+'/'+CUR,'Enlace externo: '+t+' ('+CUR+')')},true);
 renderAll();i18nStart();
 if(/^#(equipo|jugador|comparar)\//.test(location.hash))route();else openShared();

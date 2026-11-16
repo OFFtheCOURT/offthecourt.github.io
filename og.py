@@ -89,7 +89,7 @@ def page(lk, L, g, img_rel):
 <p><a href="{app}">Ver el partido en Offcourt</a></p></body></html>"""
 
 def build(S, B, LEAGUES):
-    os.makedirs(os.path.join(S, 'p'), exist_ok=True); urls = [(SITE + '/', None)]; n_img = 0; n = 0
+    os.makedirs(os.path.join(S, 'p'), exist_ok=True); urls = [(SITE + '/', None), (SITE + '/links/', None)]; n_img = 0; n = 0
     for lk, L in LEAGUES.items():
         d = os.path.join(S, 'p', lk); os.makedirs(d, exist_ok=True)
         for per in L.get('periods', []):
