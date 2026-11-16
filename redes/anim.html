@@ -562,12 +562,48 @@ function cineAudience(t,cheer){
       const ph=R_()*6,jump=cheer*Math.max(0,Math.sin(t*9+ph))*(26+row*8),bob=Math.sin(t*2+ph)*3,s=1+row*.22;
       X.save();X.translate(x,y-jump+bob);X.scale(s,s);
       if(cheer>.3&&((i+row)%2==0)){X.strokeStyle=sk;X.lineWidth=11;X.lineCap='round';X.beginPath();X.moveTo(-26,10);X.lineTo(-40,-50-jump*.4);X.moveTo(26,10);X.lineTo(40,-50-jump*.4);X.stroke()}
-      X.fillStyle=col;rr(-36,0,72,90,26);X.fill();X.fillStyle='#1d1612';X.beginPath();X.arc(0,-22,27,0,7);X.fill();X.restore()}
-    // butacas
-    X.fillStyle='#b02a40';for(let i=0;i<n+1;i++){const x=(i+.35)*sw-(row%2)*sw*.25-48;rr(x-10,y+50+row*8,sw*.8,90,18);X.fill()}
-    X.fillStyle='rgba(0,0,0,.18)';X.fillRect(0,y+130+row*8,W,30)}
+      // hombros con luz de la pantalla y cabeza a contraluz con brillo en el pelo
+      const sg=X.createLinearGradient(0,-4,0,60);sg.addColorStop(0,mix(col,'#ffffff',.08));sg.addColorStop(1,mix(col,'#000000',.6));
+      X.fillStyle=sg;X.beginPath();X.moveTo(-44,70);X.bezierCurveTo(-46,18,-30,4,-12,2);X.lineTo(12,2);X.bezierCurveTo(30,4,46,18,44,70);X.closePath();X.fill();
+      X.fillStyle=mix(sk,'#000000',.45);X.fillRect(-9,-8,18,14);
+      const hg=X.createRadialGradient(-6,-34,2,0,-22,30);hg.addColorStop(0,'#3a2c22');hg.addColorStop(1,'#0e0a08');
+      X.fillStyle=hg;X.beginPath();X.ellipse(0,-24,24,28,0,0,7);X.fill();
+      X.strokeStyle='rgba(255,236,210,.35)';X.lineWidth=3;X.beginPath();X.ellipse(0,-24,23,27,0,Math.PI*1.15,Math.PI*1.85);X.stroke();X.restore()}
+    // butacas premium: terciopelo acolchado, ribete dorado, reposabrazos con portavasos y LED en el escalón
+    const s=1+row*.22,top=y+26*s,bw=Math.min(sw*.84,150*s),bh=1920-top;
+    for(let i=-1;i<n+1;i++){const cx=(i+.35)*sw-(row%2)*sw*.25,ax=cx+sw/2;
+      X.fillStyle='#07070b';rr(ax-11*s,top+52*s,22*s,bh,8*s);X.fill(); // reposabrazos
+      const cg=X.createRadialGradient(ax,top+60*s,1,ax,top+60*s,16*s);cg.addColorStop(0,ACC2);cg.addColorStop(1,'rgba(0,0,0,0)');
+      X.globalAlpha=.55;X.fillStyle=cg;X.beginPath();X.arc(ax,top+60*s,16*s,0,7);X.fill();X.globalAlpha=1;
+      X.fillStyle='#000';X.beginPath();X.ellipse(ax,top+58*s,8*s,4*s,0,0,7);X.fill()}
+    for(let i=0;i<n;i++){const cx=(i+.35)*sw-(row%2)*sw*.25;cineButaca(cx,top,bw,bh,s,row,i)}
+  }
   // palomitas
   const R2=rng(9);for(let i=0;i<26;i++){const p0=R2()*3,x=R2()*W,q=((t+p0)%1.6)/1.6;if(cheer<.2&&i%3)continue;const y=1500-q*700+q*q*500;X.fillStyle='#fff6d8';X.beginPath();X.arc(x+Math.sin(q*6+i)*30,y,7+R2()*4,0,7);X.fill()}
+}
+function cineButaca(cx,top,w,h,s,row,i){ // respaldo de butaca vista desde atrás
+  const c=TH.tela||'#a3122a',dark=lum(c)<.12,base=dark?'#1b1b1f':mix(c,'#000000',.42),hi=dark?'#45454d':mix(c,'#ffffff',.08),lo=dark?'#050506':mix(c,'#000000',.78);
+  const x=cx-w/2,r=w*.3,hh=h*.24*Math.min(1,150/h*2.4);
+  X.save();X.shadowColor='rgba(0,0,0,.6)';X.shadowBlur=24*s;X.shadowOffsetY=8*s;
+  X.fillStyle=lo;rr(x,top,w,h,r);X.fill();X.restore();
+  // terciopelo: sombreado cilíndrico + luz de la pantalla desde arriba
+  const g=X.createLinearGradient(x,0,x+w,0);g.addColorStop(0,lo);g.addColorStop(.22,base);g.addColorStop(.5,hi);g.addColorStop(.78,base);g.addColorStop(1,lo);
+  X.fillStyle=g;rr(x+3*s,top+3*s,w-6*s,h,r*.92);X.fill();
+  const v=X.createLinearGradient(0,top,0,top+h*.6);v.addColorStop(0,'rgba(255,255,255,.16)');v.addColorStop(.35,'rgba(255,255,255,0)');v.addColorStop(1,'rgba(0,0,0,.45)');
+  X.fillStyle=v;rr(x+3*s,top+3*s,w-6*s,h,r*.92);X.fill();
+  // cabezal acolchado separado por una costura
+  const sy=top+52*s;X.strokeStyle='rgba(0,0,0,.55)';X.lineWidth=3*s;X.beginPath();X.moveTo(x+10*s,sy);X.quadraticCurveTo(cx,sy+8*s,x+w-10*s,sy);X.stroke();
+  X.strokeStyle='rgba(255,255,255,.10)';X.lineWidth=1.5*s;X.beginPath();X.moveTo(x+10*s,sy+3*s);X.quadraticCurveTo(cx,sy+11*s,x+w-10*s,sy+3*s);X.stroke();
+  // canales verticales del capitoné
+  for(const k of [-1,0,1]){const lx=cx+k*w*.24;
+    X.strokeStyle='rgba(0,0,0,.45)';X.lineWidth=3.5*s;X.beginPath();X.moveTo(lx,sy+12*s);X.lineTo(lx,top+h);X.stroke();
+    X.strokeStyle='rgba(255,255,255,.08)';X.lineWidth=1.5*s;X.beginPath();X.moveTo(lx+3*s,sy+12*s);X.lineTo(lx+3*s,top+h);X.stroke()}
+  // ribete dorado en el borde superior
+  const gd=X.createLinearGradient(x,0,x+w,0);gd.addColorStop(0,'#6b4e16');gd.addColorStop(.5,'#ffe08a');gd.addColorStop(1,'#6b4e16');
+  X.strokeStyle=gd;X.lineWidth=3*s;X.beginPath();X.moveTo(x+4*s,top+r);X.arcTo(x+4*s,top+4*s,cx,top+4*s,r*.9);X.arcTo(x+w-4*s,top+4*s,x+w-4*s,top+r,r*.9);X.lineTo(x+w-4*s,top+r);X.stroke();
+  // plaquita con fila y número
+  const py=sy+26*s,pw=40*s,ph=17*s;X.fillStyle=gd;rr(cx-pw/2,py,pw,ph,4*s);X.fill();
+  X.fillStyle='#2a1d05';X.font=`800 ${12*s}px ${FL}`;X.textAlign='center';X.textBaseline='middle';X.fillText('ABC'[row]+(i+1),cx,py+ph/2+1);X.textAlign='left';X.textBaseline='alphabetic';
 }
 // ── PORTADA DE CINE: una pantalla grande con TODOS los partidos y, encima, los 4 titulares de la noche ──
 function cineTela(t){ // telón del escenario con pliegues (color por liga: NBA rojo, EuroLiga naranja, ACB negro)
