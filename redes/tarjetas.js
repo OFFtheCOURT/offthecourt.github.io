@@ -5,7 +5,7 @@ const fs = require('fs'), path = require('path');
   const [url, lg, fecha, max, out] = process.argv.slice(2);
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
   await p.route(/goatcounter|gc\.zgo\.at|espn\.com|euroleague\.net|acb\.com/, r => r.abort());
-  await p.addInitScript(l => { localStorage.setItem('offcourt-league', l) }, lg);
+  await p.addInitScript(([l, lang]) => { localStorage.setItem('offcourt-league', l); localStorage.setItem('offcourt-lang', lang) }, [lg, process.env.OFFCOURT_LANG || 'es']);
   await p.goto(url); await p.waitForFunction(() => typeof shDraw === 'function' && typeof L !== 'undefined');
   const r = await p.evaluate(async ([fecha, max]) => {
     // partidos del día: NBA = la noche (clave del periodo); Europa = partidos cuya fecha en España es ese día
