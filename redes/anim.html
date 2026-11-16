@@ -562,7 +562,7 @@ function cineAudience(t,cheer){
     for(let k=-4;k<=4;k++){const x=540+(k+(row%2?.5:0))*sw;if(x>-sw*.45&&x<W+sw*.45)xs.push(x)}
     const n=xs.length;
     for(let i=0;i<n;i++){const x=xs[i],col=['#c8323a','#2c62c9','#e0953f','#2fae7a','#d9dee8','#7d4fc4','#1f2a3a'][Math.floor(R_()*7)],sk=SKIN[Math.floor(R_()*5)];
-      const ph=R_()*6,jump=cheer*Math.max(0,Math.sin(t*9+ph))*(22+row*6),bob=Math.sin(t*2+ph)*2,ps=s*1.5;
+      const ph=R_()*6,jump=cheer*Math.max(0,Math.sin(t*9+ph))*(22+row*6),bob=Math.sin(t*2+ph)*2,ps=s*1.38;
       const pelo=['#16100b','#3b2416','#5a3a1f','#7a5530','#2b2b2e'][Math.floor(R_()*5)],est=Math.floor(R_()*5),gorra=['#c8323a','#1f2a3a','#e0953f'][Math.floor(R_()*3)];
       X.save();X.translate(x,y-jump+bob);X.scale(ps,ps);
       cinePersona(col,sk,pelo,est,gorra,cheer>.3&&((i+row)%2==0),jump);X.restore()}
@@ -578,32 +578,19 @@ function cineAudience(t,cheer){
   // palomitas
   const R2=rng(9);for(let i=0;i<26;i++){const p0=R2()*3,x=R2()*W,q=((t+p0)%1.6)/1.6;if(cheer<.2&&i%3)continue;const y=1500-q*700+q*q*500;X.fillStyle='#fff6d8';X.beginPath();X.arc(x+Math.sin(q*6+i)*30,y,7+R2()*4,0,7);X.fill()}
 }
-function cinePersona(col,sk,pelo,est,gorra,brazos,jump){ // espectador visto de espaldas, centrado en su butaca
-  const skD=mix(sk,'#000000',.4),rim='rgba(255,236,210,.32)';
-  if(brazos){const g=X.createLinearGradient(0,-90,0,20);g.addColorStop(0,sk);g.addColorStop(1,mix(col,'#000000',.3));
-    X.strokeStyle=g;X.lineWidth=13;X.lineCap='round';X.beginPath();X.moveTo(-38,16);X.quadraticCurveTo(-56,-20,-46,-70-jump*.4);X.moveTo(38,16);X.quadraticCurveTo(56,-20,46,-70-jump*.4);X.stroke();
-    X.fillStyle=sk;for(const k of[-1,1]){X.beginPath();X.arc(k*46,-74-jump*.4,8,0,7);X.fill()}}
-  // melena larga por detrás de los hombros
-  if(est==1){X.fillStyle=mix(pelo,'#000000',.25);X.beginPath();X.moveTo(-21,-40);X.quadraticCurveTo(-27,10,-19,34);X.lineTo(19,34);X.quadraticCurveTo(27,10,21,-40);X.closePath();X.fill()}
-  // hombros y espalda
-  const sg=X.createLinearGradient(0,0,0,70);sg.addColorStop(0,mix(col,'#ffffff',.06));sg.addColorStop(1,mix(col,'#000000',.62));
-  X.fillStyle=sg;X.beginPath();X.moveTo(-52,80);X.bezierCurveTo(-54,26,-44,10,-22,4);X.quadraticCurveTo(0,-1,22,4);X.bezierCurveTo(44,10,54,26,52,80);X.closePath();X.fill();
-  X.strokeStyle=rim;X.lineWidth=2.5;X.beginPath();X.moveTo(-48,30);X.bezierCurveTo(-46,14,-36,8,-22,5);X.moveTo(22,5);X.bezierCurveTo(36,8,46,14,48,30);X.stroke();
-  if(est==1){X.fillStyle=mix(pelo,'#000000',.15);X.beginPath();X.moveTo(-17,-10);X.quadraticCurveTo(-20,14,-14,30);X.lineTo(14,30);X.quadraticCurveTo(20,14,17,-10);X.closePath();X.fill()}
-  // cuello corto y orejas
-  X.translate(0,7);X.fillStyle=skD;rr(-9,-16,18,20,6);X.fill();
-  for(const k of[-1,1]){X.fillStyle=skD;X.beginPath();X.ellipse(k*19,-34,4.5,7.5,0,0,7);X.fill()}
-  // cabeza (de espaldas: casi todo pelo)
-  const hg=X.createRadialGradient(-5,-48,2,0,-36,26);hg.addColorStop(0,mix(pelo,'#ffffff',.12));hg.addColorStop(1,mix(pelo,'#000000',.45));
-  X.fillStyle=hg;
-  if(est==4){X.beginPath();for(let a=0;a<12;a++){const an=a/12*Math.PI*2;X.moveTo(Math.cos(an)*14+7,-38+Math.sin(an)*17);X.arc(Math.cos(an)*14,-38+Math.sin(an)*17,7,0,7)}X.fill();X.beginPath();X.ellipse(0,-38,17,21,0,0,7);X.fill()}
-  else{X.beginPath();X.ellipse(0,-37,18.5,22.5,0,0,7);X.fill()}
-  if(est==0){X.fillStyle=skD;X.globalAlpha=.35;X.beginPath();X.ellipse(0,-17,13,5,0,0,Math.PI);X.fill();X.globalAlpha=1}
-  if(est==2){X.fillStyle=hg;X.beginPath();X.arc(0,-62,10,0,7);X.fill();X.strokeStyle='rgba(0,0,0,.4)';X.lineWidth=2;X.beginPath();X.arc(0,-62,10,0,7);X.stroke()}
-  if(est==3){const cg=X.createLinearGradient(0,-62,0,-34);cg.addColorStop(0,mix(gorra,'#ffffff',.15));cg.addColorStop(1,mix(gorra,'#000000',.4));
-    X.fillStyle=cg;X.beginPath();X.ellipse(0,-40,20,22,0,Math.PI,0);X.fill();X.strokeStyle='rgba(0,0,0,.35)';X.lineWidth=2;X.beginPath();X.moveTo(0,-62);X.lineTo(0,-40);X.stroke();
-    X.fillStyle=mix(gorra,'#ffffff',.3);X.beginPath();X.arc(0,-62,3,0,7);X.fill()}
-  X.strokeStyle=rim;X.lineWidth=2.5;X.beginPath();X.ellipse(0,-37,18,22,0,Math.PI*1.12,Math.PI*1.88);X.stroke();
+function cinePersona(col,sk,pelo,est,gorra,brazos,jump){ // espectador a contraluz: silueta limpia con el borde iluminado por la pantalla
+  const hw=[17,18.5,19.5,18,17.5][est],hh=hw*1.18,hy=-22,base='#0b0a10',rim='rgba(255,238,215,.42)';
+  const fill=()=>{const g=X.createLinearGradient(0,hy-hh,0,80);g.addColorStop(0,mix(col,'#0b0a10',.86));g.addColorStop(.45,base);g.addColorStop(1,'#040406');return g};
+  X.fillStyle=fill();X.strokeStyle=X.fillStyle;
+  if(brazos){X.lineWidth=13;X.lineCap='round';X.beginPath();X.moveTo(-38,18);X.quadraticCurveTo(-56,-20,-46,-70-jump*.4);X.moveTo(38,18);X.quadraticCurveTo(56,-20,46,-70-jump*.4);X.stroke()}
+  // una sola forma: cabeza, cuello y hombros
+  X.beginPath();X.moveTo(-50,80);X.bezierCurveTo(-52,32,-44,16,-26,11);X.quadraticCurveTo(-13,7,-11,0);
+  X.ellipse(0,hy,hw,hh,0,Math.PI*.7,Math.PI*.3,false);X.lineTo(11,0);
+  X.quadraticCurveTo(13,7,26,11);X.bezierCurveTo(44,16,52,32,50,80);X.closePath();X.fill();
+  // luz de la pantalla en el contorno superior
+  X.strokeStyle=rim;X.lineWidth=2.5;X.lineCap='round';
+  X.beginPath();X.ellipse(0,hy,hw-1,hh-1,0,Math.PI*1.1,Math.PI*1.9);X.stroke();
+  X.beginPath();X.moveTo(-47,36);X.bezierCurveTo(-45,21,-38,15,-26,12);X.moveTo(26,12);X.bezierCurveTo(38,15,45,21,47,36);X.stroke();
 }
 function cineButaca(cx,top,w,h,s,row,i){ // respaldo de butaca vista desde atrás
   const c=TH.tela||'#a3122a',dark=lum(c)<.12,base=dark?'#1b1b1f':mix(c,'#000000',.42),hi=dark?'#45454d':mix(c,'#ffffff',.08),lo=dark?'#050506':mix(c,'#000000',.78);
