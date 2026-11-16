@@ -553,6 +553,9 @@ def _sfx(d):
     for k in range(6):
         tb = np.arange(int(SR * .32)) / SR; put(nw, .22 * (1 - k / 7) * sum(np.sin(2 * np.pi * 73.4 * h * tb) / h for h in (1, 2, 3)) * np.exp(-tb * 9), .5 + k * .5)
     save('noticias.wav', nw / np.abs(nw).max() * .85)
+    # sintonía elegida (piano + cuerdas + timbal, composición propia): redes/sonidos/intro.wav
+    if os.path.exists(os.path.join(R, 'sonidos', 'intro.wav')):
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', os.path.join(R, 'sonidos', 'intro.wav'), '-ac', '1', '-ar', str(SR), os.path.join(d, 'noticias.wav')], check=True)
     # si el usuario deja su propio tono en redes/sonidos/pick.(wav|mp3|m4a), se usa ese
     for ext in ('wav', 'mp3', 'm4a'):
         own = os.path.join(R, 'sonidos', 'pick.' + ext)
