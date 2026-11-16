@@ -558,6 +558,7 @@ def _sfx(d):
         own = os.path.join(R, 'sonidos', 'pick.' + ext)
         if os.path.exists(own):
             subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', own, '-ac', '1', '-ar', str(SR), os.path.join(d, 'pick.wav')], check=True)
+            shutil.copy(os.path.join(d, 'pick.wav'), os.path.join(d, 'noticias.wav'))
             subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', own, '-t', '1.2', '-af', 'afade=t=out:st=.9:d=.3', '-ac', '1', '-ar', str(SR), os.path.join(d, 'pick2.wav')], check=True); break
     t = np.arange(int(SR * .6)) / SR; nz = np.convolve(np.random.default_rng(3).standard_normal(len(t)), np.ones(60) / 60, 'same'); save('hit.wav', (.9 * np.sin(2 * np.pi * (48 * t + 60 / 10 * (1 - np.exp(-t * 10)))) * np.exp(-t * 8) + .5 * nz * np.exp(-t * 22)) * .9)
     t = np.arange(int(SR * 1.3)) / SR; r = np.random.default_rng(4).standard_normal(len(t)); r = r - np.convolve(r, np.ones(int(30 - 26 * 0)) / 30, 'same')
