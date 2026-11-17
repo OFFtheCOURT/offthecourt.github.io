@@ -688,7 +688,8 @@ def estado_europa(imprimir):
         etas = []
         for g in pen:
             tip = datetime.datetime.fromisoformat(g['utc'].replace('Z', '+00:00'))
-            etas.append(max(0, (tip - now).total_seconds() / 60) + 125 if g.get('state', 'pre') == 'pre' else 40)
+            mins = (tip - now).total_seconds() / 60
+            etas.append(max(10, mins + 125) if g.get('state') in (None, 'pre') else 40)   # si ya empezó, cuenta desde el salto
         res['estado'] = 'ESPERANDO'; res['minutos_restantes'] = round(max(etas))
     if imprimir: print(json.dumps(res, ensure_ascii=False))
     return res
@@ -739,7 +740,7 @@ def esperar():
     t0 = time.time()
     while True:
         e = estado(False)
-        if e['estado'] != 'ESPERANDO' or e.get('minutos_restantes', 0) > 100: break
+        if e['estado'] != 'ESPERANDO' or e.get('minutos_restantes', 0) > 150: break
         if time.time() - t0 > 7 * 60: break
         actualizar_web(); time.sleep(max(0, 240 - 60))
     print(json.dumps(estado(False), ensure_ascii=False))
