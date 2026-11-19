@@ -114,7 +114,9 @@ def guion(lg, nivel=0):
     for i, x in enumerate(orden):
         W, Ls, p = x['W'], x['L'], x['p']; w, l = W['puntos'], Ls['puntos']; P = pr(p['nombre'])
         Wv = lambda sg, pl: vb(W, sg, pl)
-        if corto:
+        if nivel >= 3 and i >= (6 if nivel == 3 else 4):      # noches largas: los partidos menores, en una frase mínima
+            ops = [f"Ganan {S(W)} {al(Ls)}, {w} a {l}."] if nivel == 3 else [f"{w} a {l} para {S(W)}."]
+        elif corto:
             ops = [f"{S(W, 1)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}, con {p['pts']} de {P}.",
                    f"{P} mete {p['pts']} y {S(W)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}."]
         elif x['ot']:
@@ -132,7 +134,8 @@ def guion(lg, nivel=0):
         t = rnd.choice(ops)
         if x['td'] and not corto: t = t[:-1] + f", que firma un triple-doble."
         linea = f"{p['pts']} PTS · {p.get('valoracion')} VAL" if eu and p.get('valoracion') is not None else f"{p['pts']} PTS · {p['reb']} REB · {p['ast']} AST"
-        seg.append({'id': f'p{i}', 'partido': x['g']['partido'], 't': t, 'tarjetas': [{'clave': clave(P) if '{' in P else P.split()[-1], 'pid': p['pid'], 'linea': linea}]})
+        ck = (clave(P) if '{' in P else P.split()[-1]) if P in t else clave(S(W))
+        seg.append({'id': f'p{i}', 'partido': x['g']['partido'], 't': t, 'tarjetas': [{'clave': ck, 'pid': p['pid'], 'linea': linea}]})
     prox = b.get('esta_noche') or []
     def nom(c):
         a_ = _art(c); q = '{%s|%s}' % (c, PRON[c]) if c in PRON and PRON[c] != c else c
@@ -145,7 +148,7 @@ def guion(lg, nivel=0):
     if prox:
         dos = prox[:1] if nivel >= 1 else prox[:2]
         ps = [f"{nom(x.get('visitante_corto') or x['visitante'])} contra {nom(x.get('local_corto') or x['local'])}" for x in dos]
-        out = f"{cuando}, {' y '.join(ps)}. ¿Quién dará la sorpresa? Esto es {{OFFCOURT|Ófkort}}."
+        out = f"{cuando}, {' y '.join(ps)}. " + ("" if nivel >= 4 else "¿Quién dará la sorpresa? ") + "Esto es {OFFCOURT|Ófkort}."
         res = {x['partido']: clave(nom(x.get('visitante_corto') or x['visitante'])) for x in dos}
     else:
         out, res = f"Muy pronto, más baloncesto en la {SIGLA[lg]}. ¡No te lo pierdas! Esto es {{OFFCOURT|Ófkort}}.", {}
@@ -162,7 +165,7 @@ def duracion(out):
 # ---------------------------------------------------------------- una liga de principio a fin
 def video(lg):
     sh('--liga', lg, 'borrador')
-    for nivel in range(3):
+    for nivel in range(5):
         n = guion(lg, nivel)
         sh('--liga', lg, 'voz')
         d = duracion(sh('--liga', lg, 'montar'))
