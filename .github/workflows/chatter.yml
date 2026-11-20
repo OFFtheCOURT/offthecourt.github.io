@@ -15,6 +15,10 @@ on:
         description: 'Variantes exageración:cfg separadas por comas'
         required: false
         default: '0.5:0.5'
+      fx:
+        description: 'Transformaciones de la referencia (filtros ffmpeg) separadas por ;  (vacío = sin cambios)'
+        required: false
+        default: ''
       variante:
         description: 'Paquete de idioma (es-es = España)'
         required: false
@@ -48,6 +52,7 @@ jobs:
           GUION: ${{ github.event.inputs.guion }}
           AJUSTES: ${{ github.event.inputs.ajustes }}
           VARIANTE: ${{ github.event.inputs.variante }}
+          FX: ${{ github.event.inputs.fx }}
         run: |
           mkdir -p out w
           openssl enc -d -aes-256-cbc -pbkdf2 -in repo/redes/ref_voz.enc -out w/ref.opus -pass env:CLAVE
@@ -76,12 +81,18 @@ jobs:
               for f in glob.glob(d + '/s3gen*.safetensors'):
                   r = m.s3gen.load_state_dict(load_file(f), strict=False); print('S3Gen', os.path.basename(f), 'faltan', len(r.missing_keys), 'sobran', len(r.unexpected_keys), flush=True)
           def texto(t): return re.sub(r'\{([^|}]*)\|([^}]*)\}', lambda x: x.group(2), t)
-          for aj in os.environ['AJUSTES'].split(','):
+          import subprocess
+          FX = [f for f in (os.environ.get('FX') or '').split(';') if f.strip()] or ['']
+          for k, fx in enumerate(FX):
+            ref = 'w/ref.wav'
+            if fx:
+              ref = f'w/ref_fx{k}.wav'; subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', 'w/ref.wav', '-af', fx, '-ar', '24000', ref], check=True)
+            for aj in os.environ['AJUSTES'].split(','):
               ex, cfg = map(float, aj.split(':'))
               for s in G:
                   t0 = time.time()
-                  wav = m.generate(texto(s['t']), language_id='es', audio_prompt_path='w/ref.wav', exaggeration=ex, cfg_weight=cfg)
-                  torchaudio.save(f"out/{s['id']}_{VAR}_ex{ex}_cfg{cfg}.wav", wav, m.sr)
+                  wav = m.generate(texto(s['t']), language_id='es', audio_prompt_path=ref, exaggeration=ex, cfg_weight=cfg)
+                  torchaudio.save(f"out/{s['id']}_{VAR}_fx{k}_ex{ex}.wav", wav, m.sr)
                   print('ok', s['id'], ex, cfg, round(time.time() - t0, 1), 's', flush=True)
           EOF
           python3 gen.py
