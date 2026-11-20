@@ -6,8 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Grabación de referencia (opus en base64)'
-        required: true
+        description: 'Grabación de referencia (opus en base64); vacío = usa redes/ref_voz.enc'
+        required: false
+        default: ''
+      clave:
+        description: 'Clave para descifrar redes/ref_voz.enc'
+        required: false
+        default: ''
       guion:
         description: 'Guion JSON en base64: [{id,t}]'
         required: true
@@ -24,6 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Ocultar la clave en los registros
+        run: |
+          C=$(jq -r '.inputs.clave // ""' "$GITHUB_EVENT_PATH"); [ -n "$C" ] && echo "::add-mask::$C" || true
+      - uses: actions/checkout@v4
+        with:
+          path: repo
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -39,11 +50,12 @@ jobs:
       - name: Clonar
         env:
           REF: ${{ github.event.inputs.ref }}
+          CLAVE: ${{ github.event.inputs.clave }}
           GUION: ${{ github.event.inputs.guion }}
           VOCES: ${{ github.event.inputs.voces }}
         run: |
           mkdir -p out w
-          echo "$REF" | base64 -d > w/ref.opus
+          if [ -n "$REF" ]; then echo "$REF" | base64 -d > w/ref.opus; else openssl enc -d -aes-256-cbc -pbkdf2 -in repo/redes/ref_voz.enc -out w/ref.opus -pass env:CLAVE; fi
           # limpia la grabación: sin graves de calle, sin silencios largos
           ffmpeg -y -v error -i w/ref.opus -ac 1 -ar 22050 -af "highpass=f=70,silenceremove=stop_periods=-1:stop_duration=0.4:stop_threshold=-40dB" w/ref.wav
           cat > clon.py <<'EOF'
