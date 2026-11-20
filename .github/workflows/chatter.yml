@@ -14,7 +14,11 @@ on:
       ajustes:
         description: 'Variantes exageración:cfg separadas por comas'
         required: false
-        default: '0.5:0.5,0.75:0.3'
+        default: '0.5:0.5'
+      variante:
+        description: 'Paquete de idioma (es-es = España)'
+        required: false
+        default: 'es-es'
 
 permissions:
   contents: write
@@ -37,30 +41,47 @@ jobs:
         run: |
           sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg >/dev/null
           pip install -q torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-          pip install -q chatterbox-tts
+          pip install -q git+https://github.com/resemble-ai/chatterbox safetensors huggingface_hub
       - name: Generar
         env:
           CLAVE: ${{ github.event.inputs.clave }}
           GUION: ${{ github.event.inputs.guion }}
           AJUSTES: ${{ github.event.inputs.ajustes }}
+          VARIANTE: ${{ github.event.inputs.variante }}
         run: |
           mkdir -p out w
           openssl enc -d -aes-256-cbc -pbkdf2 -in repo/redes/ref_voz.enc -out w/ref.opus -pass env:CLAVE
           # referencia: 20 s limpios del centro de la grabación (sin silencios largos)
           ffmpeg -y -v error -ss 25 -t 22 -i w/ref.opus -ac 1 -ar 24000 -af "highpass=f=70,silenceremove=stop_periods=-1:stop_duration=0.35:stop_threshold=-40dB" w/ref.wav
           cat > gen.py <<'EOF'
-          import base64, json, os, re, time
+          import base64, inspect, json, os, re, time, glob
           import torch, torchaudio
           from chatterbox.mtl_tts import ChatterboxMultilingualTTS
           G = json.loads(base64.b64decode(os.environ['GUION']).decode())
-          m = ChatterboxMultilingualTTS.from_pretrained(device='cpu')
+          VAR = os.environ.get('VARIANTE', 'es-es')
+          try: print(inspect.getsource(ChatterboxMultilingualTTS.from_pretrained)[:3000], flush=True)
+          except Exception as e: print('sin fuente', e)
+          m = None
+          for kw in ({'t3_model': VAR}, {'t3_model': 'es_es'}):
+              try: m = ChatterboxMultilingualTTS.from_pretrained(device='cpu', **kw); print('cargado con', kw, flush=True); break
+              except Exception as e: print('no vale', kw, repr(e)[:300], flush=True)
+          if m is None:
+              from huggingface_hub import snapshot_download
+              from safetensors.torch import load_file
+              m = ChatterboxMultilingualTTS.from_pretrained(device='cpu', t3_model='v3')
+              d = snapshot_download('ResembleAI/Chatterbox-Multilingual-' + VAR)
+              print('archivos del paquete', os.listdir(d), flush=True)
+              for f in glob.glob(d + '/t3*.safetensors'):
+                  r = m.t3.load_state_dict(load_file(f), strict=False); print('T3', os.path.basename(f), 'faltan', len(r.missing_keys), 'sobran', len(r.unexpected_keys), flush=True)
+              for f in glob.glob(d + '/s3gen*.safetensors'):
+                  r = m.s3gen.load_state_dict(load_file(f), strict=False); print('S3Gen', os.path.basename(f), 'faltan', len(r.missing_keys), 'sobran', len(r.unexpected_keys), flush=True)
           def texto(t): return re.sub(r'\{([^|}]*)\|([^}]*)\}', lambda x: x.group(2), t)
           for aj in os.environ['AJUSTES'].split(','):
               ex, cfg = map(float, aj.split(':'))
               for s in G:
                   t0 = time.time()
                   wav = m.generate(texto(s['t']), language_id='es', audio_prompt_path='w/ref.wav', exaggeration=ex, cfg_weight=cfg)
-                  torchaudio.save(f"out/{s['id']}_ex{ex}_cfg{cfg}.wav", wav, m.sr)
+                  torchaudio.save(f"out/{s['id']}_{VAR}_ex{ex}_cfg{cfg}.wav", wav, m.sr)
                   print('ok', s['id'], ex, cfg, round(time.time() - t0, 1), 's', flush=True)
           EOF
           python3 gen.py
