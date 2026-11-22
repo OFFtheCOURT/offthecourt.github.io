@@ -32,6 +32,18 @@ for e in arr:
         if not md: continue
         matches[md['id']]={'id':md['id'],'round':r['roundData']['roundNumber'],'home':resolve(md['homeTeam']),'away':resolve(md['awayTeam']),
             'hs':md['homeScore'],'as':md['awayScore'],'date':md['startDateTime'],'played':md['matchStatus']=='FINALIZED'}
+# la clasificación tarda en reflejar los partidos recién acabados: los que el calendario ya da por FINALIZADOS también cuentan como jugados
+try:
+    tc=page('https://acb.com/es/liga/calendario'); ic=tc.find('"rounds":[{"id"'); RR0=dec.raw_decode(tc[ic+9:])[0]
+    jc=tc.rfind('"teams":[',0,ic); CTL0=dec.raw_decode(tc[jc+8:])[0]
+    cab=lambda x:(x if isinstance(x,dict) else CTL0[int(x.split(':')[-1])])['abbreviatedName']
+    for r0 in RR0:
+        for m0 in r0['matches']:
+            if m0['matchStatus']=='FINALIZED' and m0['id'] not in matches and cab(m0['homeTeam']) in teams and cab(m0['awayTeam']) in teams:
+                matches[m0['id']]={'id':m0['id'],'round':r0['roundNumber'],'home':cab(m0['homeTeam']),'away':cab(m0['awayTeam']),
+                    'hs':m0.get('homeTeamScore') or 0,'as':m0.get('awayTeamScore') or 0,'date':m0['startDateTime'],'played':True}
+                print('añadido desde el calendario', m0['id'], cab(m0['homeTeam']), cab(m0['awayTeam']))
+except Exception as x: print('calendario (jugados)', x)
 played=[m for m in matches.values() if m['played']]
 print('matches',len(matches),'played',len(played))
 
