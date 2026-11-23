@@ -436,12 +436,15 @@ def montar():
         DATA['cine'] = True
         intro = next((x for x in scenes if x['type'] == 'intro'), None); seg = next((x for x in n['segmentos'] if x['id'] == 'intro'), {})
         focos = []
-        for f_ in seg.get('focos', []):
+        inicios = [w['o'] for w in intro['words'] if w['w'].startswith('¡')]   # cada titular es una frase "¡...!": su inicio marca el foco
+        for k_, f_ in enumerate(seg.get('focos', [])):
             a_, h_ = f_['partido'].split('-')
             idx = next((i for i, r in enumerate(DATA['results']) if r['l']['ab'] == h_ and r['v']['ab'] == a_), None)
             ult = focos[-1]['t'] + .2 if focos else -1   # cada titular se busca después del anterior
-            tt = next((w['o'] for w in intro['words'] if w['o'] > ult and w['src'] == f_['clave']), None)
+            tt = inicios[k_] if len(inicios) == len(seg.get('focos', [])) else None
+            if tt is None: tt = next((w['o'] for w in intro['words'] if w['o'] > ult and w['src'].lower() == f_['clave'].lower()), None)
             if tt is None: tt = next((w['o'] for w in intro['words'] if w['o'] > ult and f_['clave'].split()[-1].lower() in w['src'].lower()), None)
+            print('foco', f_.get('etiqueta'), f_['partido'], 'partido' if idx is not None else 'PARTIDO NO ENCONTRADO', 't=', tt)
             if idx is not None and tt is not None: focos.append({'i': idx, 't': round(tt - .12, 3), 'tag': f_.get('etiqueta') or DATA['results'][idx].get('tag')})
         if not focos:
             hot = [i for i, r in enumerate(DATA['results']) if r.get('tag')][:4] or [0]
