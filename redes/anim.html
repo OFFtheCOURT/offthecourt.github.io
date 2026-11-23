@@ -408,7 +408,66 @@ function wipeDraw(colors,q,dirIn){ // q 0..1; dirIn: bars entering (cover) or le
   colors.forEach((c,i)=>{const off=dirIn?lerp(-1.6,0,eio(q-i*.12)):lerp(0,1.6,eio(q+i*.12-.12));
     X.save();X.translate(off*W+(i?60:0)*(dirIn?-1:1),0);X.transform(1,0,-.25,1,0,0);X.fillStyle=c;X.fillRect(-200+i*0,0,W+700,H);X.restore()});
 }
-function sceneGame(sc,t){
+function sceneGame(sc,t){if(D.escenaClasica)return sceneGameOld(sc,t);return sceneGameNew(sc,t)}
+// ── ESCENA DE PARTIDO (nueva): colores de los dos equipos a pantalla completa, marcador gigante y el jugador del partido en grande ──
+function sceneGameNew(sc,t){
+  const A=sc.teams[0],B=sc.teams[1],aw=A.score>B.score,Wt=aw?A:B,c=(sc.cards||[])[0];
+  // fondo partido en diagonal con los colores de cada equipo (el perdedor más apagado)
+  X.fillStyle='#05070d';X.fillRect(0,0,W,H);
+  const sh=Math.sin(t*.7)*30,side=(T,left,win)=>{X.save();X.beginPath();if(left){X.moveTo(0,0);X.lineTo(640+sh,0);X.lineTo(440+sh,H);X.lineTo(0,H)}else{X.moveTo(640+sh,0);X.lineTo(W,0);X.lineTo(W,H);X.lineTo(440+sh,H)}X.closePath();X.clip();
+    const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,mix(T.c,'#000000',win?.15:.45));g.addColorStop(.55,mix(T.c,'#000000',win?.5:.72));g.addColorStop(1,'#05070d');X.fillStyle=g;X.fillRect(0,0,W,H);
+    if(IM['t_'+T.ab]){X.globalAlpha=win?.16:.09;X.drawImage(IM['t_'+T.ab],left?-170:470,180+Math.sin(t*.6+(left?0:2))*14,780,780);X.globalAlpha=1}
+    X.restore()};
+  side(A,true,aw);side(B,false,!aw);
+  // línea de corte brillante y destello que cruza
+  X.save();X.globalCompositeOperation='lighter';X.strokeStyle='rgba(255,255,255,.35)';X.lineWidth=4;X.beginPath();X.moveTo(640+sh,0);X.lineTo(440+sh,H);X.stroke();
+  const gx=lerp(-400,W+400,clamp((t-.15)/.7)),gg=X.createLinearGradient(gx-160,0,gx+160,0);gg.addColorStop(0,'rgba(255,255,255,0)');gg.addColorStop(.5,'rgba(255,255,255,.16)');gg.addColorStop(1,'rgba(255,255,255,0)');
+  X.fillStyle=gg;X.save();X.translate(gx,0);X.transform(1,0,-.35,1,0,0);X.fillRect(-200,0,400,H);X.restore();
+  for(let i=0;i<3;i++){const a=Math.sin(t*.5+i*2.1)*.25,ox=200+i*340;const lg=X.createLinearGradient(ox,0,ox+Math.sin(a)*600,1300);lg.addColorStop(0,'rgba(255,255,255,.10)');lg.addColorStop(1,'rgba(255,255,255,0)');X.fillStyle=lg;X.beginPath();X.moveTo(ox-20,0);X.lineTo(ox+Math.sin(a)*600-160,1300);X.lineTo(ox+Math.sin(a)*600+160,1300);X.lineTo(ox+20,0);X.closePath();X.fill()}
+  X.restore();
+  header(D.eyebrow||'LA NOCHE NBA',D.dateLabel,sc.gi,D.ngames);
+  // marcador gigante
+  const t0=sc.fromCine?.12:0,qi=back(clamp((t-t0)/.35)),cn=eo(clamp((t-t0)/.6));
+  X.save();X.translate(0,lerp(-260,0,clamp(qi)));
+  for(const [T,x,win] of [[A,150,aw],[B,930,!aw]]){
+    if(IM['t_'+T.ab]){X.save();X.shadowColor=hex(vis(T),.8);X.shadowBlur=40;X.drawImage(IM['t_'+T.ab],x-95,330,190,190);X.restore()}
+    X.textAlign='center';X.font=`900 34px ${FD}`;X.fillStyle=win?'#fff':'rgba(255,255,255,.6)';X.fillText(T.short.toUpperCase(),x,565);
+    X.font=`700 22px ${FL}`;X.fillStyle='rgba(255,255,255,.5)';X.fillText(T.rec||'',x,595)}
+  X.font=`900 210px ${FD}`;X.textAlign='center';X.lineJoin='round';
+  for(const [T,x,win] of [[A,388,aw],[B,692,!aw]]){const v=Math.round(T.score*cn);X.lineWidth=14;X.strokeStyle='rgba(0,0,0,.55)';X.strokeText(v,x,530);
+    if(win){X.save();X.shadowColor=hex(vis(T),.9);X.shadowBlur=50;X.fillStyle='#fff';X.fillText(v,x,530);X.restore()}else{X.fillStyle='rgba(255,255,255,.42)';X.fillText(v,x,530)}}
+  X.font=`800 24px ${FL}`;X.letterSpacing='4px';const pl='FINAL',pw=X.measureText(pl).width+40;X.fillStyle=ACC;rr(540-pw/2,262,pw,44,22);X.fill();X.fillStyle=INK;X.fillText(pl,542,292);X.letterSpacing='0px';
+  X.restore();
+  // jugador del partido: entra cuando la voz dice su nombre
+  if(c){const tc=Math.max(t0+.3,Math.min(c.t-.25,t0+.55)),a=t-tc,ts=Math.max(c.t,tc+.35),im=IM['p_'+c.pid],col=vis(sc.teams[c.team]||Wt);
+    if(a>0){const q=eo(clamp(a/.35));
+      // apellido gigante detrás
+      X.save();X.globalAlpha=q;X.font=`900 250px ${FD}`;X.textAlign='center';const ln=(c.last||'').toUpperCase(),dx=lerp(120,0,q)-t*18;
+      X.lineWidth=3;X.strokeStyle='rgba(255,255,255,.28)';X.strokeText(ln,540+dx,1080);X.fillStyle=hex(col,.22);X.fillText(ln,540+dx,1080);X.restore();
+      // halo de suelo
+      X.save();X.globalCompositeOperation='lighter';const hg=X.createRadialGradient(540,1380,20,540,1380,460);hg.addColorStop(0,hex(col,.45*q));hg.addColorStop(1,hex(col,0));X.fillStyle=hg;X.fillRect(0,900,W,800);X.restore();
+      const cut=IM['c_'+c.pid];
+      if(cut){const h=Math.min(900,820*cut.height/Math.max(cut.height,cut.width*1.05))*lerp(1.12,1,q),r=h/cut.height,w=cut.width*r;X.save();X.globalAlpha=q;X.shadowColor=hex(col,.95);X.shadowBlur=55;X.drawImage(cut,500-w/2,1440-h+lerp(90,0,q),w,h);X.restore()}
+      else if(im){const w=640,h=w*im.height/im.width,y0=860+lerp(80,0,q);X.save();X.globalAlpha=q;X.translate(500,y0+h/2);X.rotate(-.03);X.shadowColor=hex(col,.9);X.shadowBlur=50;X.fillStyle='#fff';X.fillRect(-w/2-10,-h/2-10,w+20,h+20);X.shadowBlur=0;X.drawImage(im,-w/2,-h/2,w,h);X.restore()}
+      if(a<.14){X.save();X.globalCompositeOperation='lighter';X.globalAlpha=.55*(1-a/.14);X.fillStyle='#fff';X.fillRect(0,0,W,H);X.restore()}
+      // nombre
+      const nq=back(clamp((a-.12)/.3));X.save();X.translate(lerp(-500,0,clamp(nq)),0);X.textAlign='left';
+      X.font=`800 26px ${FL}`;X.letterSpacing='5px';X.fillStyle=ACC2;X.fillText('★ JUGADOR DEL PARTIDO',70,1268);X.letterSpacing='0px';
+      X.font=`700 40px ${FD}`;X.fillStyle='#fff';X.fillText((c.first||'').toUpperCase(),70,1318);
+      fitText(ln,FD,120,560,900);X.lineJoin='round';X.lineWidth=12;X.strokeStyle='rgba(0,0,0,.6)';X.strokeText(ln,66,1420);X.fillStyle='#fff';X.fillText(ln,66,1420);X.restore();
+      // estadísticas que saltan una a una a la derecha
+      const st=(c.line||'').split('·').map(x=>x.trim()).filter(Boolean).slice(0,3);
+      st.forEach((x,i)=>{const m=/(\d+)\s*(.*)/.exec(x);if(!m)return;const b=t-ts-i*.18;if(b<0)return;const k=back(clamp(b/.28)),v=Math.round(+m[1]*eo(clamp(b/.4)));
+        const cx=900,cy=760+i*165;X.save();X.translate(cx,cy);X.scale(k,k);
+        X.fillStyle=i==0?col:'rgba(10,14,24,.82)';rr(-115,-70,230,140,24);X.fill();X.strokeStyle=i==0?'#fff':hex(col,.9);X.lineWidth=4;rr(-115,-70,230,140,24);X.stroke();
+        X.textAlign='center';X.font=`900 92px ${FD}`;X.fillStyle=i==0&&lum(col)>.6?'#0b1020':'#fff';X.fillText(v,0,26);
+        X.font=`800 24px ${FL}`;X.letterSpacing='4px';X.fillText(m[2].toUpperCase(),0,58);X.letterSpacing='0px';X.restore()})}
+  }else if(IM['t_'+Wt.ab]){const q=back(clamp((t-.4)/.4));X.save();X.translate(540,1000);X.scale(q,q);X.shadowColor=hex(vis(Wt),.9);X.shadowBlur=80;X.drawImage(IM['t_'+Wt.ab],-260,-260,520,520);X.restore()}
+  captions(sc.words,t);footer();
+  if(t<.22&&!sc.fromCine)wipe([B.c,A.c],t/.22,false);
+  if(sc.next&&t>sc.dur-.18)wipe(sc.next,(t-(sc.dur-.18))/.18,true);
+}
+function sceneGameOld(sc,t){
   const A=sc.teams[0],Hm=sc.teams[1];
   bg(A.c,Hm.c,t);header(D.eyebrow||'LA NOCHE NBA',D.dateLabel,sc.gi,D.ngames);
   const s0=simState(sc,t*SP),ag=s0.pop?s0.pop.age:9,pun=ag<.3?Math.pow(1-ag/.3,2):0,big=s0.pop&&s0.pop.label?1.6:1;
@@ -954,7 +1013,7 @@ function sceneOutro(sc,t){
 }
 const SC=D.scenes;
 window.ready=(async()=>{
-  const jobs=[loadImg('logo',D.logo)];for(const k in D.logos)jobs.push(loadImg('t_'+k,D.logos[k]));for(const k in D.photos)jobs.push(loadImg('p_'+k,D.photos[k]));
+  const jobs=[loadImg('logo',D.logo)];for(const k in D.logos)jobs.push(loadImg('t_'+k,D.logos[k]));for(const k in D.photos)jobs.push(loadImg('p_'+k,D.photos[k]));for(const k in (D.cutouts||{}))jobs.push(loadImg('c_'+k,D.cutouts[k]));
   await Promise.all(jobs);await document.fonts.load('900 40px BigS');await document.fonts.load('700 40px BarlowC');await document.fonts.load('700 40px Barlow');await document.fonts.ready;
   SC.forEach(sc=>{if(sc.type=='game')buildSim(sc)});return true})();
 window.draw=(i,t)=>{WQ.length=0;const OX=X;X=OX;X.setTransform(1,0,0,1,0,0);X.globalAlpha=1;const sc=SC[i];if(sc.type=='game'&&!sc.hero){const z=(sc.fromCine?lerp(1.25,1,eo(t/.5)):lerp(1.14,1,eo(t/.22)))*(1+.035*t/sc.dur);X.translate(540,900);X.scale(z,z);X.translate(-540,-900)}if(sc.hero)introHero(sc,t);else if(sc.type=='intro')sceneIntro(sc,t);else if(sc.type=='outro')sceneOutro(sc,t);else sceneGame(sc,t);

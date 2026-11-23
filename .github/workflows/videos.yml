@@ -80,7 +80,8 @@ jobs:
       - name: Herramientas para el vídeo
         if: steps.mira.outputs.ligas != ''
         run: |
-          pip install -q edge-tts numpy
+          pip install -q edge-tts numpy pillow onnxruntime "opencv-python-headless<5"
+          mkdir -p voz && [ -f voz/birefnet.onnx ] || curl -sL -o voz/birefnet.onnx https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/model.onnx
           npm i --no-save --silent playwright-core
           which ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
           ls /usr/bin/google-chrome

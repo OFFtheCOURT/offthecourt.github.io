@@ -35,6 +35,26 @@ def dia_europeo():
     return (madrid(datetime.datetime.now(datetime.timezone.utc).isoformat()) - datetime.timedelta(hours=6)).date().isoformat()
 
 
+def _recorte(pid):
+    """jugador sin fondo (BiRefNet, MIT) a partir de la foto original: para mostrarlo grande en las escenas de partido"""
+    src = os.path.join(REPO, 'photos', 'src', pid + '.webp')
+    if not os.path.exists(src): return None
+    try:
+        sys.path.insert(0, REPO); import stylize, io
+        if not os.path.exists(stylize.MODEL): return None
+        from PIL import Image
+        import numpy as np
+        im = Image.open(src).convert('RGB'); m = stylize._mask(im)
+        try: m = stylize._main_person(m, im.width / 2, im.height * .33)
+        except Exception: pass
+        rgba = im.convert('RGBA'); rgba.putalpha(Image.fromarray(m)); bb = rgba.getbbox()
+        if not bb or (bb[2] - bb[0]) * (bb[3] - bb[1]) < im.width * im.height * .08: return None
+        rgba = rgba.crop(bb); buf = io.BytesIO(); rgba.save(buf, 'WEBP', quality=90)
+        return 'data:image/webp;base64,' + base64.b64encode(buf.getvalue()).decode()
+    except Exception as e:
+        print('sin recorte', pid, e); return None
+
+
 def partidos_del_dia(lg, fecha):
     """(jugados, pendientes, ronda) de EuroLiga/ACB en una fecha (hora de España)"""
     jug = []; ronda = None
@@ -354,7 +374,7 @@ def montar():
     games = {g['teams'][0]['abbr'] + '-' + g['teams'][1]['abbr']: g for g in night['games']}
     os.makedirs(os.path.join(OUT, 'audio'), exist_ok=True)
     PAD_IN, PAD_OUT = (0.05, 0.04) if n.get('continua', True) else (0.22, 0.18)
-    scenes = []; photos = {}; used = set(); narrated = [s for s in n['segmentos'] if s.get('partido')]
+    scenes = []; photos = {}; cutouts = {}; used = set(); narrated = [s for s in n['segmentos'] if s.get('partido')]
     for seg in n['segmentos']:
         b = next(x['palabras'] for x in TIMES if x['id'] == seg['id'])
         d, tm = tighten(os.path.join(vdir, vkey, seg['id'] + '.mp3'), os.path.join(OUT, 'audio', seg['id'] + '.wav'))
@@ -396,6 +416,8 @@ def montar():
             marks.append({'t': wt, 'team': ti, 'fig': min(fig, 4), 'short': c.get('etiqueta', full.split(' ')[-1]).upper(), 'pts': 3 if pr['three'] else None, 'prof': pr})
             ph = os.path.join(REPO, 'photos', c['pid'] + '.webp')
             if os.path.exists(ph): photos[c['pid']] = 'data:image/webp;base64,' + base64.b64encode(open(ph, 'rb').read()).decode()
+            rc = _recorte(c['pid'])
+            if rc: cutouts[c['pid']] = rc
         scenes.append({'type': 'game', 'id': seg['id'], 'gi': narrated.index(seg), 'dur': round(d + PAD_IN + PAD_OUT, 2), 'off': PAD_IN,
                        'seed': int(re.sub(r'\D', '', str(g['id'])) or 1) % 100000, 'teams': [tA, tH], 'venue': g.get('venue') or '', 'cards': cards, 'marks': marks, 'words': w})
     for i, sc in enumerate(scenes[:-1]):
@@ -412,7 +434,7 @@ def montar():
             'tonightLabel': f'{ABR_D[f2.weekday()]} {f2.day} {ABR_M[f2.month - 1]}', 'tonightCount': f'{len(ton)} PARTIDOS · HORA ESPAÑOLA',
             'ngames': len(narrated), 'scenes': scenes, 'tonight': ton,
             'mini': [{'a': g['teams'][1]['abbr'], 'h': g['teams'][0]['abbr'], 'as': g['teams'][1]['score'], 'hs': g['teams'][0]['score']} for g in night['games'] if g['teams'][0].get('score') is not None],
-            'logos': {k: LOG[k] for k in used | {g['teams'][i]['abbr'] for g in night['games'] for i in (0, 1)} if k in LOG}, 'photos': photos,
+            'logos': {k: LOG[k] for k in used | {g['teams'][i]['abbr'] for g in night['games'] for i in (0, 1)} if k in LOG}, 'photos': photos, 'cutouts': cutouts,
             'logo': 'data:image/svg+xml;base64,' + base64.b64encode(logo.encode()).decode()}
     DATA['results'] = []
     DATA['theme'] = {'nba': {'a': '#4d94ff', 'b': '#ff5a66', 'bg': '#13213f', 'tela': '#a3122a'}, 'el': {'a': '#ff7a1a', 'b': '#386eff', 'tela': '#ff7a1a'}, 'acb': {'a': '#1fbf75', 'b': '#2f6bff', 'tela': '#141414'}}[LIGA]
