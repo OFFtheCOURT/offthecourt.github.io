@@ -778,6 +778,14 @@ const DIARIO_POSE=[[-14,-8,-.035],[22,10,.04],[-20,24,-.022],[16,40,.03]],DPRE=.
 function diarioPose(k,a,t){ // a = segundos desde que arranca; aterriza a los DIN s (justo cuando la voz empieza el titular)
   const st=k%4,q=clamp(a/DIN),e=eo(q),P=DIARIO_POSE[st],C=window.__cam||{cx:540,cy:860,z:1};
   let x=(540-C.cx)*C.z+540+P[0]*.6,y=(HANG_Y-C.cy)*C.z+960+P[1]*.25,rot=P[2],sc=HANG_S*C.z,sx=1,sy=1;
+  if(k==0){   // APERTURA EN FRÍO: a pantalla completa desde el fotograma 0, golpe, y a los ~0,8 s se encoge y se cuelga
+    const hx=x,hy=y,hs=sc,hr=rot,big=.98,sl=a<.14?lerp(1.18,1,eo(a/.14)):1;
+    if(a<.7){x=540;y=935;sc=big*sl;rot=-.015}
+    else{const u=eio(clamp((a-.7)/.42));x=lerp(540,hx,u);y=lerp(935,hy,u);sc=lerp(big,hs,u);rot=lerp(-.015,hr,u)}
+    const im0=a-1.12;if(im0>0&&im0<.25){const b=Math.sin(im0/.25*Math.PI)*(1-im0/.25);sy*=1-.06*b;sx*=1+.05*b}
+    if(im0>0)rot+=.05*Math.sin(im0*13)*Math.exp(-im0*3.5);
+    if(a<.12)x+=Math.sin(t*97)*16*(1-a/.12);
+    return {x,y,rot,sc,sx,sy}}
   if(st==0){rot+=(1-e)*Math.PI*6;sc*=lerp(.04,1,e)}                       // GIRO de película
   else if(st==1){y=lerp(-700,y,Math.pow(q,1.6));rot+=(1-q)*-.5}           // CAÍDA desde arriba
   else if(st==2){sc*=lerp(4.5,1,Math.pow(q,1.8));rot+=(1-q)*.25}          // GOLPE contra la cámara
@@ -787,12 +795,13 @@ function diarioPose(k,a,t){ // a = segundos desde que arranca; aterriza a los DI
   return {x,y,rot,sc,sx,sy}}
 function cineDiario(f,k,g,a,t,alpha){
   const W_=cineWin(g),L_=cineLose(g),col=vis(W_),H_=cineHero(g),q=clamp(a/DIN);
-  const one=(aa,al,pin)=>{const P=diarioPose(k,aa,t);X.save();X.globalAlpha=al;X.translate(P.x,P.y);X.rotate(P.rot);X.scale(P.sc*P.sx,P.sc*P.sy);diarioPortada(f.tag||'',W_,L_,col,H_,t,aa-DIN);
-    if(pin&&aa>DIN){X.fillStyle='#b7894f';rr(-22,-DPH/2-46,44,96,8);X.fill();X.fillStyle='#8a6136';X.fillRect(-22,-DPH/2-4,44,8);X.fillStyle='#d6d9de';X.fillRect(-16,-DPH/2+10,32,8)}X.restore()};
-  if(q<1)for(const d of[.06,.04,.02])one(Math.max(0,a-d),alpha*.18); // estela de movimiento
+  const one=(aa,al,pin)=>{const P=diarioPose(k,aa,t);X.save();X.globalAlpha=al;X.translate(P.x,P.y);X.rotate(P.rot);X.scale(P.sc*P.sx,P.sc*P.sy);diarioPortada(f.tag||'',W_,L_,col,H_,t,k==0?aa+.2:aa-DIN);
+    if(pin&&aa>(k==0?1.05:DIN)){X.fillStyle='#b7894f';rr(-22,-DPH/2-46,44,96,8);X.fill();X.fillStyle='#8a6136';X.fillRect(-22,-DPH/2-4,44,8);X.fillStyle='#d6d9de';X.fillRect(-16,-DPH/2+10,32,8)}X.restore()};
+  if(k==0&&a<1.15){X.save();X.globalAlpha=.6*(1-clamp((a-.65)/.45));X.fillStyle='#05060a';X.fillRect(0,0,W,H);X.restore()}  // fondo oscuro mientras ocupa la pantalla
+  if(q<1&&k)for(const d of[.06,.04,.02])one(Math.max(0,a-d),alpha*.18); // estela de movimiento
   one(a,alpha,1);
   // impacto: onda, papelitos, destello
-  const im=a-DIN;if(im>0&&im<.6){const P=diarioPose(k,DIN+.3,t),qq=im/.6,fz=P.sc/.94;X.save();X.globalCompositeOperation='lighter';
+  const im=a-(k==0?0:DIN);if(im>0&&im<.6){const P=diarioPose(k,k==0?.3:DIN+.3,t),qq=im/.6,fz=P.sc/.94;X.save();X.globalCompositeOperation='lighter';
     X.strokeStyle=hex('#ffffff',.9*(1-qq));X.lineWidth=18*(1-qq)+2;X.beginPath();X.ellipse(P.x,P.y,(430+qq*520)*fz,(520+qq*520)*fz,0,0,7);X.stroke();
     X.strokeStyle=hex(col,1-qq);X.lineWidth=10*(1-qq)+2;X.beginPath();X.ellipse(P.x,P.y,(400+qq*380)*fz,(490+qq*380)*fz,0,0,7);X.stroke();X.restore();
     const R=rng(k*31+7);X.save();for(let i=0;i<34;i++){const an=R()*6.283,v=500+R()*900,px=P.x+Math.cos(an)*(380+v*eo(qq))*fz,py=P.y+Math.sin(an)*(480+v*eo(qq))*fz+600*qq*qq;
