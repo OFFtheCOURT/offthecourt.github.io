@@ -45,6 +45,7 @@ def eq(t):
 
 
 SINGULAR_NBA = {'Magic', 'Jazz', 'Heat', 'Thunder'}
+GRANDES = {'Barça', 'Real Madrid'}
 LIGA_ACT = 'nba'
 
 
@@ -91,18 +92,32 @@ def guion(lg, nivel=0):
         todos = [(p, W) for p in W['jugadores']] or [(p, s) for s in (V, Lc) for p in s['jugadores']]
         tp, ts = max(todos, key=lambda x: (x[0].get('valoracion') or 0) * (1 if eu else 0) + x[0]['pts'])
         td = sum(1 for k in ('pts', 'reb', 'ast') if (tp.get(k) or 0) >= 10) >= 3
-        hooks = []
-        if tp['pts'] >= (25 if eu else 38): hooks.append((tp['pts'] * (2.2 if eu else 1.5), f"{tp['pts']} de {pr(tp['nombre'])}", f"{tp['pts']} DE {tp['nombre'].split()[-1].upper()}"))
-        if td: hooks.append((70, f"triple-doble de {pr(tp['nombre'])}", 'TRIPLE-DOBLE'))
-        if ot: hooks.append((62 + 8 * ot, f"{S(W)} {vb(W, 'gana', 'ganan')} en {'la prórroga' if ot == 1 else str(ot) + ' prórrogas'}", 'PRÓRROGA' if ot == 1 else f'{ot} PRÓRROGAS'))
-        if m >= 20: hooks.append((40 + m, f"paliza {de(W)}", f'PALIZA +{m}'))
-        if m <= 3 and not ot: hooks.append((58, f"final de infarto entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO'))
-        if not hooks and tp['pts'] >= (18 if eu else 25): hooks.append((tp['pts'], f"{tp['pts']} de {pr(tp['nombre'])}", f"{tp['pts']} DE {tp['nombre'].split()[-1].upper()}"))
+        hooks = []; P_ = pr(tp['nombre']); AP = re.sub(r'\s+(Jr\.?|Sr\.?|II|III|IV)$', '', tp['nombre']).split()[-1].upper(); pts = tp['pts']
+        Wv_ = lambda sg, pl: vb(W, sg, pl)
+        # cada tipo de titular tiene varias formas de decirse: cambia cada día y no se repite dentro del mismo vídeo
+        if pts >= (25 if eu else 38): hooks.append((pts * (2.2 if eu else 1.5), 'pts', [(f"{pts} de {P_}", f"{pts} DE {AP}"), (f"{P_} se va a {pts}", f"{pts} DE {AP}"),
+                                                                                    (f"exhibición de {P_}: {pts} puntos", f"{AP}: {pts} PTS"), (f"{P_} anota {pts}", f"{pts} DE {AP}")]))
+        if td: hooks.append((70, 'td', [(f"triple-doble de {P_}", 'TRIPLE-DOBLE'), (f"{P_} firma un triple-doble", 'TRIPLE-DOBLE'), (f"{P_} lo hace todo: triple-doble", 'TRIPLE-DOBLE')]))
+        if ot:
+            pr_ = 'la prórroga' if ot == 1 else str(ot) + ' prórrogas'; tg_ = 'PRÓRROGA' if ot == 1 else f'{ot} PRÓRROGAS'
+            hooks.append((62 + 8 * ot, 'ot', [(f"{S(W)} {Wv_('gana', 'ganan')} en {pr_}", tg_), (f"{S(W)} {Wv_('sobrevive', 'sobreviven')} a {pr_}", tg_), (f"{'prórroga' if ot == 1 else pr_} y victoria {de(W)}", tg_)]))
+        if m >= 20: hooks.append((40 + m, 'paliza', [(f"paliza {de(W)}", f'PALIZA +{m}'), (f"{S(W)} {Wv_('arrasa', 'arrasan')} {al(Ls)}", f'+{m}'),
+                                                     (f"{S(W)} {Wv_('pasa', 'pasan')} por encima {de(Ls)}", f'PALIZA +{m}'), (f"exhibición {de(W)}: más {m}", 'EXHIBICIÓN')]))
+        if m <= 3 and not ot: hooks.append((58, 'ajustado', [(f"final de infarto entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO'), (f"{S(W)} {Wv_('gana', 'ganan')} por la mínima", 'POR LA MÍNIMA'),
+                                                              (f"{S(W)} {Wv_('sufre', 'sufren')} hasta el final", 'AL LÍMITE'), (f"infarto: {S(W)} {Wv_('gana', 'ganan')} de {m}", f'+{m} AL FINAL')]))
+        if eu and Ls['corto'] in GRANDES:   # en España lo que más interesa: cae un grande
+            hooks.append((78, 'grande', [(f"{S(W)} {Wv_('tumba', 'tumban')} {al(Ls)}", f"CAE EL {Ls['corto'].upper()}"), (f"golpe {de(W)} {al(Ls)}", f"CAE EL {Ls['corto'].upper()}"),
+                                         (f"{S(Ls)} cae ante {S(W)}", f"CAE EL {Ls['corto'].upper()}")]))
+        if not hooks and pts >= (18 if eu else 25): hooks.append((pts, 'pts', [(f"{pts} de {P_}", f"{pts} DE {AP}"), (f"{P_} se va a {pts}", f"{pts} DE {AP}")]))
         hooks.sort(key=lambda h: -h[0])
         info.append(dict(g=g, W=W, L=Ls, ot=ot, m=m, p=tp, ps=ts, td=td, hook=hooks[0] if hooks else None, score=(hooks[0][0] if hooks else 0) + g.get('interes', 0) / 10))
     info.sort(key=lambda x: -x['score'])
     con = [x for x in info if x['hook']][: (4 if nivel == 0 else 3)]
-    if not con: con = info[:1]; con[0]['hook'] = (1, f"{eq(con[0]['W'])} gana {con[0]['W']['puntos']} a {con[0]['L']['puntos']}", 'VICTORIA')
+    if not con: con = info[:1]; con[0]['hook'] = (1, 'v', [(f"{eq(con[0]['W'])} gana {con[0]['W']['puntos']} a {con[0]['L']['puntos']}", 'VICTORIA')])
+    usados = {}
+    for x in con:   # (puntos, tipo, opciones) -> (puntos, frase, etiqueta), sin repetir forma dentro del mismo tipo
+        sc_, tipo, ops_ = x['hook']; libres = [o for k, o in enumerate(ops_) if k not in usados.get(tipo, set())] or ops_
+        o = rnd.choice(libres); usados.setdefault(tipo, set()).add(ops_.index(o)); x['hook'] = (sc_, o[0], o[1])
     frases = [x['hook'][1] for x in con]
     cap_ = lambda x: re.sub(r'^(\{?)(\w)', lambda m_: m_.group(1) + m_.group(2).upper(), x)
     intro = ' '.join('¡' + cap_(f) + '!' for f in frases)   # un titular por frase: deja respirar cada entrada
@@ -111,6 +126,7 @@ def guion(lg, nivel=0):
     seg = [{'id': 'intro', 't': intro, 'focos': [{'clave': primera(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in con]}]
     orden = con + [x for x in info if x not in con]
     corto = nivel >= 1 or len(orden) >= 8
+    usadas = set()
     for i, x in enumerate(orden):
         W, Ls, p = x['W'], x['L'], x['p']; w, l = W['puntos'], Ls['puntos']; P = pr(p['nombre'])
         Wv = lambda sg, pl: vb(W, sg, pl)
@@ -118,21 +134,33 @@ def guion(lg, nivel=0):
             ops = [f"Ganan {S(W)} {al(Ls)}, {w} a {l}."] if nivel == 3 else [f"{w} a {l} para {S(W)}."]
         elif corto:
             ops = [f"{S(W, 1)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}, con {p['pts']} de {P}.",
-                   f"{P} mete {p['pts']} y {S(W)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}."]
+                   f"{P} mete {p['pts']} y {S(W)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}.",
+                   f"{S(W, 1)} {Wv('vence', 'vencen')} {al(Ls)}, {w} a {l}; {P} suma {p['pts']}.",
+                   f"{w} a {l}: {S(W)} {Wv('puede', 'pueden')} con {S(Ls)} gracias a los {p['pts']} de {P}."]
         elif x['ot']:
-            ops = [f"{S(W, 1)} {Wv('se lleva', 'se llevan')} el partidazo {al(Ls)} en la prórroga, {w} a {l}, con {p['pts']} de {P}."]
+            ops = [f"{S(W, 1)} {Wv('se lleva', 'se llevan')} el partidazo {al(Ls)} en la prórroga, {w} a {l}, con {p['pts']} de {P}.",
+                   f"Hizo falta prórroga: {S(W)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}, y {P} firma {p['pts']}.",
+                   f"Tiempo extra y triunfo {de(W)} ante {S(Ls)}, {w} a {l}, con {p['pts']} de {P}."]
         elif x['m'] >= 20:
             ops = [f"{S(W, 1)} {Wv('arrasa', 'arrasan')} {al(Ls)}, {w} a {l}, con {p['pts']} puntos de {P}.",
-                   f"Paliza {de(W)} {al(Ls)}, {w} a {l}; {P} se va a {p['pts']}."]
+                   f"Paliza {de(W)} {al(Ls)}, {w} a {l}; {P} se va a {p['pts']}.",
+                   f"Sin historia: {S(W)} {Wv('golea', 'golean')} {al(Ls)}, {w} a {l}, con {p['pts']} de {P}.",
+                   f"{S(W, 1)} {Wv('pasa', 'pasan')} por encima {de(Ls)}, {w} a {l}, y {P} anota {p['pts']}."]
         elif x['m'] <= 3:
             ops = [f"{S(W, 1)} {Wv('gana', 'ganan')} por la mínima {al(Ls)}, {w} a {l}, y {P} firma {p['pts']}.",
-                   f"Final apretado: {S(W)} {w}, {S(Ls)} {l}, con {p['pts']} de {P}."]
+                   f"Final apretado: {S(W)} {w}, {S(Ls)} {l}, con {p['pts']} de {P}.",
+                   f"Sufrimiento hasta el final: {S(W)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}, con {p['pts']} de {P}.",
+                   f"Se decidió en el último minuto: {w} a {l} para {S(W)}, con {p['pts']} de {P}."]
         else:
             ops = [f"{S(W, 1)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}, con {p['pts']} de {P}.",
                    f"{P} mete {p['pts']} y {S(W)} {Wv('supera', 'superan')} {al(Ls)}, {w} a {l}.",
-                   f"Victoria {de(W)} ante {S(Ls)}, {w} a {l}, con {p['pts']} puntos de {P}."]
-        t = rnd.choice(ops)
-        if x['td'] and not corto: t = t[:-1] + f", que firma un triple-doble."
+                   f"Victoria {de(W)} ante {S(Ls)}, {w} a {l}, con {p['pts']} puntos de {P}.",
+                   f"{S(W, 1)} {Wv('vence', 'vencen')} {al(Ls)}, {w} a {l}, y {P} se va a {p['pts']}.",
+                   f"{w} a {l} para {S(W)} ante {S(Ls)}, con {p['pts']} de {P} como líder."]
+        cat = 'corto' if corto else 'ot' if x['ot'] else 'paliza' if x['m'] >= 20 else 'ajustado' if x['m'] <= 3 else 'normal'
+        libres = [k for k in range(len(ops)) if (cat, k) not in usadas] or list(range(len(ops)))   # no repetir la misma frase en el vídeo
+        k = rnd.choice(libres); usadas.add((cat, k)); t = ops[k]
+        if x['td'] and not corto: t = t + " ¡Con triple-doble incluido!"
         linea = f"{p['pts']} PTS · {p.get('valoracion')} VAL" if eu and p.get('valoracion') is not None else f"{p['pts']} PTS · {p['reb']} REB · {p['ast']} AST"
         ck = (clave(P) if '{' in P else P.split()[-1]) if P in t else clave(S(W))
         seg.append({'id': f'p{i}', 'partido': x['g']['partido'], 't': t, 'tarjetas': [{'clave': ck, 'pid': p['pid'], 'linea': linea}]})
@@ -148,10 +176,11 @@ def guion(lg, nivel=0):
     if prox:
         dos = prox[:1] if nivel >= 1 else prox[:2]
         ps = [f"{nom(x.get('visitante_corto') or x['visitante'])} contra {nom(x.get('local_corto') or x['local'])}" for x in dos]
-        out = f"{cuando}, {' y '.join(ps)}. " + ("" if nivel >= 4 else "¿Quién dará la sorpresa? ") + "Esto es {OFFCOURT|Ófkort}."
+        preg = rnd.choice(["¿Quién dará la sorpresa? ", "¿Quién se lo lleva? Déjalo en comentarios. ", "¿Tu pronóstico? Te leemos en comentarios. ", "¿Quién gana? Mójate en comentarios. "])
+        out = f"{cuando}, {' y '.join(ps)}. " + ("" if nivel >= 4 else preg) + "Esto es {OFFCOURT|Ófkort}."
         res = {x['partido']: clave(nom(x.get('visitante_corto') or x['visitante'])) for x in dos}
     else:
-        out, res = f"Muy pronto, más baloncesto en la {SIGLA[lg]}. ¡No te lo pierdas! Esto es {{OFFCOURT|Ófkort}}.", {}
+        out, res = rnd.choice([f"Muy pronto, más baloncesto en la {SIGLA[lg]}. ¡No te lo pierdas! ", f"¿Quién ha sido el mejor de la jornada? Te leemos en comentarios. ", f"La {SIGLA[lg]} vuelve pronto. ¿Tu MVP de la jornada? "]) + "Esto es {OFFCOURT|Ófkort}.", {}
     seg.append({'id': 'outro', 't': out, 'resaltar': res})
     n = {'fecha': b['fecha'], 'auto': True, 'segmentos': seg}
     json.dump(n, open(os.path.join(R, 'salida', lg, 'noche.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
