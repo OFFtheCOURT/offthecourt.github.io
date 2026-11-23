@@ -96,18 +96,23 @@ def guion(lg, nivel=0):
         Wv_ = lambda sg, pl: vb(W, sg, pl)
         # cada tipo de titular tiene varias formas de decirse: cambia cada día y no se repite dentro del mismo vídeo
         if pts >= (25 if eu else 38): hooks.append((pts * (2.2 if eu else 1.5), 'pts', [(f"{pts} de {P_}", f"{pts} DE {AP}"), (f"{P_} se va a {pts}", f"{pts} DE {AP}"),
-                                                                                    (f"exhibición de {P_}: {pts} puntos", f"{AP}: {pts} PTS"), (f"{P_} anota {pts}", f"{pts} DE {AP}")]))
-        if td: hooks.append((70, 'td', [(f"triple-doble de {P_}", 'TRIPLE-DOBLE'), (f"{P_} firma un triple-doble", 'TRIPLE-DOBLE'), (f"{P_} lo hace todo: triple-doble", 'TRIPLE-DOBLE')]))
+                                                                                    (f"exhibición de {P_}: {pts} puntos", f"{AP}: {pts} PTS"), (f"{P_} anota {pts}", f"{pts} DE {AP}"),
+                                                                                    (f"{P_} enciende la noche con {pts}", f"{pts} DE {AP}"), (f"{pts} puntos de {P_}, imparable", f"{AP} IMPARABLE"),
+                                                                                    (f"{P_} no falla: {pts} puntos", f"{pts} DE {AP}")]))
+        if td: hooks.append((70, 'td', [(f"triple-doble de {P_}", 'TRIPLE-DOBLE'), (f"{P_} firma un triple-doble", 'TRIPLE-DOBLE'), (f"{P_} lo hace todo: triple-doble", 'TRIPLE-DOBLE'), (f"{P_} se sale con un triple-doble", 'TRIPLE-DOBLE')]))
         if ot:
             pr_ = 'la prórroga' if ot == 1 else str(ot) + ' prórrogas'; tg_ = 'PRÓRROGA' if ot == 1 else f'{ot} PRÓRROGAS'
-            hooks.append((62 + 8 * ot, 'ot', [(f"{S(W)} {Wv_('gana', 'ganan')} en {pr_}", tg_), (f"{S(W)} {Wv_('sobrevive', 'sobreviven')} a {pr_}", tg_), (f"{'prórroga' if ot == 1 else pr_} y victoria {de(W)}", tg_)]))
+            hooks.append((62 + 8 * ot, 'ot', [(f"{S(W)} {Wv_('gana', 'ganan')} en {pr_}", tg_), (f"{S(W)} {Wv_('sobrevive', 'sobreviven')} a {pr_}", tg_), (f"{'prórroga' if ot == 1 else pr_} y victoria {de(W)}", tg_), (f"{S(W)} {Wv_('resiste', 'resisten')} hasta {pr_}", tg_), (f"hasta {pr_}: {S(W)} {Wv_('se lo lleva', 'se lo llevan')}", tg_)]))
         if m >= 20: hooks.append((40 + m, 'paliza', [(f"paliza {de(W)}", f'PALIZA +{m}'), (f"{S(W)} {Wv_('arrasa', 'arrasan')} {al(Ls)}", f'+{m}'),
-                                                     (f"{S(W)} {Wv_('pasa', 'pasan')} por encima {de(Ls)}", f'PALIZA +{m}'), (f"exhibición {de(W)}: más {m}", 'EXHIBICIÓN')]))
+                                                     (f"{S(W)} {Wv_('pasa', 'pasan')} por encima {de(Ls)}", f'PALIZA +{m}'), (f"exhibición {de(W)}: más {m}", 'EXHIBICIÓN'), (f"{S(W)} no {Wv_('tiene', 'tienen')} piedad", f'PALIZA +{m}'),
+                                                     (f"repaso {de(W)} {al(Ls)}", f'+{m}'), (f"{S(W)} {Wv_('humilla', 'humillan')} {al(Ls)}", f'PALIZA +{m}')]))
         if m <= 3 and not ot: hooks.append((58, 'ajustado', [(f"final de infarto entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO'), (f"{S(W)} {Wv_('gana', 'ganan')} por la mínima", 'POR LA MÍNIMA'),
-                                                              (f"{S(W)} {Wv_('sufre', 'sufren')} hasta el final", 'AL LÍMITE'), (f"infarto: {S(W)} {Wv_('gana', 'ganan')} de {m}", f'+{m} AL FINAL')]))
+                                                              (f"{S(W)} {Wv_('sufre', 'sufren')} hasta el final", 'AL LÍMITE'), (f"infarto: {S(W)} {Wv_('gana', 'ganan')} de {m}", f'+{m} AL FINAL'), (f"{S(W)} lo {Wv_('salva', 'salvan')} en el último segundo", 'AL LÍMITE'),
+                                                              (f"agonía y victoria {de(W)}", 'FINAL DE INFARTO'), (f"partidazo hasta el final entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO')]))
         if eu and Ls['corto'] in GRANDES:   # en España lo que más interesa: cae un grande
             hooks.append((78, 'grande', [(f"{S(W)} {Wv_('tumba', 'tumban')} {al(Ls)}", f"CAE EL {Ls['corto'].upper()}"), (f"golpe {de(W)} {al(Ls)}", f"CAE EL {Ls['corto'].upper()}"),
-                                         (f"{S(Ls)} cae ante {S(W)}", f"CAE EL {Ls['corto'].upper()}")]))
+                                         (f"{S(Ls)} cae ante {S(W)}", f"CAE EL {Ls['corto'].upper()}"), (f"bombazo: {S(W)} {Wv_('gana', 'ganan')} {al(Ls)}", f"CAE EL {Ls['corto'].upper()}"),
+                                         (f"sorpresa: {S(Ls)} pierde con {S(W)}", f"CAE EL {Ls['corto'].upper()}")]))
         if not hooks and pts >= (18 if eu else 25): hooks.append((pts, 'pts', [(f"{pts} de {P_}", f"{pts} DE {AP}"), (f"{P_} se va a {pts}", f"{pts} DE {AP}")]))
         hooks.sort(key=lambda h: -h[0])
         info.append(dict(g=g, W=W, L=Ls, ot=ot, m=m, p=tp, ps=ts, td=td, hook=hooks[0] if hooks else None, score=(hooks[0][0] if hooks else 0) + g.get('interes', 0) / 10))
@@ -121,9 +126,14 @@ def guion(lg, nivel=0):
     frases = [x['hook'][1] for x in con]
     cap_ = lambda x: re.sub(r'^(\{?)(\w)', lambda m_: m_.group(1) + m_.group(2).upper(), x)
     intro = ' '.join('¡' + cap_(f) + '!' for f in frases)   # un titular por frase: deja respirar cada entrada
+    # a veces, un arranque corto que sube la tensión antes de los titulares (cambia cada día)
+    ARR = {'nba': ['¡Qué nochecita en la NBA!', '¡Locura anoche en la NBA!', '¡Atención a lo de anoche!', '¡Nochón de NBA!', '¡Vaya noche!'],
+           'el': ['¡Qué jornada de Euroliga!', '¡Locura en la Euroliga!', '¡Atención a la Euroliga!', '¡Nochón europeo!'],
+           'acb': ['¡Qué jornada en la ACB!', '¡Locura en la Liga Endesa!', '¡Atención a la ACB!', '¡Vaya jornada!']}
+    if rnd.random() < .5: intro = rnd.choice(ARR.get(lg, ARR['nba'])) + ' ' + intro
     if len(intro.split()) < 8: intro = intro[:-1] + f', en la {SIGLA[lg]}!'
     primera = lambda h: re.sub(r'[{}|¡!]', ' ', h).split()[0]   # el titular entra con la primera palabra de su frase
-    seg = [{'id': 'intro', 't': intro, 'focos': [{'clave': primera(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in con]}]
+    seg = [{'id': 'intro', 't': intro, 'velocidad': '+18%', 'tono': '+6Hz', 'focos': [{'clave': primera(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in con]}]
     orden = con + [x for x in info if x not in con]
     corto = nivel >= 1 or len(orden) >= 8
     usadas = set()
@@ -181,7 +191,7 @@ def guion(lg, nivel=0):
         res = {x['partido']: clave(nom(x.get('visitante_corto') or x['visitante'])) for x in dos}
     else:
         out, res = rnd.choice([f"Muy pronto, más baloncesto en la {SIGLA[lg]}. ¡No te lo pierdas! ", f"¿Quién ha sido el mejor de la jornada? Te leemos en comentarios. ", f"La {SIGLA[lg]} vuelve pronto. ¿Tu MVP de la jornada? "]) + "Esto es {OFFCOURT|Ófkort}.", {}
-    seg.append({'id': 'outro', 't': out, 'resaltar': res})
+    seg.append({'id': 'outro', 't': out, 'resaltar': res, 'velocidad': '+8%', 'tono': '+0Hz'})
     n = {'fecha': b['fecha'], 'auto': True, 'segmentos': seg}
     json.dump(n, open(os.path.join(R, 'salida', lg, 'noche.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     return n

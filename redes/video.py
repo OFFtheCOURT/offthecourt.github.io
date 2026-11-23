@@ -223,7 +223,7 @@ def _voz_local(n, voice):
         for intento in range(5):
             pal = []
             try:
-                c = edge_tts.Communicate(t, name, rate=rate, pitch=tono, boundary='WordBoundary')
+                c = edge_tts.Communicate(t, name, rate=s.get('velocidad', rate), pitch=s.get('tono', tono), boundary='WordBoundary')   # cada frase puede llevar su propio tono
                 with open(f, 'wb') as fh:
                     async for ch in c.stream():
                         if ch['type'] == 'audio': fh.write(ch['data'])
@@ -463,7 +463,8 @@ def montar():
             a_, h_ = f_['partido'].split('-')
             idx = next((i for i, r in enumerate(DATA['results']) if r['l']['ab'] == h_ and r['v']['ab'] == a_), None)
             ult = focos[-1]['t'] + .2 if focos else -1   # cada titular se busca después del anterior
-            tt = inicios[k_] if len(inicios) == len(seg.get('focos', [])) else None
+            nf = len(seg.get('focos', [])); ini = inicios[-nf:] if len(inicios) in (nf, nf + 1) else []
+            tt = ini[k_] if ini else None
             if tt is None: tt = next((w['o'] for w in intro['words'] if w['o'] > ult and w['src'].lower() == f_['clave'].lower()), None)
             if tt is None: tt = next((w['o'] for w in intro['words'] if w['o'] > ult and f_['clave'].split()[-1].lower() in w['src'].lower()), None)
             print('foco', f_.get('etiqueta'), f_['partido'], 'partido' if idx is not None else 'PARTIDO NO ENCONTRADO', 't=', tt)
