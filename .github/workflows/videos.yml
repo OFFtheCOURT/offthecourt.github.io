@@ -20,6 +20,10 @@ on:
         description: 'Prueba: no se apunta ni se entrega (va a la rama redes-prueba)'
         type: boolean
         default: false
+      fecha:
+        description: 'Solo pruebas: fecha de la jornada europea (AAAA-MM-DD)'
+        required: false
+        default: ''
       hasta:
         description: 'Prueba: solo los primeros N segundos'
         required: false
@@ -51,6 +55,7 @@ jobs:
           OFFCOURT_IGNORA_HECHO: '1'
           GH_TOKEN: ${{ github.token }}
           FORZAR: ${{ github.event.inputs.forzar }}
+          OFFCOURT_FECHA: ${{ github.event.inputs.fecha }}
           LIGAS: ${{ github.event.inputs.ligas }}
         run: |
           git config --global user.name "offcourt-bot"; git config --global user.email "offcourt-bot@users.noreply.github.com"
@@ -91,6 +96,7 @@ jobs:
           OFFCOURT_FORZAR: ${{ github.event.inputs.forzar == 'true' && '1' || '' }}
           OFFCOURT_PRUEBA: ${{ github.event.inputs.prueba == 'true' && '1' || '' }}
           OFFCOURT_HASTA: ${{ github.event.inputs.hasta }}
+          OFFCOURT_FECHA: ${{ github.event.inputs.fecha }}
         run: python3 redes/auto.py ${{ steps.mira.outputs.ligas }}
       - name: Guardar la prueba (rama redes-prueba)
         if: steps.mira.outputs.ligas != '' && github.event.inputs.prueba == 'true'
