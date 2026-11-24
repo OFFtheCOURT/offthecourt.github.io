@@ -209,7 +209,7 @@ def video(lg):
         sh('--liga', lg, 'voz')
         d = duracion(sh('--liga', lg, 'montar'))
         print(lg, 'nivel', nivel, 'duración', d)
-        if d <= 61: break
+        if d <= 59.5: break   # margen: el vídeo final suma algo de transición
     sh('--liga', lg, 'render')
     out = os.path.join(R, 'salida', lg)
     prueba = bool(os.environ.get('OFFCOURT_HASTA'))
