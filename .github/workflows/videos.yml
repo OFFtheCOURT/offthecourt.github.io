@@ -118,6 +118,21 @@ jobs:
             git ls-files | grep -q mp4   # si el vídeo no se ha guardado, el paso falla y no se apunta como hecho
             cd "$GITHUB_WORKSPACE"
           fi
-          git add redes/videos.json
-          git diff --cached --quiet || git commit -qm "Vídeos automáticos: registro"
-          ok=0; for i in 1 2 3 4 5; do git pull -q --rebase --autostash origin main && git push -q origin HEAD:main && ok=1 && break; sleep 5; done; [ $ok = 1 ]
+          # registro: se fusiona entrada a entrada con lo último de main (sin conflictos de rebase)
+          cp redes/videos.json /tmp/registro_nuevo.json
+          ok=0
+          for i in 1 2 3 4 5 6; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            python3 - <<'PY'
+          import json, os
+          nuevo = json.load(open('/tmp/registro_nuevo.json')); p = 'redes/videos.json'
+          base = json.load(open(p)) if os.path.exists(p) else {}
+          for k, v in nuevo.items():
+              if k == 'errores': base[k] = v; continue
+              if isinstance(v, dict) and v.get('hecho', '') > (base.get(k) or {}).get('hecho', ''): base[k] = v
+          json.dump(base, open(p, 'w'), ensure_ascii=False, indent=1)
+          PY
+            git add redes/videos.json
+            git diff --cached --quiet || git commit -qm "Vídeos automáticos: registro"
+            git push -q origin HEAD:main && ok=1 && break; sleep 5
+          done; [ $ok = 1 ]
