@@ -1147,7 +1147,7 @@ window.draw=(i,t)=>{WQ.length=0;const OX=X;X=OX;X.setTransform(1,0,0,1,0,0);X.gl
   const XS=X;X=M;for(const w of WQ)wipeDraw(...w);X=XS;
   if(window.FX&&D.fx!==false)fxPost(sc,t);};
 /* acabado de imagen y golpes de efecto (redes/fx.js); se desactiva con "fx": false en el guion */
-function fxPost(sc,t){const o={bloom:.48,vignette:.38,grain:D.grano!=null?D.grano:.07},map=(x,y)=>[540-540*SAFE_S+x*SAFE_S,SAFE_T+y*SAFE_S];
+function fxPost(sc,t){const o={bloom:.48,vignette:.38,grain:D.grano!=null?D.grano:.045},map=(x,y)=>[540-540*SAFE_S+x*SAFE_S,SAFE_T+y*SAFE_S];
   if(sc.type!=='intro'&&!sc.fromCine&&t<.34){o.zoom={t0:0,x:540,y:860,dur:.3,strength:.14};if(t<.12)o.rgb=3}
   if(sc.type==='intro'&&t<.12)o.rgb=3;
   const cs=sc.cards||[];if(cs.length){const n=cs.length,cw=n>=3?316:350,gap=16,tot=n*cw+(n-1)*gap,x0=(W-tot)/2;

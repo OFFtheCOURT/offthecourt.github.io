@@ -23,7 +23,7 @@ const fs = require('fs');
     const i = Number(a), out = b, tmp = out.replace(/\.mp4$/, '.tmp.mp4');
     const dur = await pg.evaluate(i => window.DATA.scenes[i].dur, i);
     const n = Math.round(dur * 30);
-    const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', '30', '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', '30', tmp], { stdio: ['pipe', 'inherit', 'inherit'] });
+    const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', '30', '-c:v', 'mjpeg', '-i', '-', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '21', '-maxrate', '9M', '-bufsize', '18M', '-pix_fmt', 'yuv420p', '-r', '30', tmp], { stdio: ['pipe', 'inherit', 'inherit'] });
     for (let f = 0; f < n; f++) {
       await pg.evaluate(t => window.draw(window.__i, t), f / 30).catch(() => {});
       if (f === 0) { await pg.evaluate(i => { window.__i = i }, i); await pg.evaluate(t => window.draw(window.__i, t), 0) }
