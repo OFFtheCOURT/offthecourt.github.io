@@ -914,7 +914,7 @@ function cineDiario(f,k,g,a,t,alpha){
     const R=rng(k*31+7);X.save();for(let i=0;i<34;i++){const an=R()*6.283,v=500+R()*900,px=P.x+Math.cos(an)*(380+v*eo(qq))*fz,py=P.y+Math.sin(an)*(480+v*eo(qq))*fz+600*qq*qq;
       X.globalAlpha=1-qq;X.fillStyle=i%3==0?col:i%3==1?'#efe8d8':'#ffffff';X.save();X.translate(px,py);X.rotate(qq*10+i);X.fillRect(-10,-6,20,12);X.restore()}X.restore();
     if(im<.08){X.fillStyle=hex('#ffffff',.3*(1-im/.08));X.fillRect(0,0,W,H)}}}
-function diarioPortada(tg,W_,L_,col,H_,t,ia){ // portada limpia: cabecera, titular enorme, foto grande y resultado
+function diarioPortada(tg,W_,L_,col,H_,t,ia){const mist=(tg||'').startsWith('¿'); // portada limpia: cabecera, titular enorme, foto grande y resultado
   if(ia===undefined)ia=9;const pw=860,ph=DPH,x0=-pw/2,y0=-ph/2,SER='Georgia,"Times New Roman",serif',ink='#14110d';
   X.save();X.shadowColor='rgba(0,0,0,.65)';X.shadowBlur=60;X.shadowOffsetY=24;X.fillStyle='#efe8d8';X.fillRect(x0,y0,pw,ph);X.restore();
   const pg=X.createLinearGradient(x0,y0,x0+pw,y0+ph);pg.addColorStop(0,'rgba(255,255,255,.35)');pg.addColorStop(.6,'rgba(255,255,255,0)');pg.addColorStop(1,'rgba(120,100,60,.18)');X.fillStyle=pg;X.fillRect(x0,y0,pw,ph);
@@ -926,15 +926,18 @@ function diarioPortada(tg,W_,L_,col,H_,t,ia){ // portada limpia: cabecera, titul
   // foto grande con trama de puntos sobre el color del equipo
   const fx=x0+30,fy=y0+330,fw=pw-60,fh=560;
   X.save();X.beginPath();X.rect(fx,fy,fw,fh);X.clip();
-  const bg=X.createLinearGradient(fx,fy,fx+fw,fy+fh);bg.addColorStop(0,mix(W_.c,'#ffffff',.1));bg.addColorStop(1,mix(W_.c,'#000000',.45));X.fillStyle=bg;X.fillRect(fx,fy,fw,fh);
+  const bc0=mist?'#2a2d36':W_.c,bg=X.createLinearGradient(fx,fy,fx+fw,fy+fh);bg.addColorStop(0,mix(bc0,'#ffffff',.1));bg.addColorStop(1,mix(bc0,'#000000',.45));X.fillStyle=bg;X.fillRect(fx,fy,fw,fh);
   X.fillStyle='rgba(0,0,0,.15)';for(let yy=fy;yy<fy+fh;yy+=14)for(let xx=fx+((yy/14)%2)*7;xx<fx+fw;xx+=14){X.beginPath();X.arc(xx,yy,3,0,7);X.fill()}
-  if(IM['t_'+W_.ab]){X.globalAlpha*=.25;X.drawImage(IM['t_'+W_.ab],fx+fw-380,fy+70,420,420);X.globalAlpha/=.25}
-  if(H_&&IM['p_'+H_.pid]){const im=IM['p_'+H_.pid],r=(fh+20)/im.height;X.drawImage(im,fx+fw*.4-im.width*r/2,fy+fh-im.height*r+20,im.width*r,im.height*r)}
+  if(!mist&&IM['t_'+W_.ab]){X.globalAlpha*=.25;X.drawImage(IM['t_'+W_.ab],fx+fw-380,fy+70,420,420);X.globalAlpha/=.25}
+  if(mist){const cut=H_&&IM['c_'+H_.pid];if(cut){const tmp=window.__ms||(window.__ms=document.createElement('canvas'));tmp.width=cut.width;tmp.height=cut.height;const c2=tmp.getContext('2d');c2.clearRect(0,0,tmp.width,tmp.height);c2.drawImage(cut,0,0);c2.globalCompositeOperation='source-atop';c2.fillStyle='#07080c';c2.fillRect(0,0,tmp.width,tmp.height);c2.globalCompositeOperation='source-over';
+      const h=fh*.95,r=h/cut.height;X.drawImage(tmp,fx+fw*.42-cut.width*r/2,fy+fh-h,cut.width*r,h)}
+    X.save();X.font=`900 420px ${FD}`;X.textAlign='center';X.fillStyle=hex(ACC,.9);X.shadowColor=ACC;X.shadowBlur=40;X.fillText('?',fx+fw*.72,fy+fh*.78);X.restore()}
+  else if(H_&&IM['p_'+H_.pid]){const im=IM['p_'+H_.pid],r=(fh+20)/im.height;X.drawImage(im,fx+fw*.4-im.width*r/2,fy+fh-im.height*r+20,im.width*r,im.height*r)}
   else if(IM['t_'+W_.ab])X.drawImage(IM['t_'+W_.ab],fx+fw/2-190,fy+80,380,380);
   X.restore();
   // resultado en franja del color del ganador
-  const by=fy+fh,bh=ph-(fh+330)-30,bc=mix(W_.c,'#000000',.12);X.fillStyle=bc;X.fillRect(fx,by,fw,bh);
-  X.fillStyle='#fff';X.textAlign='center';const sc_=W_.short.toUpperCase()+' '+W_.score+'  ·  '+L_.score+' '+L_.short.toUpperCase();fitText(sc_,FD,76,fw-40,900);X.fillText(sc_,0,by+bh*.72);
+  const by=fy+fh,bh=ph-(fh+330)-30,bc=mix(mist?'#1d2028':W_.c,'#000000',.12);X.fillStyle=bc;X.fillRect(fx,by,fw,bh);
+  X.fillStyle='#fff';X.textAlign='center';const sc_=mist?'TE LO CONTAMOS AL FINAL':W_.short.toUpperCase()+' '+W_.score+'  ·  '+L_.score+' '+L_.short.toUpperCase();fitText(sc_,FD,76,fw-40,900);X.fillText(sc_,0,by+bh*.72);
   // sello ¡EXTRA! que cae justo después
   const sp=clamp((ia-.08)/.14);if(sp>0){const k2=lerp(2.4,1,eo(sp));X.save();X.translate(x0+pw-130,fy+100);X.rotate(-.2);X.scale(k2,k2);X.globalAlpha*=sp;
     const stc=mix(W_.c,'#000000',.12);X.fillStyle='rgba(239,232,216,.95)';X.beginPath();X.arc(0,0,78,0,7);X.fill();X.strokeStyle=stc;X.lineWidth=7;X.beginPath();X.arc(0,0,72,0,7);X.stroke();
@@ -1003,7 +1006,8 @@ function introCine(sc,t){
   let cx=540,cy=860,z=1;
   if(cur){const r=LY[cur.i],q=eio((t-cur.t)/.5);cx=lerp(540,lerp(540,r.x+r.w/2,.06),q);cy=lerp(860,lerp(860,r.y+r.h/2,.08),q);z=1+.012*curK+.02*Math.max(0,1-(t-cur.t)/.4)}
   let dive=0;
-  if(t>tend&&F.length){const r=LY[F[0].i],q1=eio((t-tend)/.3),zf=Math.max(W/r.w,H/r.h)*1.05;dive=clamp((t-tend-.3)/.32);
+  const nx0=SC[SC.indexOf(sc)+1],diveI=nx0&&nx0.type=='game'?Math.max(0,RS.findIndex(g=>[g.l.ab,g.v.ab].includes(nx0.teams[0].ab)&&[g.l.ab,g.v.ab].includes(nx0.teams[1].ab))):(F[0]||{}).i;
+  if(t>tend&&F.length){const r=LY[diveI],q1=eio((t-tend)/.3),zf=Math.max(W/r.w,H/r.h)*1.05;dive=clamp((t-tend-.3)/.32);
     cx=lerp(cx,r.x+r.w/2,q1);cy=lerp(cy,r.y+r.h/2,q1);z=lerp(z,1.9,q1);if(dive>0)z=lerp(1.9,zf,Math.pow(dive,2.2))}
   const sinceF=cur?t-cur.t:9,lastF_=F.length?F[F.length-1].t:sc.dur*.6,st_=Math.min(.55,Math.max(.16,(lastF_+.9-.12)/Math.max(1,n))),sinceL=((t-.12)%st_+st_)%st_,litN=Math.floor((t-.12)/st_)+1;
   let sh=sinceF>=0&&sinceF<.25?(1-sinceF/.25)*16:0;if(t>=.12&&litN<=n&&sinceL<.12)sh=Math.max(sh,(1-sinceL/.12)*7);
@@ -1045,7 +1049,7 @@ function introCine(sc,t){
     const w2s=(x,y)=>[(x-cx)*z+540,(y-cy)*z+960],tileS=i=>{const r=LY[i];return w2s(r.x+r.w/2,r.y+r.h/2)};
     const fk=[...F4].reverse().find(f=>t>=f.t-DPRE)||F4[0],k=F4.indexOf(fk),a=t-fk.t+DPRE;
     let tgt,mode;   // mode: 'cartel' (diario recién caído), 'dato' (su resultado), 'libre' (todo encendido), 'final' (primer partido)
-    if(t>tend-.8){tgt=tileS(F[0].i);mode='final'}
+    if(t>tend-.8){tgt=tileS(diveI);mode='final'}
     else if(t>=flyS&&t<land(0)+.5){tgt=null;mode='libre'}
     else if(t>=flyS){tgt=null;mode='libre'}
     else if(a<.95){const P=diarioPose(k,Math.min(a,.6),t);tgt=[P.x,(P.y+(140-cy)*z+960)/2];mode='cartel'}

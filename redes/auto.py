@@ -136,6 +136,16 @@ def guion(lg, nivel=0):
     FMT = os.environ.get('OFFCOURT_FORMATO') or 'turbo'; habla = con; vel = '+18%'
     if FMT == 'turbo':      # el cine de siempre, sin arranque y más rápido
         intro = ' '.join('¡' + cap_(f) + '!' for f in frases); vel = '+24%'
+    elif FMT == 'gancho' and len(con) >= 2:   # bucle abierto: el gran titular se anuncia sin desvelarlo y se cuenta al final
+        top = con[0]; tq = top.get('tipo'); pq = top['p']; mq = top['m']
+        tease = {'grande': f"¡Anoche cayó {S(top['L'])}!... y no te imaginas contra quién. Te lo cuento al final.",
+                 'pts': f"¡Anoche alguien se fue a {pq['pts']} puntos!... y no es quien piensas. Te lo digo al final.",
+                 'td': "¡Anoche hubo un triple-doble de locos!... Al final te digo de quién.",
+                 'ot': "¡Anoche hubo un partido que se fue a la prórroga!... y el final te va a volar la cabeza. Quédate.",
+                 'paliza': f"¡Anoche hubo una paliza de {mq} puntos!... ¿Adivinas quién la dio? Al final te lo digo.",
+                 'ajustado': "¡Anoche hubo un final de infarto!... Te lo enseño al final. Antes, lo demás."}.get(tq, "¡Anoche pasó algo que no te esperas!... Quédate hasta el final.")
+        habla = con[:3]; intro = tease + ' ' + ' '.join('¡' + cap_(x['hook'][1]) + '!' for x in con[1:3]); vel = '+22%'
+        top['misterio'] = True
     elif FMT == 'cuenta' and len(con) >= 2:   # cuenta atrás: de menos a más, y el uno es el primer partido
         k = min(3, len(con)); habla = con[:k][::-1]; nums = ['Tres', 'Dos', 'Uno'][3 - k:]
         quita = lambda f: re.sub(r':\s*más \d+$', '', f)
@@ -147,8 +157,9 @@ def guion(lg, nivel=0):
         resp = f"¡{Pq}, con {S(Wq)}!" if tq in ('pts', 'td') else f"¡{S(Wq, 1)}, con {pq['pts']} de {Pq}!"
         resto = con[1:3]; intro = preg + ' ' + resp + ' ' + ' '.join(('¡Y además, ' if i == 0 else '¡') + (f if i else f) + '!' for i, f in enumerate(cap_(x['hook'][1]) if i else x['hook'][1] for i, x in enumerate(resto)))
         habla = [top] + resto
-    seg = [{'id': 'intro', 't': intro, 'velocidad': vel, 'tono': '+6Hz', 'focos': [{'clave': primera(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in habla]}]
+    seg = [{'id': 'intro', 't': intro, 'velocidad': vel, 'tono': '+6Hz', 'focos': [{'clave': primera(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': ('¿QUIÉN?' if x.get('misterio') else x['hook'][2][:18])} for x in habla]}]
     orden = con + [x for x in info if x not in con]
+    if con and con[0].get('misterio'): orden = [x for x in orden if x is not con[0]] + [con[0]]
     corto = nivel >= 1 or len(orden) >= 8
     usadas = set()
     for i, x in enumerate(orden):
@@ -174,7 +185,7 @@ def guion(lg, nivel=0):
             ops = [f"{S(W, 1)} {Wv('gana', 'ganan')} por la mínima {al(Ls)}, {w} a {l}, y {P} firma {p['pts']}.",
                    f"Final apretado: {S(W)} {w}, {S(Ls)} {l}, con {p['pts']} de {P}.",
                    f"Sufrimiento hasta el final: {S(W)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}, con {p['pts']} de {P}.",
-                   f"Se decidió en el último minuto: {w} a {l} para {S(W)}, con {p['pts']} de {P}."]
+                   f"Igualado hasta el final: {w} a {l} para {S(W)}, con {p['pts']} de {P}."]
         else:
             ops = [f"{S(W, 1)} {Wv('gana', 'ganan')} {al(Ls)}, {w} a {l}, con {p['pts']} de {P}.",
                    f"{P} mete {p['pts']} y {S(W)} {Wv('supera', 'superan')} {al(Ls)}, {w} a {l}.",
@@ -184,6 +195,7 @@ def guion(lg, nivel=0):
         cat = 'corto' if corto else 'ot' if x['ot'] else 'paliza' if x['m'] >= 20 else 'ajustado' if x['m'] <= 3 else 'normal'
         libres = [k for k in range(len(ops)) if (cat, k) not in usadas] or list(range(len(ops)))   # no repetir la misma frase en el vídeo
         k = rnd.choice(libres); usadas.add((cat, k)); t = ops[k]
+        if x.get('misterio'): t = rnd.choice(['Y ahora sí, lo prometido. ', 'Y lo que esperabas. ', 'Y aquí está la bomba de la noche. ']) + '¡' + cap_(x['hook'][1]) + '! ' + t
         if x['td'] and not corto: t = t + " ¡Con triple-doble incluido!"
         linea = f"{p['pts']} PTS · {p.get('valoracion')} VAL" if eu and p.get('valoracion') is not None else f"{p['pts']} PTS · {p['reb']} REB · {p['ast']} AST"
         ck = (clave(P) if '{' in P else P.split()[-1]) if P in t else clave(S(W))
