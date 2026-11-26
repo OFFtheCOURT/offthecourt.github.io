@@ -12,7 +12,7 @@ UA = {'User-Agent': f'OffcourtBot/1.0 ({SITE}; fotos de jugadores para una web p
 MAX_SEARCH = int(os.environ.get('MAX_SEARCH', '150'))   # búsquedas sueltas por ejecución
 RECROP = os.environ.get('RECROP') == '1'                 # volver a descargar y recortar todas las fotos
 STYLE = os.environ.get('STYLE') == '1'                   # aplicar el patrón Offcourt (sin fondo + fondo del equipo)
-MAX_PHOTOS = int(os.environ.get('MAX_PHOTOS', '120'))   # fotos procesadas por ejecución (se hace por tandas)
+MAX_PHOTOS = int(os.environ.get('MAX_PHOTOS', '400'))   # fotos procesadas por ejecución (se hace por tandas)
 DEADLINE = time.time() + 60 * float(os.environ.get('MAX_MIN', '55'))   # y como mucho estos minutos
 ONLY = [x for x in os.environ.get('ONLY', '').replace(' ', '').split(',') if x]   # limitar a estos jugadores
 import facecrop
@@ -50,7 +50,8 @@ if ONLY: names = {k: v for k, v in names.items() if k in ONLY}
 print('jugadores', len(names))
 
 idx_f, cr_f = PH + '/index.json', PH + '/credits.json'
-st_f = PH + '/styled.json'                                # jugadores que ya tienen el patrón Offcourt
+PHOTO_STYLE = os.environ.get('PHOTO_STYLE', 'duo')       # fondo: duo (dos colores del equipo), estudio, neon, minimal o rayas
+st_f = PH + f'/styled_{PHOTO_STYLE}.json'                # jugadores que ya tienen ese estilo
 styled = set(json.load(open(st_f))) if os.path.exists(st_f) else set()
 idx = json.load(open(idx_f)) if os.path.exists(idx_f) else {}
 credits = json.load(open(cr_f)) if os.path.exists(cr_f) else {}
@@ -124,7 +125,7 @@ for f, pid in need.items():
     if STYLE and pid in info:
         import stylize
         lk, ab, num = info[pid]; tm = LG[lk]['teams'][ab]
-        img = stylize.card(orig, tm['color'], tm['alt'], num, 300, 219)
+        img = stylize.card(orig, tm['color'], tm['alt'], num, 450, 328, style=PHOTO_STYLE)
     else:
         img, _ = facecrop.crop(orig, W, H)
     img.save(f'{PH}/{pid}.webp', 'WEBP', quality=84)

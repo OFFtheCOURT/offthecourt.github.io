@@ -34,7 +34,7 @@ def _main_person(m, cx, cy):
 
 def _hex(h): return np.array([int(h[i:i + 2], 16) for i in (0, 2, 4)], np.float32)
 
-def card(src, color, alt, number='', W=300, H=219):
+def card(src, color, alt, number='', W=300, H=219, style='rayas'):
     """src: foto original (PIL). Devuelve el cromo W x H con el patrón Offcourt."""
     src = src.convert('RGB')
     # 1) recorte amplio alrededor de la cara (cabeza + torso), para que la silueta llegue hasta abajo
@@ -66,22 +66,51 @@ def card(src, color, alt, number='', W=300, H=219):
         pw, ph = int(900 * scale), int(900 * scale); ox = int(W / 2 - (fx + fw / 2) * scale); oy = int(H * 0.40 - cyf * scale)
     person = Image.fromarray(a).resize((pw, ph), Image.LANCZOS)
     pm = Image.fromarray(m).resize((pw, ph), Image.LANCZOS)
-    # 4) fondo del equipo: degradado + rayas + dorsal
+    # 4) fondo del equipo
     c1 = _hex(color)
     if c1.sum() < 60: c1 = np.array([42, 47, 58], np.float32)
-    c2 = tuple(int(v) for v in _hex(alt))
-    yy, xx = np.mgrid[0:H, 0:W]; t = np.clip((xx * 0.6 + yy) / (W * 0.6 + H), 0, 1)[..., None]
-    bg = Image.fromarray((c1 * (1 - t) + c1 * 0.32 * t).astype(np.uint8)).convert('RGBA')
+    c2 = tuple(int(v) for v in _hex(alt)); c2a = np.array(c2, np.float32)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    fx0, fy0 = W / 2, H * 0.36                      # el foco cae detrás de la cabeza
+    rr = np.sqrt(((xx - fx0) / W) ** 2 + ((yy - fy0) / H) ** 2)[..., None]
+    if style == 'rayas':
+        t = np.clip((xx * 0.6 + yy) / (W * 0.6 + H), 0, 1)[..., None]
+        bg = Image.fromarray((c1 * (1 - t) + c1 * 0.32 * t).astype(np.uint8)).convert('RGBA'); d = ImageDraw.Draw(bg)
+        for k in range(-H, W, 22): d.line([(k, H), (k + H * 0.45, 0)], fill=tuple(min(255, int(v * 1.22)) for v in c1) + (255,), width=3)
+    elif style == 'estudio':     # degradado suave del color del equipo con foco de luz detrás del jugador
+        light = np.clip(c1 * 1.35 + 18, 0, 255); dark = c1 * 0.28
+        k = np.clip(rr / 0.75, 0, 1) ** 0.9
+        bg = Image.fromarray((light * (1 - k) + dark * k).astype(np.uint8)).convert('RGBA')
+    elif style == 'neon':        # fondo oscuro con halo del color del equipo
+        base = np.array([10, 13, 20], np.float32); glow = np.clip(c1 * 1.25 + 10, 0, 255)
+        k = np.clip(1 - rr / 0.55, 0, 1) ** 1.6
+        bg = Image.fromarray((base * (1 - k) + glow * k * 0.85 + base * k * 0.15).astype(np.uint8)).convert('RGBA')
+    elif style == 'duo':         # fusión suave de los dos colores del equipo
+        c2b = c2a if abs(float(c2a.sum()) - float(c1.sum())) > 60 else np.clip(c1 * 0.4, 0, 255)
+        t = np.clip((xx / W) * 0.75 + (yy / H) * 0.45 - 0.1, 0, 1)[..., None] ** 1.2
+        mixc = c1 * (1 - t) + c2b * t * 0.85
+        v = np.clip(1 - rr * 0.55, 0.55, 1)
+        bg = Image.fromarray(np.clip(mixc * v, 0, 255).astype(np.uint8)).convert('RGBA')
+    else:                        # minimal: liso, un poco más claro arriba
+        t = (yy / H)[..., None]
+        bg = Image.fromarray((c1 * (1.08 - 0.45 * t)).clip(0, 255).astype(np.uint8)).convert('RGBA')
     d = ImageDraw.Draw(bg)
-    for k in range(-H, W, 22): d.line([(k, H), (k + H * 0.45, 0)], fill=tuple(min(255, int(v * 1.22)) for v in c1) + (255,), width=3)
-    if number:
-        try: fnt = ImageFont.truetype(FONT, int(H * 0.32))
+    if number and style in ('rayas', 'estudio', 'duo', 'neon'):
+        try: fnt = ImageFont.truetype(FONT, int(H * (0.32 if style == 'rayas' else 0.62)))
         except Exception: fnt = ImageFont.load_default()
-        d.text((W - 10, int(H * 0.04)), str(number), font=fnt, fill=tuple(min(255, int(v * 1.55)) for v in c1) + (255,), anchor='ra')
+        if style == 'rayas':
+            d.text((W - 10, int(H * 0.04)), str(number), font=fnt, fill=tuple(min(255, int(v * 1.55)) for v in c1) + (255,), anchor='ra')
+        else:                    # dorsal grande y muy sutil detrás del jugador
+            lay = Image.new('RGBA', (W, H), (0, 0, 0, 0)); ld = ImageDraw.Draw(lay)
+            ld.text((W * 0.5, H * 0.52), str(number), font=fnt, fill=(255, 255, 255, 34 if style != 'neon' else 26), anchor='mm')
+            bg.alpha_composite(lay)
+    # suelo: sombra suave abajo para asentar al jugador
+    fl = Image.new('L', (W, H), 0); fd = ImageDraw.Draw(fl); fd.ellipse((W * 0.12, H * 0.86, W * 0.88, H * 1.12), fill=110)
+    fl = fl.filter(ImageFilter.GaussianBlur(H * 0.06)); shade = Image.new('RGBA', (W, H), (0, 0, 0, 255)); shade.putalpha(fl); bg.alpha_composite(shade)
     # 5) sombra + borde del 2.º color + jugador
     sh = Image.new('RGBA', (pw, ph), (0, 0, 0, 0)); sh.putalpha(pm.point(lambda v: int(v * 0.5)))
     bg.alpha_composite(sh.filter(ImageFilter.GaussianBlur(8)), (ox + 8, oy + 6))
-    rim = Image.new('RGBA', (pw, ph), c2 + (0,)); rim.putalpha(pm.filter(ImageFilter.MaxFilter(5)).point(lambda v: int(v * 0.9)))
+    rim = Image.new('RGBA', (pw, ph), (c2 if style == 'rayas' else (255, 255, 255)) + (0,)); rim.putalpha(pm.filter(ImageFilter.MaxFilter(5 if style == 'rayas' else 3)).point(lambda v: int(v * (0.9 if style == 'rayas' else 0.35))))
     bg.alpha_composite(rim, (ox, oy))
     person.putalpha(pm); bg.alpha_composite(person, (ox, oy))
     return bg.convert('RGB')
