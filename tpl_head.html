@@ -1045,6 +1045,97 @@ html[data-theme="light"] .cmp-r .v.w{filter:brightness(.85) saturate(1.2)}
 .g-foot{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr) 44px;flex-wrap:nowrap}
 .g-foot .btn{min-width:0;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-inline:8px}
 .g-foot .sh-btn{padding:0}.g-foot .sh-l{display:none}
+
+/* =====================================================================
+   V2 · Rediseño visual: fondo con aurora, tarjetas de cristal, barra de
+   secciones, títulos más limpios y detalles de movimiento
+   ===================================================================== */
+:root{--r-lg:22px;--r-md:16px;--glass:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.018));--glass-b:rgba(255,255,255,.09);--sh-1:0 1px 0 rgba(255,255,255,.05) inset,0 18px 40px -18px rgba(0,0,0,.6)}
+html[data-theme="light"]{--glass:linear-gradient(180deg,#ffffff,#fbfcfe);--glass-b:rgba(15,23,42,.08);--sh-1:0 1px 2px rgba(15,23,42,.05),0 18px 40px -22px rgba(15,23,42,.25)}
+/* fondo: aurora con los colores de la liga que se mueve muy despacio */
+body{background-image:none!important}
+body::after{content:"";position:fixed;inset:-20vmax;z-index:-1;pointer-events:none;
+  background:radial-gradient(42vmax 32vmax at 18% 12%,var(--glow1),transparent 70%),radial-gradient(40vmax 30vmax at 88% 18%,var(--glow2),transparent 70%),
+             radial-gradient(36vmax 28vmax at 60% 92%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%);
+  filter:saturate(1.15);animation:aurora 26s ease-in-out infinite alternate}
+html[data-theme="light"] body::after{opacity:.75}
+@keyframes aurora{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(2vmax,-1.5vmax,0) scale(1.05)}100%{transform:translate3d(-2vmax,1vmax,0) scale(1.02)}}
+main.wrap::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000,transparent 75%);mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000,transparent 75%)}
+html[data-theme="light"] main.wrap::before{background-image:linear-gradient(rgba(15,23,42,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.04) 1px,transparent 1px)}
+/* cabecera más ligera */
+header.top{background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);border-bottom:1px solid var(--glass-b)}
+html[data-theme="light"] header.top{background:rgba(255,255,255,.78)}
+/* barra de secciones */
+.secnav{border-top:1px solid var(--glass-b)}
+.secnav .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-block:7px;scroll-behavior:smooth}.secnav .wrap::-webkit-scrollbar{display:none}
+.sn{flex:none;appearance:none;border:0;background:none;color:var(--muted);font:800 12.5px var(--f-label);letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;border-radius:999px;cursor:pointer;position:relative;transition:color .2s,background .2s;display:inline-flex;align-items:center;gap:7px}
+.sn:hover{color:var(--fg);background:color-mix(in srgb,var(--fg) 6%,transparent)}
+.sn[aria-current="true"]{color:#120a02;background:var(--hot);box-shadow:0 6px 18px var(--lgshadow)}
+.sn .dot{width:7px;height:7px;border-radius:50%;background:#e5484d;animation:pulse 1.4s ease-in-out infinite}
+/* secciones y títulos */
+section{padding-block:56px 12px}
+section + section{border-top:0}
+section + section::before{content:"";display:block;height:1px;margin:-56px 0 56px;background:linear-gradient(90deg,transparent,var(--glass-b) 20%,var(--glass-b) 80%,transparent)}
+.sec-head{margin-bottom:22px}
+.eyebrow{transform:none;border-radius:999px;padding:5px 12px;font-size:11.5px;letter-spacing:.22em;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent2);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.eyebrow > *{transform:none}
+h2{font-size:clamp(34px,4.6vw,54px);letter-spacing:-.005em;margin-top:10px}
+h2 .hl{font-style:normal;background:var(--hot);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;padding-right:.04em}
+/* tarjetas de cristal */
+.game,.up,.fact,.ldr,.conf,.cg,.day,.fav-card,.fav-empty,.ts-list,.cu,.qchart,.fl-card,.cr,.leader{border-radius:var(--r-lg)}
+.game,.up,.fact,.ldr,.conf,.day,.ts-list,.cu,.fav-empty{background:var(--glass);border:1px solid var(--glass-b);box-shadow:var(--sh-1)}
+@media (min-width:900px){.game,.up,.conf,.ldr,.ts-list{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}}
+.cg{background:var(--glass);border-color:var(--glass-b)}
+.game{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .25s}
+.game:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 35%,var(--glass-b));box-shadow:0 26px 50px -22px rgba(0,0,0,.7)}
+html[data-theme="light"] .game:hover{box-shadow:0 26px 50px -24px rgba(15,23,42,.35)}
+.g-head{background:transparent;border-bottom:1px solid var(--glass-b)}
+.trow{background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 26%,transparent),transparent 70%)}
+.trow:not(.win){background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 9%,transparent),transparent 55%)}
+.trow .lg{border-radius:16px;box-shadow:0 8px 20px -8px color-mix(in srgb,var(--tc) 80%,transparent)}
+.trow.win .score{background:linear-gradient(180deg,#fff,color-mix(in srgb,var(--ti) 55%,#fff));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+html[data-theme="light"] .trow.win .score{background:linear-gradient(180deg,var(--fg),color-mix(in srgb,var(--ti) 70%,var(--fg)));-webkit-background-clip:text;background-clip:text}
+.g-foot{border-top:1px solid var(--glass-b)}
+.btn{border-radius:12px;border-color:var(--glass-b);background:color-mix(in srgb,var(--fg) 5%,transparent);transition:background .2s,border-color .2s,transform .15s}
+.btn:hover{background:color-mix(in srgb,var(--fg) 9%,transparent);border-color:color-mix(in srgb,var(--fg) 18%,transparent)}.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--hot);border-color:transparent;color:#120a02}
+.tab{border-color:var(--glass-b);background:color-mix(in srgb,var(--fg) 4%,transparent)}
+/* datos destacados: números más grandes y con degradado */
+.fact .fv{font-size:40px;letter-spacing:-.01em}
+.fact .fv.hot{background:var(--hot);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.fact{position:relative;overflow:hidden}.fact::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--tc,var(--accent)) 30%,transparent),transparent 70%);pointer-events:none}
+/* clasificación */
+.conf h3{background:transparent;border-bottom:1px solid var(--glass-b)}
+.st tbody tr{transition:background .15s}.st tbody tr:hover td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.st td{border-bottom-color:color-mix(in srgb,var(--fg) 6%,transparent)}
+/* ranking de equipos */
+.ts-bar{height:14px;border-radius:99px;background:color-mix(in srgb,var(--fg) 7%,transparent)}
+.ts-bar i{border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--tcol) 55%,transparent),var(--tcol))!important;box-shadow:0 0 14px -2px color-mix(in srgb,var(--tcol) 70%,transparent)}
+/* ticker */
+.tk{border-radius:12px;background:var(--glass);border-color:var(--glass-b)}
+/* pie */
+footer{border-top:1px solid var(--glass-b)}
+/* momentum en las tarjetas de partido */
+.mom{display:block;margin:8px 16px 2px;height:46px;position:relative}
+.mom svg{width:100%;height:100%;display:block;overflow:visible}
+.mom .ml{fill:none;stroke-width:2.6;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.mom-l{position:absolute;right:0;top:-14px;font:800 9.5px var(--f-label);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+/* gráfico ataque/defensa */
+.ts-view{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:color-mix(in srgb,var(--fg) 5%,transparent);border:1px solid var(--glass-b);margin-bottom:12px}
+.ts-view button{appearance:none;border:0;background:none;color:var(--muted);font:800 11.5px var(--f-label);letter-spacing:.14em;text-transform:uppercase;padding:7px 14px;border-radius:999px;cursor:pointer}
+.ts-view button[aria-pressed="true"]{background:var(--hot);color:#120a02}
+.scat{background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r-lg);padding:14px;box-shadow:var(--sh-1)}
+.scat svg{width:100%;height:auto;display:block}
+.scat .ax{font:700 12px var(--f-label);fill:var(--dim);letter-spacing:.06em}.scat .gl{stroke:color-mix(in srgb,var(--fg) 8%,transparent)}
+.scat .avg{stroke:color-mix(in srgb,var(--fg) 30%,transparent);stroke-dasharray:5 6}
+.scat .q{font:800 13px var(--f-label);letter-spacing:.16em;text-transform:uppercase;fill:color-mix(in srgb,var(--fg) 30%,transparent)}
+.scat image{cursor:pointer;transition:transform .15s;transform-box:fill-box;transform-origin:center}.scat image:hover{transform:scale(1.35)}
+.scat .q{font-size:13px}@media (max-width:640px){.scat{padding:8px}.scat .ax{font-size:13px}.scat .q{font-size:11px;letter-spacing:.1em}}
+.scat-note{font:600 12px var(--f-body);color:var(--dim);margin:10px 4px 0}
+@media (max-width:640px){section{padding-block:40px 8px}section + section::before{margin:-40px 0 40px}.fact .fv{font-size:32px}.sn{padding:7px 11px;font-size:11.5px}}
+@media (prefers-reduced-motion:reduce){body::after{animation:none}}
 </style>
 <script data-goatcounter="https://offcourt.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 <script>try{var _t=localStorage.getItem("offcourt-theme");if(_t!=="dark")document.documentElement.dataset.theme="light"}catch(e){}</script>
@@ -1096,6 +1187,7 @@ html[data-theme="light"] .cmp-r .v.w{filter:brightness(.85) saturate(1.2)}
     </div>
   </div>
   <div class="ticker"><div class="tk-box"><button class="tk-arr l" type="button" aria-label="Partidos anteriores" hidden>‹</button><div class="wrap" id="ticker"></div><button class="tk-arr r" type="button" aria-label="Más partidos" hidden>›</button></div></div>
+  <nav class="secnav" aria-label="Secciones"><div class="wrap" id="secnav"></div></nav>
 </header>
 
 <main class="wrap">

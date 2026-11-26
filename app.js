@@ -150,6 +150,7 @@ function gameCard(g){
     <div class="g-head"><span class="badges"><span class="st">${when?esc(when):'Final'}</span>${b.join('')}</span><span class="ven">${esc(g.venue)}${g.city&&!/\d/.test(g.city)&&g.city.length<26?'<span class="vc"> · '+esc(g.city)+'</span>':''}</span></div>
     <div class="qhead"><span></span><span></span><span class="qs">${qlabels}</span><span style="text-align:right">TOTAL</span></div>
     ${teamRow(g,0)}${teamRow(g,1)}
+    <div class="mom" data-mom="${esc(g.id)}"></div>
     <div class="margin" title="Reparto de puntos"><i style="width:${A.score/tot*100}%;background:${ca}"></i><i style="width:${H.score/tot*100}%;background:${ch}"></i></div>
     <div class="stars">${g.teams.map(s=>{const p=s.top[0];if(!p)return '';const t=TEAMS[s.abbr];const ph=photo(p);
       return `<div class="star" data-player="${esc(p.pid)}" style="--tc:${tc(t)}"><div class="av ${ph?'':'fb'}">${ph||initials(p.n)}</div><div class="who"><div class="tg">Mejor de ${esc(t.short)}</div><b>${esc(p.n)}</b><span><em>${p.pts}</em> pts · ${p.reb} reb · ${p.ast} ast${CUR!=='nba'?' · '+p.val+' val':''}</span></div></div>`}).join('')}</div>
@@ -357,6 +358,9 @@ const TSM=[['Puntos','avgPoints'],['Puntos recibidos','opp',1],['Diferencial','d
 let tsSel=0,ST={},TSA=[];
 function tsVal(ab,k){if(k==='opp'||k==='diff')return parseFloat((ST[ab]||{})[k]);return parseFloat((L.teamstats[ab]||{})[k])}
 function renderTS(){
+  const sv=document.getElementById('tsView')||(()=>{const d=document.createElement('div');d.id='tsView';d.className='ts-view';$('tsTabs').before(d);return d})();
+  sv.innerHTML=`<button type="button" data-tsview="list" aria-pressed="${tsMode==='list'}">Ranking</button><button type="button" data-tsview="chart" aria-pressed="${tsMode==='chart'}">Ataque vs defensa</button>`;
+  $('tsTabs').hidden=tsMode==='chart';if(tsMode==='chart'){$('tsList').className='';$('tsList').innerHTML=scatterHTML();return}else $('tsList').className='ts-list';
   $('tsEyebrow').innerHTML=`<span>Ranking de los ${Object.keys(TEAMS).length} equipos</span>`;
   $('tsTabs').innerHTML=TSA.map((m,i)=>`<button class="tab" type="button" data-ts="${i}" aria-pressed="${i===tsSel}">${m[0]}</button>`).join('');
   const [lbl,k,low]=TSA[tsSel];
@@ -599,7 +603,7 @@ function renderAll(){
   TSA=TSM.filter(([,k])=>Object.keys(TEAMS).some(ab=>!isNaN(tsVal(ab,k))));
   renderHoy();renderTop();renderUp();renderDays();renderPanel();renderStandings();
   $('leadersGrid').innerHTML=L.leaders.map(ldrCard).join('');
-  calSel=null;renderTS();renderFav();renderCal();renderMenu();countUp();setHH();
+  calSel=null;renderTS();renderFav();renderCal();renderMenu();countUp();setHH();renderSecNav();initMom();
 }
 function setLeague(k,scroll){if(LG[k]&&k!==CUR&&scroll!==undefined)track('liga/'+k,'Liga: '+k);try{delete $('ticker').dataset.user}catch(e){}setTimeout(()=>{try{liveTick()}catch(e){}},300);
   if(!LG[k]||k===CUR&&scroll!==undefined)return;CUR=k;
@@ -1134,6 +1138,61 @@ async function drawFlow(el){
     <div><b>${changes}</b><small>Cambios de líder</small></div><div><b>${ties}</b><small>Empates</small></div>${best.n>=8&&runTeam?`<div><b>${best.n}-0</b><small>Mejor parcial · ${esc(runTeam.short)}</small></div>`:''}</div>`;
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-toggle]');if(!b)return;setTimeout(()=>{const p=$(b.dataset.toggle);if(p&&!p.hidden)p.querySelectorAll('[data-flow]').forEach(drawFlow)},0)});
+/* ================= V2: barra de secciones, momentum y gráfico ataque/defensa ================= */
+const SECS=()=>[['hoy',CUR==='nba'?'Esta noche':'Hoy'],['anoche',TXT[CUR].m1],['proximos','Próximos'],['fechas',TXT[CUR].m3],['calendario','Calendario'],['clasificacion','Clasificación'],['lideres','Líderes'],['equipos','Equipos']];
+let secObs=null;
+function renderSecNav(){
+  const box=$('secnav');if(!box)return;
+  const live=(()=>{try{return hoyList().gs.some(g=>g.state==='in')}catch(e){return false}})();
+  box.innerHTML=SECS().filter(([id])=>{const e=$(id);return e&&!e.hidden}).map(([id,l])=>`<button class="sn" type="button" data-sec="${id}">${id==='hoy'&&live?'<i class="dot"></i>':''}${esc(l)}</button>`).join('');
+  if(secObs)secObs.disconnect();
+  const vis=new Map();secObs=new IntersectionObserver(es=>{es.forEach(e=>vis.set(e.target.id,e.isIntersecting?e.intersectionRatio:0));
+    let best=null,bv=0;for(const [id,v] of vis)if(v>bv){bv=v;best=id}
+    if(best)box.querySelectorAll('.sn').forEach(b=>{const on=b.dataset.sec===best;if(on&&b.getAttribute('aria-current')!=='true'){b.setAttribute('aria-current','true');box.scrollTo({left:b.offsetLeft-box.clientWidth/2+b.offsetWidth/2,behavior:'smooth'})}else if(!on)b.removeAttribute('aria-current')})},
+    {rootMargin:'-30% 0px -55% 0px',threshold:[0,.01,.2,.5,1]});
+  SECS().forEach(([id])=>{const e=$(id);if(e&&!e.hidden)secObs.observe(e)});
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-sec]');if(!b)return;const el=$(b.dataset.sec);if(!el)return;
+  const head=document.querySelector('header.top').getBoundingClientRect().bottom;window.scrollTo({top:el.getBoundingClientRect().top+scrollY-head-8,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});track('secnav/'+b.dataset.sec,'Barra de secciones')});
+/* momentum: línea de la diferencia en el marcador (flow/<liga>.json) en cada tarjeta, cuando se ve */
+let momObs=null;
+function drawMom(el){
+  if(el.dataset.done)return;el.dataset.done=1;const g=findGame(el.dataset.mom);if(!g){el.remove();return}
+  loadFlow(CUR).then(F=>{const raw=F[String(g.id)];if(!raw||raw.length<10){el.remove();return}
+    const [A,H]=g.teams,[cA,cH]=pair(TEAMS[A.abbr],TEAMS[H.abbr]),aH=!!A.home,mg=raw.map(([t,v,l])=>[t,aH?l-v:v-l]);
+    const end=Math.max(...mg.map(m=>m[0]),1),mx=Math.max(4,...mg.map(m=>Math.abs(m[1]))),W=300,Hh=46,X=t=>t/end*W,Y=m=>Hh/2-m/mx*(Hh/2-2);
+    let d=`M0,${Y(0)}`;mg.forEach(([t,m])=>{d+=`L${X(t).toFixed(1)},${Y(m).toFixed(1)}`});const area=d+`L${W},${Y(0)}Z`,id='m'+String(g.id).replace(/\W/g,'');
+    el.innerHTML=`<span class="mom-l">Momentum</span><svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" aria-hidden="true"><defs><clipPath id="${id}a"><rect width="${W}" height="${Y(0)}"/></clipPath><clipPath id="${id}b"><rect y="${Y(0)}" width="${W}" height="${Hh}"/></clipPath>
+      <linearGradient id="${id}ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cA}" stop-opacity=".55"/><stop offset="1" stop-color="${cA}" stop-opacity="0"/></linearGradient>
+      <linearGradient id="${id}gh" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${cH}" stop-opacity=".55"/><stop offset="1" stop-color="${cH}" stop-opacity="0"/></linearGradient></defs>
+      <line x1="0" x2="${W}" y1="${Y(0)}" y2="${Y(0)}" stroke="currentColor" opacity=".18" vector-effect="non-scaling-stroke"/>
+      <path d="${area}" fill="url(#${id}ga)" clip-path="url(#${id}a)"/><path d="${area}" fill="url(#${id}gh)" clip-path="url(#${id}b)"/>
+      <path class="ml" d="${d}" stroke="${cA}" clip-path="url(#${id}a)"/><path class="ml" d="${d}" stroke="${cH}" clip-path="url(#${id}b)"/></svg>`;
+    el.title=tr('Diferencia en el marcador minuto a minuto')});
+}
+function initMom(){if(momObs)momObs.disconnect();momObs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){momObs.unobserve(e.target);drawMom(e.target)}}),{rootMargin:'200px'});
+  document.querySelectorAll('[data-mom]:not([data-done])').forEach(e=>momObs.observe(e))}
+new MutationObserver(()=>{if(document.querySelector('[data-mom]:not([data-done]):not([data-obs])')){document.querySelectorAll('[data-mom]:not([data-obs])').forEach(e=>{e.dataset.obs=1;momObs&&momObs.observe(e)})}}).observe(document.body,{childList:true,subtree:true});
+/* gráfico ataque/defensa */
+let tsMode='list';
+function scatterHTML(){
+  const rows=Object.keys(TEAMS).map(ab=>({ab,o:tsVal(ab,'avgPoints'),d:tsVal(ab,'opp')})).filter(r=>!isNaN(r.o)&&!isNaN(r.d));if(rows.length<4)return '<p class="pf-empty">Sin datos suficientes.</p>';
+  const mob=innerWidth<640,W=mob?420:880,Hh=mob?520:560,pl=mob?54:78,pr=mob?10:24,pt=mob?18:24,pb=mob?44:48,os=rows.map(r=>r.o),ds=rows.map(r=>r.d),o0=Math.min(...os)-1.5,o1=Math.max(...os)+1.5,d0=Math.min(...ds)-1.5,d1=Math.max(...ds)+1.5;
+  const X=v=>pl+(v-o0)/(o1-o0)*(W-pl-pr),Y=v=>pt+(v-d0)/(d1-d0)*(Hh-pt-pb);   // arriba = recibe menos
+  const ao=os.reduce((a,b)=>a+b,0)/os.length,ad=ds.reduce((a,b)=>a+b,0)/ds.length,s=mob?(CUR==='nba'?28:32):(CUR==='nba'?40:44);
+  const ticks=(a,b)=>{const st=(b-a)>14?4:2,out=[];for(let v=Math.ceil(a/st)*st;v<=b;v+=st)out.push(v);return out};
+  return `<div class="scat"><svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Ataque contra defensa">
+    ${ticks(o0,o1).map(v=>`<line class="gl" x1="${X(v)}" x2="${X(v)}" y1="${pt}" y2="${Hh-pb}"/><text class="ax" x="${X(v)}" y="${Hh-pb+20}" text-anchor="middle">${v}</text>`).join('')}
+    ${ticks(d0,d1).map(v=>`<line class="gl" x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${pl-10}" y="${Y(v)+4}" text-anchor="end">${v}</text>`).join('')}
+    <line class="avg" x1="${X(ao)}" x2="${X(ao)}" y1="${pt}" y2="${Hh-pb}"/><line class="avg" x1="${pl}" x2="${W-pr}" y1="${Y(ad)}" y2="${Y(ad)}"/>
+    <text class="q" x="${W-pr-8}" y="${pt+20}" text-anchor="end">Ataque y defensa</text><text class="q" x="${pl+8}" y="${pt+20}">Defensa</text>
+    <text class="q" x="${W-pr-8}" y="${Hh-pb-10}" text-anchor="end">Ataque</text><text class="q" x="${pl+8}" y="${Hh-pb-10}">A mejorar</text>
+    <text class="ax" x="${(W+pl)/2}" y="${Hh-6}" text-anchor="middle">Puntos anotados por partido →</text>
+    <text class="ax" transform="translate(${mob?12:18} ${(Hh+pt-pb)/2}) rotate(-90)" text-anchor="middle">← Puntos recibidos (menos, más arriba)</text>
+    ${rows.map(r=>`<image href="${logo(r.ab)}" x="${X(r.o)-s/2}" y="${Y(r.d)-s/2}" width="${s}" height="${s}" data-team="${esc(r.ab)}"><title>${esc(TEAMS[r.ab].name)} · ${r.o.toFixed(1)} a favor · ${r.d.toFixed(1)} en contra</title></image>`).join('')}
+  </svg><p class="scat-note">Cada escudo es un equipo. Arriba a la derecha, los que más anotan y menos reciben. Toca un escudo para ver su ficha.</p></div>`;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tsview]');if(!b)return;tsMode=b.dataset.tsview;renderTS();track('equipos/'+tsMode,'Equipos: '+tsMode)});
 function setHH(){const h=document.querySelector('header.top'),tk=h.querySelector('.ticker'),mob=matchMedia('(max-width:640px)').matches,th=mob&&tk?tk.offsetHeight:0;
   document.documentElement.style.setProperty('--tkh',th+'px');document.documentElement.style.setProperty('--hh',(h.offsetHeight-th)+'px')}
 addEventListener('resize',setHH);
