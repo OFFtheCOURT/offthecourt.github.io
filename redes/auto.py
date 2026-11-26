@@ -107,7 +107,7 @@ def guion(lg, nivel=0):
                                                      (f"{S(W)} {Wv_('pasa', 'pasan')} por encima {de(Ls)}", f'PALIZA +{m}'), (f"exhibición {de(W)}: más {m}", 'EXHIBICIÓN'), (f"{S(W)} no {Wv_('tiene', 'tienen')} piedad", f'PALIZA +{m}'),
                                                      (f"repaso {de(W)} {al(Ls)}", f'+{m}'), (f"{S(W)} {Wv_('humilla', 'humillan')} {al(Ls)}", f'PALIZA +{m}')]))
         if m <= 3 and not ot: hooks.append((58, 'ajustado', [(f"final de infarto entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO'), (f"{S(W)} {Wv_('gana', 'ganan')} por la mínima", 'POR LA MÍNIMA'),
-                                                              (f"{S(W)} {Wv_('sufre', 'sufren')} hasta el final", 'AL LÍMITE'), (f"infarto: {S(W)} {Wv_('gana', 'ganan')} de {m}", f'+{m} AL FINAL'), (f"{S(W)} lo {Wv_('salva', 'salvan')} en el último segundo", 'AL LÍMITE'),
+                                                              (f"{S(W)} {Wv_('sufre', 'sufren')} hasta el final", 'AL LÍMITE'), (f"infarto: {S(W)} {Wv_('gana', 'ganan')} de {m}", f'+{m} AL FINAL'), (f"{S(W)} {Wv_('aguanta', 'aguantan')} hasta el final", 'AL LÍMITE'),
                                                               (f"agonía y victoria {de(W)}", 'FINAL DE INFARTO'), (f"partidazo hasta el final entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO')]))
         if eu and Ls['corto'] in GRANDES:   # en España lo que más interesa: cae un grande
             hooks.append((78, 'grande', [(f"{S(W)} {Wv_('tumba', 'tumban')} {al(Ls)}", f"CAE EL {Ls['corto'].upper()}"), (f"golpe {de(W)} {al(Ls)}", f"CAE EL {Ls['corto'].upper()}"),
