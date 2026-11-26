@@ -1007,6 +1007,18 @@ function introCine(sc,t){
   if(cur&&t<tend){X.save();X.globalCompositeOperation='lighter';const wa=.08+.22*Math.exp(-ldS/.6),wg=X.createRadialGradient(540,950,100,540,950,1000);wg.addColorStop(0,hex(tc,wa));wg.addColorStop(1,hex(tc,0));X.fillStyle=wg;X.fillRect(-200,-200,W+400,H+400);X.restore()}cineHaz(fr,t,on*fl);
   X.restore();
   // titular que entra: una entrada distinta para cada uno y vuela a su hueco encima de la pantalla
+  // FOCO DE ATENCIÓN: la sala se oscurece y un cañón de luz sigue lo que se está contando (diario -> su resultado -> todo -> el primer partido)
+  if(F4.length&&t>F4[0].t+.9){window.__cam={cx,cy,z};let tx=540,ty=900,tr=420,dk=0;
+    const tileS=i=>{const r=LY[i];return [(r.x+r.w/2-cx)*z+540,(r.y+r.h/2-cy)*z+960,Math.max(r.w,r.h)*z*.62]};
+    const fk=[...F4].reverse().find(f=>t>=f.t-DPRE),k=F4.indexOf(fk),a=t-fk.t+DPRE;
+    if(t<flyS){if(a<.9&&k>0){const P=diarioPose(k,Math.min(a,.6),t);tx=P.x;ty=P.y;tr=DPH*P.sc*.6;dk=.78}else{[tx,ty,tr]=tileS(fk.i);dk=.74}}
+    else if(t<land(0)+.3){dk=.74*(1-clamp((t-flyS)/.35))}
+    else if(t>tend-.7){[tx,ty,tr]=tileS(F[0].i);dk=.8*clamp((t-(tend-.7))/.3)}
+    const S_=sc._spot||(sc._spot={x:tx,y:ty,r:tr,d:0});const kk=.22;S_.x+=(tx-S_.x)*kk;S_.y+=(ty-S_.y)*kk;S_.r+=(tr-S_.r)*kk;S_.d+=(dk-S_.d)*.2;
+    if(S_.d>.01){const gg=X.createRadialGradient(S_.x,S_.y,S_.r*.7,S_.x,S_.y,S_.r*1.35);gg.addColorStop(0,'rgba(0,0,0,0)');gg.addColorStop(1,'rgba(0,0,0,'+S_.d+')');X.fillStyle=gg;X.fillRect(0,0,W,H);
+      X.save();X.globalCompositeOperation='lighter';const sx0=S_.x+(540-S_.x)*.35,bg_=X.createLinearGradient(0,-80,0,S_.y);bg_.addColorStop(0,'rgba(255,240,215,'+(.32*S_.d)+')');bg_.addColorStop(1,'rgba(255,240,215,'+(.10*S_.d)+')');
+      X.fillStyle=bg_;X.beginPath();X.moveTo(sx0-40,-80);X.lineTo(S_.x-S_.r*.9,S_.y);X.lineTo(S_.x+S_.r*.9,S_.y);X.lineTo(sx0+40,-80);X.closePath();X.fill();
+      X.strokeStyle='rgba(255,236,200,'+(.55*S_.d)+')';X.lineWidth=5;X.beginPath();X.ellipse(S_.x,S_.y,S_.r*1.02,S_.r*.98,0,0,7);X.stroke();X.restore()}}
   if(F4.length&&t>=F4[0].t-DPRE&&t<land(0)){
     // fondo oscuro con rayos mientras los diarios están en pantalla; se va al volar
     window.__cam={cx,cy,z};const ov=1-clamp((t-flyS)/.4),wy=(HANG_Y-DPH*HANG_S/2-34-cy)*z+960;

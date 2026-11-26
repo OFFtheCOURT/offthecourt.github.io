@@ -133,7 +133,7 @@ def guion(lg, nivel=0):
     if rnd.random() < .5: intro = rnd.choice(ARR.get(lg, ARR['nba'])) + ' ' + intro
     if len(intro.split()) < 8: intro = intro[:-1] + f', en la {SIGLA[lg]}!'
     primera = lambda h: re.sub(r'[{}|¡!]', ' ', h).split()[0]   # el titular entra con la primera palabra de su frase
-    FMT = os.environ.get('OFFCOURT_FORMATO') or 'cine'; habla = con; vel = '+18%'
+    FMT = os.environ.get('OFFCOURT_FORMATO') or 'turbo'; habla = con; vel = '+18%'
     if FMT == 'turbo':      # el cine de siempre, sin arranque y más rápido
         intro = ' '.join('¡' + cap_(f) + '!' for f in frases); vel = '+24%'
     elif FMT == 'cuenta' and len(con) >= 2:   # cuenta atrás: de menos a más, y el uno es el primer partido
@@ -206,7 +206,7 @@ def guion(lg, nivel=0):
     else:
         out, res = rnd.choice([f"Muy pronto, más baloncesto en la {SIGLA[lg]}. ¡No te lo pierdas! ", f"¿Quién ha sido el mejor de la jornada? Te leemos en comentarios. ", f"La {SIGLA[lg]} vuelve pronto. ¿Tu MVP de la jornada? "]) + "Esto es {OFFCOURT|Ófkort}.", {}
     seg.append({'id': 'outro', 't': out, 'resaltar': res, 'velocidad': '+8%', 'tono': '+0Hz'})
-    n = {'fecha': b['fecha'], 'auto': True, 'segmentos': seg, 'formato': os.environ.get('OFFCOURT_FORMATO') or 'cine'}
+    n = {'fecha': b['fecha'], 'auto': True, 'segmentos': seg, 'formato': os.environ.get('OFFCOURT_FORMATO') or 'turbo'}
     json.dump(n, open(os.path.join(R, 'salida', lg, 'noche.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     return n
 
