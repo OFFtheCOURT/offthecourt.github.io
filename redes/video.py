@@ -474,7 +474,8 @@ def montar():
             focos = [{'i': i, 't': round(.5 + k * (intro['dur'] - 1.2) / len(hot), 3), 'tag': DATA['results'][i].get('tag')} for k, i in enumerate(hot)]
         intro['focos'] = focos
         # cada titular necesita ~1 s para entrar y volar a su sitio antes de que la cámara se meta en el primer partido
-        intro['dur'] = round(max(intro['dur'], max(f['t'] for f in focos[:4]) + 2.6), 2)
+        DATA['formato'] = n.get('formato', 'cine')
+        intro['dur'] = round(max(intro['dur'], max(f['t'] for f in focos[:4]) + {'cine': 2.6, 'turbo': 2.0}.get(DATA['formato'], 1.4)), 2)
         nxt = scenes[scenes.index(intro) + 1] if scenes.index(intro) + 1 < len(scenes) else None
         if nxt and nxt['type'] == 'game': nxt['fromCine'] = True; intro.pop('next', None)
     _hero = {x['id'] for x in n['segmentos'] if x.get('hero')}
@@ -639,7 +640,7 @@ def render():
         # cada resultado se enciende con una nota que va subiendo (misma fórmula que anim.html: LUZ(i))
         fs4 = intro_['focos'][:4]; ev.append(('whoosh', fs4[-1]['t'] + .72))  # los diarios vuelan a su hueco
         ev += [('hit', f_['t'] + .1) for k, f_ in enumerate(intro_['focos'][:4])]  # golpe del diario al caer
-        nres = len(D.get('results') or []); lastF = intro_['focos'][-1]['t']
+        nres = len(D.get('results') or []) if D.get('formato', 'cine') in ('cine', 'turbo') else 0; lastF = intro_['focos'][-1]['t']
         step = min(.55, max(.16, (lastF + .9 - .12) / max(1, nres)))
         ev += [(f'luz{i % 12}', .12 + i * step) for i in range(nres)]
     nm = len(D['mini'])

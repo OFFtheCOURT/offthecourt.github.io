@@ -122,7 +122,7 @@ def guion(lg, nivel=0):
     usados = {}
     for x in con:   # (puntos, tipo, opciones) -> (puntos, frase, etiqueta), sin repetir forma dentro del mismo tipo
         sc_, tipo, ops_ = x['hook']; libres = [o for k, o in enumerate(ops_) if k not in usados.get(tipo, set())] or ops_
-        o = rnd.choice(libres); usados.setdefault(tipo, set()).add(ops_.index(o)); x['hook'] = (sc_, o[0], o[1])
+        o = rnd.choice(libres); usados.setdefault(tipo, set()).add(ops_.index(o)); x['hook'] = (sc_, o[0], o[1]); x['tipo'] = tipo
     frases = [x['hook'][1] for x in con]
     cap_ = lambda x: re.sub(r'^(\{?)(\w)', lambda m_: m_.group(1) + m_.group(2).upper(), x)
     intro = ' '.join('¡' + cap_(f) + '!' for f in frases)   # un titular por frase: deja respirar cada entrada
@@ -133,7 +133,21 @@ def guion(lg, nivel=0):
     if rnd.random() < .5: intro = rnd.choice(ARR.get(lg, ARR['nba'])) + ' ' + intro
     if len(intro.split()) < 8: intro = intro[:-1] + f', en la {SIGLA[lg]}!'
     primera = lambda h: re.sub(r'[{}|¡!]', ' ', h).split()[0]   # el titular entra con la primera palabra de su frase
-    seg = [{'id': 'intro', 't': intro, 'velocidad': '+18%', 'tono': '+6Hz', 'focos': [{'clave': primera(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in con]}]
+    FMT = os.environ.get('OFFCOURT_FORMATO') or 'cine'; habla = con; vel = '+18%'
+    if FMT == 'turbo':      # el cine de siempre, sin arranque y más rápido
+        intro = ' '.join('¡' + cap_(f) + '!' for f in frases); vel = '+24%'
+    elif FMT == 'cuenta' and len(con) >= 2:   # cuenta atrás: de menos a más, y el uno es el primer partido
+        k = min(3, len(con)); habla = con[:k][::-1]; nums = ['Tres', 'Dos', 'Uno'][3 - k:]
+        quita = lambda f: re.sub(r':\s*más \d+$', '', f)
+        intro = f"¡{['', '', 'Dos', 'Tres'][k]} cosas de anoche en la {SIGLA[lg]}, y la última es la más fuerte! " + ' '.join(f"¡{nums[i]}: {cap_(quita(x['hook'][1]))}!" for i, x in enumerate(habla))
+    elif FMT == 'pregunta':  # misterio: pregunta sobre la silueta y respuesta con golpe
+        top = con[0]; Wq, Lq, pq = top['W'], top['L'], top['p']; Pq = pr(pq['nombre']); tq = top.get('tipo')
+        preg = {'grande': f"¿Quién ha tumbado {al(Lq)} esta noche?", 'pts': f"¿Quién se ha ido a {pq['pts']} puntos esta noche?", 'td': "¿Quién ha firmado un triple-doble esta noche?",
+                'ot': "¿Quién ha ganado en la prórroga esta noche?", 'paliza': "¿Quién ha dado la paliza de la noche?", 'ajustado': "¿Quién ha ganado el partido más loco de la noche?"}.get(tq, "¿Quién ha sido el protagonista de la noche?")
+        resp = f"¡{Pq}, con {S(Wq)}!" if tq in ('pts', 'td') else f"¡{S(Wq, 1)}, con {pq['pts']} de {Pq}!"
+        resto = con[1:3]; intro = preg + ' ' + resp + ' ' + ' '.join(('¡Y además, ' if i == 0 else '¡') + (f if i else f) + '!' for i, f in enumerate(cap_(x['hook'][1]) if i else x['hook'][1] for i, x in enumerate(resto)))
+        habla = [top] + resto
+    seg = [{'id': 'intro', 't': intro, 'velocidad': vel, 'tono': '+6Hz', 'focos': [{'clave': primera(x['hook'][1]), 'partido': x['g']['partido'], 'etiqueta': x['hook'][2][:18]} for x in habla]}]
     orden = con + [x for x in info if x not in con]
     corto = nivel >= 1 or len(orden) >= 8
     usadas = set()
@@ -192,7 +206,7 @@ def guion(lg, nivel=0):
     else:
         out, res = rnd.choice([f"Muy pronto, más baloncesto en la {SIGLA[lg]}. ¡No te lo pierdas! ", f"¿Quién ha sido el mejor de la jornada? Te leemos en comentarios. ", f"La {SIGLA[lg]} vuelve pronto. ¿Tu MVP de la jornada? "]) + "Esto es {OFFCOURT|Ófkort}.", {}
     seg.append({'id': 'outro', 't': out, 'resaltar': res, 'velocidad': '+8%', 'tono': '+0Hz'})
-    n = {'fecha': b['fecha'], 'auto': True, 'segmentos': seg}
+    n = {'fecha': b['fecha'], 'auto': True, 'segmentos': seg, 'formato': os.environ.get('OFFCOURT_FORMATO') or 'cine'}
     json.dump(n, open(os.path.join(R, 'salida', lg, 'noche.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     return n
 

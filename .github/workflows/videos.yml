@@ -20,6 +20,10 @@ on:
         description: 'Prueba: no se apunta ni se entrega (va a la rama redes-prueba)'
         type: boolean
         default: false
+      formato:
+        description: 'Solo pruebas: formato de portada (cine, turbo, cuenta, pregunta)'
+        required: false
+        default: ''
       fecha:
         description: 'Solo pruebas: fecha de la jornada europea (AAAA-MM-DD)'
         required: false
@@ -96,6 +100,7 @@ jobs:
           OFFCOURT_FORZAR: ${{ github.event.inputs.forzar == 'true' && '1' || '' }}
           OFFCOURT_PRUEBA: ${{ github.event.inputs.prueba == 'true' && '1' || '' }}
           OFFCOURT_HASTA: ${{ github.event.inputs.hasta }}
+          OFFCOURT_FORMATO: ${{ github.event.inputs.formato }}
           OFFCOURT_FECHA: ${{ github.event.inputs.fecha }}
         run: python3 redes/auto.py ${{ steps.mira.outputs.ligas }}
       - name: Guardar la prueba (rama redes-prueba)
@@ -104,7 +109,7 @@ jobs:
           mkdir -p /tmp/p && cd /tmp/p && git init -q -b redes-prueba
           git config --global user.name "offcourt-bot"; git config --global user.email "offcourt-bot@users.noreply.github.com"
           while read -r f || [ -n "$f" ]; do [ -n "$f" ] && cp "$f" .; done < "$GITHUB_WORKSPACE/redes/salida/nuevos.txt"
-          git add -A; git commit -qm "Prueba"; git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:redes-prueba
+          git add -A; git commit -qm "Prueba"; git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:redes-prueba${{ github.event.inputs.formato && format('-{0}', github.event.inputs.formato) || '' }}
       - name: Guardar el MP4 (rama redes-videos) y el registro (main)
         if: steps.mira.outputs.ligas != '' && github.event.inputs.prueba != 'true'
         run: |
