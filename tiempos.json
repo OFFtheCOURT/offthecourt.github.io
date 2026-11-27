@@ -1,0 +1,730 @@
+{
+ "es-ES-ElviraNeural_r": [
+  {
+   "id": "m",
+   "texto": "¡Anoche cayó el Barsa!... y no te imaginas contra quién. Te lo cuento al final. ¡Uembeniáma se va a 50! ¡Los Niks ganan por la mínima! Esto es Ófkort.",
+   "palabras": [
+    {
+     "w": "Anoche",
+     "o": 0.093875,
+     "d": 0.38375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "cayó",
+     "o": 0.477625,
+     "d": 0.285083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "el",
+     "o": 0.762708,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Barsa",
+     "o": 0.850458,
+     "d": 0.318,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 2.050458,
+     "d": 0.043875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "no",
+     "o": 2.138166,
+     "d": 0.142541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "te",
+     "o": 2.280708,
+     "d": 0.120625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "imaginas",
+     "o": 2.42325,
+     "d": 0.493416,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "contra",
+     "o": 2.916666,
+     "d": 0.285083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "quién",
+     "o": 3.212708,
+     "d": 0.241208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Te",
+     "o": 4.287291,
+     "d": 0.07675,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "lo",
+     "o": 4.364041,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "cuento",
+     "o": 4.462708,
+     "d": 0.318,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "al",
+     "o": 4.780708,
+     "d": 0.07675,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "final",
+     "o": 4.857458,
+     "d": 0.361833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Uembeniáma",
+     "o": 6.030708,
+     "d": 0.54825,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "se",
+     "o": 6.578958,
+     "d": 0.1535,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "va",
+     "o": 6.732458,
+     "d": 0.098666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 6.831125,
+     "d": 0.098666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "50",
+     "o": 6.929833,
+     "d": 0.493416,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Los",
+     "o": 8.300458,
+     "d": 0.219291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Niks",
+     "o": 8.51975,
+     "d": 0.274125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "ganan",
+     "o": 8.793875,
+     "d": 0.296041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "por",
+     "o": 9.089916,
+     "d": 0.131583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "la",
+     "o": 9.2215,
+     "d": 0.109625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "mínima",
+     "o": 9.331125,
+     "d": 0.361833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Esto",
+     "o": 10.559208,
+     "d": 0.307,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "es",
+     "o": 10.866208,
+     "d": 0.186416,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Ófkort",
+     "o": 11.052625,
+     "d": 0.427625,
+     "k": "WordBoundary"
+    }
+   ]
+  }
+ ],
+ "es-ES-XimenaNeural_r": [
+  {
+   "id": "m",
+   "texto": "¡Anoche cayó el Barsa!... y no te imaginas contra quién. Te lo cuento al final. ¡Uembeniáma se va a 50! ¡Los Niks ganan por la mínima! Esto es Ófkort.",
+   "palabras": [
+    {
+     "w": "Anoche",
+     "o": 0.1,
+     "d": 0.427625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "cayó",
+     "o": 0.538583,
+     "d": 0.252208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "el",
+     "o": 0.80175,
+     "d": 0.07675,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Barsa",
+     "o": 0.889458,
+     "d": 0.4715,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 2.111416,
+     "d": 0.1535,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "no",
+     "o": 2.275875,
+     "d": 0.131583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "te",
+     "o": 2.418416,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "imaginas",
+     "o": 2.517125,
+     "d": 0.493416,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "contra",
+     "o": 3.0215,
+     "d": 0.285083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "quién",
+     "o": 3.317541,
+     "d": 0.361833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Te",
+     "o": 4.446916,
+     "d": 0.1535,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "lo",
+     "o": 4.611416,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "cuento",
+     "o": 4.710083,
+     "d": 0.296041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "al",
+     "o": 5.017125,
+     "d": 0.07675,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "final",
+     "o": 5.104833,
+     "d": 0.405708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Uembeniáma",
+     "o": 6.289041,
+     "d": 0.625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "se",
+     "o": 6.925,
+     "d": 0.131583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "va",
+     "o": 7.067541,
+     "d": 0.120625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 7.199125,
+     "d": 0.054833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "50",
+     "o": 7.264916,
+     "d": 0.625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Los",
+     "o": 8.6465,
+     "d": 0.296041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Niks",
+     "o": 8.9535,
+     "d": 0.23025,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "ganan",
+     "o": 9.19475,
+     "d": 0.263166,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "por",
+     "o": 9.468875,
+     "d": 0.131583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "la",
+     "o": 9.611416,
+     "d": 0.07675,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "mínima",
+     "o": 9.699125,
+     "d": 0.416666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Esto",
+     "o": 10.872375,
+     "d": 0.39475,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "es",
+     "o": 11.278083,
+     "d": 0.131583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Ófkort",
+     "o": 11.420625,
+     "d": 0.416666,
+     "k": "WordBoundary"
+    }
+   ]
+  }
+ ],
+ "en-US-AvaMultilingualNeural_o": [
+  {
+   "id": "m",
+   "texto": "¡Anoche cayó el Barça!... y no te imaginas contra quién. Te lo cuento al final. ¡Wembanyama se va a 50! ¡Los Knicks ganan por la mínima! Esto es OFFCOURT.",
+   "palabras": [
+    {
+     "w": "Anoche",
+     "o": 0.109666,
+     "d": 0.252208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "cayó",
+     "o": 0.416666,
+     "d": 0.274125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "el",
+     "o": 0.70175,
+     "d": 0.07675,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Barça",
+     "o": 0.789458,
+     "d": 0.39475,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 1.842125,
+     "d": 0.054833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "no",
+     "o": 1.907875,
+     "d": 0.142541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "te",
+     "o": 2.061416,
+     "d": 0.065791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "imaginas",
+     "o": 2.138166,
+     "d": 0.4605,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "contra",
+     "o": 2.598666,
+     "d": 0.274125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "quién",
+     "o": 2.872791,
+     "d": 0.383791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Te",
+     "o": 3.5965,
+     "d": 0.054833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "lo",
+     "o": 3.662291,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "cuento",
+     "o": 3.760958,
+     "d": 0.263166,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "al",
+     "o": 4.024125,
+     "d": 0.054833,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "final",
+     "o": 4.089916,
+     "d": 0.438583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Wembanyama",
+     "o": 4.912291,
+     "d": 0.449541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "se",
+     "o": 5.416666,
+     "d": 0.1535,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "va",
+     "o": 5.581125,
+     "d": 0.109666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 5.70175,
+     "d": 0.032875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "50",
+     "o": 5.745625,
+     "d": 0.668875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Los",
+     "o": 6.787291,
+     "d": 0.109666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Knicks",
+     "o": 6.95175,
+     "d": 0.241208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "ganan",
+     "o": 7.203958,
+     "d": 0.263166,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "por",
+     "o": 7.478083,
+     "d": 0.131583,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "la",
+     "o": 7.620625,
+     "d": 0.07675,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "mínima",
+     "o": 7.708333,
+     "d": 0.405708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Esto",
+     "o": 8.443,
+     "d": 0.274125,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "es",
+     "o": 8.728083,
+     "d": 0.1535,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "OFFCOURT",
+     "o": 8.892541,
+     "d": 0.405708,
+     "k": "WordBoundary"
+    }
+   ]
+  }
+ ],
+ "en-US-EmmaMultilingualNeural_o": [
+  {
+   "id": "m",
+   "texto": "¡Anoche cayó el Barça!... y no te imaginas contra quién. Te lo cuento al final. ¡Wembanyama se va a 50! ¡Los Knicks ganan por la mínima! Esto es OFFCOURT.",
+   "palabras": [
+    {
+     "w": "Anoche",
+     "o": 0.109666,
+     "d": 0.263166,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "cayó",
+     "o": 0.427625,
+     "d": 0.285083,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "el",
+     "o": 0.723666,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Barça",
+     "o": 0.822375,
+     "d": 0.4715,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "y",
+     "o": 1.940791,
+     "d": 0.065791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "no",
+     "o": 2.017541,
+     "d": 0.142541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "te",
+     "o": 2.171041,
+     "d": 0.109666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "imaginas",
+     "o": 2.291666,
+     "d": 0.537291,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "contra",
+     "o": 2.839916,
+     "d": 0.296041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "quién",
+     "o": 3.146916,
+     "d": 0.383791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Te",
+     "o": 3.870625,
+     "d": 0.065791,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "lo",
+     "o": 3.947375,
+     "d": 0.109666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "cuento",
+     "o": 4.068,
+     "d": 0.318,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "al",
+     "o": 4.396916,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "final",
+     "o": 4.495625,
+     "d": 0.4715,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Wembanyama",
+     "o": 5.361833,
+     "d": 0.515333,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "se",
+     "o": 5.943,
+     "d": 0.142541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "va",
+     "o": 6.0965,
+     "d": 0.120625,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "a",
+     "o": 6.228083,
+     "d": 0.032875,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "50",
+     "o": 6.271916,
+     "d": 0.723666,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Los",
+     "o": 7.390333,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Knicks",
+     "o": 7.543875,
+     "d": 0.252208,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "ganan",
+     "o": 7.807,
+     "d": 0.296041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "por",
+     "o": 8.114041,
+     "d": 0.142541,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "la",
+     "o": 8.267541,
+     "d": 0.087708,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "mínima",
+     "o": 8.366208,
+     "d": 0.504375,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "Esto",
+     "o": 9.210541,
+     "d": 0.296041,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "es",
+     "o": 9.517541,
+     "d": 0.164458,
+     "k": "WordBoundary"
+    },
+    {
+     "w": "OFFCOURT",
+     "o": 9.693,
+     "d": 0.581125,
+     "k": "WordBoundary"
+    }
+   ]
+  }
+ ]
+}
