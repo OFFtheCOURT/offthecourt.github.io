@@ -103,10 +103,10 @@ def guion(lg, nivel=0):
         if ot:
             pr_ = 'la prórroga' if ot == 1 else str(ot) + ' prórrogas'; tg_ = 'PRÓRROGA' if ot == 1 else f'{ot} PRÓRROGAS'
             hooks.append((62 + 8 * ot, 'ot', [(f"{S(W)} {Wv_('gana', 'ganan')} en {pr_}", tg_), (f"{S(W)} {Wv_('sobrevive', 'sobreviven')} a {pr_}", tg_), (f"{'prórroga' if ot == 1 else pr_} y victoria {de(W)}", tg_), (f"{S(W)} {Wv_('resiste', 'resisten')} hasta {pr_}", tg_), (f"hasta {pr_}: {S(W)} {Wv_('se lo lleva', 'se lo llevan')}", tg_)]))
-        if m >= 20: hooks.append((40 + m, 'paliza', [(f"paliza {de(W)}", f'PALIZA +{m}'), (f"{S(W)} {Wv_('arrasa', 'arrasan')} {al(Ls)}", f'+{m}'),
+        if m >= 20: hooks.append((34 + m * .6, 'paliza', [(f"paliza {de(W)}", f'PALIZA +{m}'), (f"{S(W)} {Wv_('arrasa', 'arrasan')} {al(Ls)}", f'+{m}'),
                                                      (f"{S(W)} {Wv_('pasa', 'pasan')} por encima {de(Ls)}", f'PALIZA +{m}'), (f"exhibición {de(W)}: más {m}", 'EXHIBICIÓN'), (f"{S(W)} no {Wv_('tiene', 'tienen')} piedad", f'PALIZA +{m}'),
                                                      (f"repaso {de(W)} {al(Ls)}", f'+{m}'), (f"{S(W)} {Wv_('humilla', 'humillan')} {al(Ls)}", f'PALIZA +{m}')]))
-        if m <= 3 and not ot: hooks.append((58, 'ajustado', [(f"final de infarto entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO'), (f"{S(W)} {Wv_('gana', 'ganan')} por la mínima", 'POR LA MÍNIMA'),
+        if m <= 3 and not ot: hooks.append((60 + (3 - m) * 2, 'ajustado', [(f"final de infarto entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO'), (f"{S(W)} {Wv_('gana', 'ganan')} por la mínima", 'POR LA MÍNIMA'),
                                                               (f"{S(W)} {Wv_('sufre', 'sufren')} hasta el final", 'AL LÍMITE'), (f"infarto: {S(W)} {Wv_('gana', 'ganan')} de {m}", f'+{m} AL FINAL'), (f"{S(W)} {Wv_('aguanta', 'aguantan')} hasta el final", 'AL LÍMITE'),
                                                               (f"agonía y victoria {de(W)}", 'FINAL DE INFARTO'), (f"partidazo hasta el final entre {S(V)} y {S(Lc)}", 'FINAL DE INFARTO')]))
         if eu and Ls['corto'] in GRANDES:   # en España lo que más interesa: cae un grande
@@ -117,7 +117,13 @@ def guion(lg, nivel=0):
         hooks.sort(key=lambda h: -h[0])
         info.append(dict(g=g, W=W, L=Ls, ot=ot, m=m, p=tp, ps=ts, td=td, hook=hooks[0] if hooks else None, score=(hooks[0][0] if hooks else 0) + g.get('interes', 0) / 10))
     info.sort(key=lambda x: -x['score'])
-    con = [x for x in info if x['hook']][: (4 if nivel == 0 else 3)]
+    # titulares variados: primero uno de cada tipo (por interés) y luego, si falta, se repite tipo
+    nmax = 4 if nivel == 0 else 3; con = []; vistos = set()
+    for x in info:
+        if x['hook'] and x['hook'][1] not in vistos and len(con) < nmax: con.append(x); vistos.add(x['hook'][1])
+    for x in info:
+        if x['hook'] and x not in con and len(con) < nmax: con.append(x)
+    con.sort(key=lambda x: -x['score'])
     if not con: con = info[:1]; con[0]['hook'] = (1, 'v', [(f"{eq(con[0]['W'])} gana {con[0]['W']['puntos']} a {con[0]['L']['puntos']}", 'VICTORIA')])
     usados = {}
     for x in con:   # (puntos, tipo, opciones) -> (puntos, frase, etiqueta), sin repetir forma dentro del mismo tipo
